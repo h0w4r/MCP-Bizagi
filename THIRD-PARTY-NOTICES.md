@@ -17,6 +17,11 @@ Build and test dependencies are not necessarily runtime dependencies. Redistribu
 packages must retain the applicable license texts and notices for their included
 components, not only this summary.
 
+`scripts/package.ps1` includes the runtime dependency closure's NuGet metadata,
+embedded license/notice files, and a dependency inventory. When a package omits
+its license text, the script fetches it from the exact upstream repository commit
+recorded in that package's metadata. An unresolved license stops packaging.
+
 Bizagi Modeler and its bundled third-party components remain separately licensed.
 They are loaded from the operator's installation and must not be added to this
 repository or release archives.

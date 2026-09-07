@@ -1,6 +1,7 @@
 using System.IO.Pipes;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Security.Cryptography;
 using McpBizagi.BizagiAdapter;
 using McpBizagi.Contracts;
 using Newtonsoft.Json;
@@ -64,7 +65,15 @@ public sealed class EngineService
             try
             {
                 engine ??= new NativeEngine(installation, root);
-                return engine.Execute(request, Progress);
+                var result = engine.Execute(request, Progress);
+                // Record the actual loaded vendor modules, not merely files discovered on disk.
+                string prefix = Path.GetFullPath(installation).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                var modules = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic && a.Location.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .Select(a => { using var hash = SHA256.Create(); using var file = File.OpenRead(a.Location); return new
+                    { name = Path.GetFileName(a.Location), version = a.GetName().Version?.ToString(), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() }; }).ToArray();
+                File.WriteAllText(Path.Combine(root, "loaded-engine-modules.json"), JsonConvert.SerializeObject(new
+                { architecture = IntPtr.Size == 8 ? "x64" : "x86", clr = Environment.Version.ToString(), apartment = Thread.CurrentThread.GetApartmentState().ToString(), modules }, Formatting.Indented));
+                return result;
             }
             catch (Exception error)
             {

@@ -66,6 +66,19 @@ public sealed class WorkspaceFiles
     public FileResult Commit(string path, byte[] bytes, string? expectedRevision)
     {
         string full = Resolve(path);
+        // Cooperating MCP processes share a gate; stale writers fail rather than queue a blind overwrite.
+        string identity = OperatingSystem.IsWindows() ? full.ToUpperInvariant() : full;
+        using var gate = new Mutex(false, "McpBizagi-" + BpmnDocument.Revision(Encoding.UTF8.GetBytes(identity)));
+        bool acquired;
+        try { acquired = gate.WaitOne(0); }
+        catch (AbandonedMutexException) { acquired = true; } // Revision checking still runs after a crashed writer.
+        if (!acquired) throw new IOException("Destination is busy in another MCP writer; inspect its revision before retrying.");
+        try { return CommitLocked(full, bytes, expectedRevision); }
+        finally { gate.ReleaseMutex(); }
+    }
+
+    private FileResult CommitLocked(string full, byte[] bytes, string? expectedRevision)
+    {
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         Resolve(full);
         bool exists = File.Exists(full);
@@ -87,6 +100,9 @@ public sealed class WorkspaceFiles
                 Resolve(full);
                 backup = full + "." + Guid.NewGuid().ToString("N") + ".bak";
                 File.Replace(stage, full, backup);
+                // External programs do not honor our mutex. Detect a racing atomic replacement and retain both versions.
+                if (BpmnDocument.Revision(File.ReadAllBytes(backup)) != expectedRevision)
+                    throw new IOException("Concurrent external replacement detected. Both versions are retained; inspect backup " + backup + " before retrying.");
             }
             else File.Move(stage, full, false);
             byte[] persisted = Read(full);

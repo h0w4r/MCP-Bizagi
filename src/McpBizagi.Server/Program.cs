@@ -12,5 +12,6 @@ builder.Services.AddSingleton(configuration);
 builder.Services.AddSingleton(new WorkspaceFiles(configuration.Workspace));
 builder.Services.AddSingleton<WorkerClient>();
 builder.Services.AddSingleton<Operations>();
+builder.Services.AddSingleton<NativeWorkflows>();
 builder.Services.AddMcpServer().WithStdioServerTransport().WithTools<ModelTools>();
 await builder.Build().RunAsync();

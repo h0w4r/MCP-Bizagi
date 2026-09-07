@@ -8,6 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
+[![Source version](https://img.shields.io/badge/source-0.1.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -22,6 +23,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > BPMN XML tools are implemented. Native operations are opt-in diagnostics;
 > resolving internal services is not evidence of complete `.bpm` support.
 > See the [capability ledger](docs/capabilities.md) before relying on a feature.
+> **Real local acceptance:** stdio MCP, native import/persistence/reload/export,
+> copy-only native name batches, cancellation, and recovery have run against
+> Modeler 4.3.0.008. [Scope and evidence](docs/validation.md).
 
 ## Why this project
 
@@ -47,7 +51,8 @@ every operation into a BPMN XML export.
 | Structural validation | Available | Not complete OMG XSD or behavioral validation |
 | Native engine bootstrap | Opt-in diagnostic | Internal interfaces, not a supported vendor API |
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
-| Native `.bpm` editing | Not released | Never redirected to the XML backend |
+| Inspect existing `.bpm` | Opt-in, copy-only | Native identities and revision; original bytes retained |
+| Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback; rich-content preservation not accredited |
 | Documentation and simulation | Investigated, not implemented | Native types discovered; workflows not accredited |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
 
@@ -114,6 +119,23 @@ Call `native_probe` or `native_roundtrip`, then poll `operation_get` with the
 returned operation ID. Failed, cancelled, interrupted, and completed operations
 are different states. A completed diagnostic is not full native accreditation.
 
+For an existing `.bpm`, call `native_inspect`, retain its `sourceRevision` and
+native element IDs, then pass a name-change batch to `native_apply_changes`.
+The result is a **new artifact**, not an overwrite of the input. BPMN IDs and
+native IDs are not interchangeable. See the [tool reference](docs/tools.md).
+
+### Build a Windows package
+
+```powershell
+./scripts/package.ps1
+```
+
+The script produces an ignored `artifacts/` directory and ZIP containing the
+host, worker, redistributable dependencies, complete collected license texts,
+dependency inventory, and SHA-256 manifest. It refuses an existing destination.
+It does not include Bizagi, the .NET runtime, operator models, or local research.
+See [packaging](docs/packaging.md) for packaged-server acceptance.
+
 ## Architecture
 
 | Component | Runtime | Responsibility |
@@ -140,7 +162,8 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --nat
 ```
 
 Evidence is written under ignored `.local/acceptance/` directories. Native
-diagnostics may contain local paths and must be sanitized before sharing.
+diagnostics can contain local paths and Windows identity metadata embedded by
+Bizagi. Do not publish raw native files or transcripts without sanitization.
 
 | Evidence | What it establishes |
 | --- | --- |
@@ -158,6 +181,10 @@ native success badges. Demonstrations will be added only from verified runs.
 - Preserve originals; do not use experimental native diagnostics as your only backup.
 - Root confinement and reparse-point rejection are defensive boundaries, not an OS sandbox.
 - Operators sharing the same Windows identity can still modify their own files and processes.
+- Native source models are never overwritten by the current tools. Adopting an
+  output copy requires reviewing its fidelity warnings first.
+- A Windows Job Object owns each worker. Read-only desktop observations record
+  visible/foreground behavior without collecting unrelated window titles.
 - The supervisor monitors phase, CPU, and log activity. Native I/O-only progress
   without those signals may need a larger configured inactivity window.
 - The source filename and current revision must be checked before replaying a failed write.

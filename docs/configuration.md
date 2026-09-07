@@ -21,3 +21,9 @@ For locked models or revision conflicts, inspect the latest file before retrying
 For a worker crash or interrupted write, inspect artifacts and backups before
 starting another operation. Never infer success from a returned process exit code
 alone.
+
+Current size bounds are 64 MiB for model files and 16 Mi characters for parsed
+XML. Native archive preflight also limits entry count, expanded size, nesting,
+unsafe paths, and DTD usage. Encrypted native containers are not supported.
+Native model/diagram export labels must be valid Windows file names of at most
+120 characters; ambiguous labels are rejected rather than silently renamed.

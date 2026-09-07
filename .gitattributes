@@ -4,3 +4,6 @@
 *.json text eol=lf
 *.yml text eol=lf
 *.ps1 text eol=lf
+*.props text eol=lf
+*.csproj text eol=lf
+*.slnx text eol=lf

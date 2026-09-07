@@ -88,6 +88,7 @@ public sealed class NativeEngine
     public EngineReply Execute(EngineRequest request, Action<string> progress)
     {
         if (request.ProtocolVersion != 1) throw new NotSupportedException("Unsupported worker protocol version.");
+        RequireExportLabel(request.ModelName);
         Initialize(progress);
         object model = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.DiagramModel"));
         Set(model, "Name", request.ModelName);
@@ -103,7 +104,7 @@ public sealed class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (request.Action != "import_save" && request.Action != "read_export")
+        if (request.Action != "import_save" && request.Action != "read_export" && request.Action != "edit_save")
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -111,8 +112,11 @@ public sealed class NativeEngine
         {
             progress("native_import_bpmn");
             object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
-            object diagram = Call(interop, "Import", request.InputPath, model)!;
-            Call(Get(model, "Diagrams"), "Add", diagram);
+            foreach (string input in request.InputPaths.Length > 0 ? request.InputPaths : new[] { request.InputPath })
+            {
+                object diagram = Call(interop, "Import", input, model)!;
+                Call(Get(model, "Diagrams"), "Add", diagram);
+            }
             Set(model, "Path", request.OutputPath);
             progress("native_persist_bpm");
             Call(persistence, "Persist", model);
@@ -125,18 +129,71 @@ public sealed class NativeEngine
             Set(model, "Path", request.InputPath);
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
-            object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
-            Directory.CreateDirectory(request.OutputPath);
-            progress("native_export_bpmn");
-            Call(interop, "Export", model, request.OutputPath);
-            reply.Artifacts = Directory.GetFiles(request.OutputPath, "*.bpmn", SearchOption.AllDirectories);
-            if (reply.Artifacts.Length == 0) throw new IOException("Native export produced no BPMN files.");
+            if (request.Action == "edit_save")
+            {
+                progress("native_edit_names");
+                var indexed = Elements(model).ToLookup(e => Get(e, "Id").ToString());
+                // Validate the entire batch before mutating any native object.
+                foreach (var change in request.Changes)
+                    if (indexed[change.ElementId].Count() != 1) throw new InvalidDataException("Expected one native element: " + change.ElementId);
+                foreach (var change in request.Changes) Set(indexed[change.ElementId].Single(), "DisplayName", change.Name);
+                foreach (object diagram in (IEnumerable)Get(model, "Diagrams")) Set(diagram, "HasChanged", true);
+                Set(model, "Path", request.OutputPath);
+                progress("native_persist_edited_bpm");
+                Call(persistence, "Persist", model);
+                if (!File.Exists(request.OutputPath) || new FileInfo(request.OutputPath).Length == 0)
+                    throw new IOException("Native editing returned without a persisted model.");
+                reply.Artifacts = new[] { request.OutputPath };
+            }
+            else
+            {
+                object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
+                // Fail explicitly on unsafe output labels rather than silently renaming or escaping the operation directory.
+                RequireExportLabel(Get(model, "Name").ToString()!);
+                foreach (object diagram in (IEnumerable)Get(model, "Diagrams")) RequireExportLabel(Get(diagram, "DisplayName").ToString()!);
+                Directory.CreateDirectory(request.OutputPath);
+                progress("native_export_bpmn");
+                Call(interop, "Export", model, request.OutputPath);
+                reply.Artifacts = Directory.GetFiles(request.OutputPath, "*.bpmn", SearchOption.AllDirectories);
+                if (reply.Artifacts.Length == 0) throw new IOException("Native export produced no BPMN files.");
+            }
         }
         reply.Diagrams = ((IEnumerable)Get(model, "Diagrams")).Cast<object>()
-            .Select(d => Get(d, "Name")?.ToString() ?? "").ToArray();
+            .Select(d => Get(d, "DisplayName")?.ToString() ?? "").ToArray();
+        reply.Elements = Elements(model).Select(e => new NativeElement { Id = Get(e, "Id").ToString()!,
+            Kind = e.GetType().Name, Name = Get(e, "DisplayName")?.ToString() ?? "" }).ToArray();
         reply.Success = true;
         reply.Code = "native_operation_completed";
         reply.Message = "Native operation completed; verify artifacts in a fresh worker before accreditation.";
         return reply;
+    }
+
+    private static void RequireExportLabel(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value == "." || value == ".." || value.Length > 120 ||
+            value.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || value.EndsWith(".") || value.EndsWith(" "))
+            throw new InvalidDataException("Native model and diagram export labels must be nonempty Windows file names (maximum 120 characters).");
+        string stem = value.Split('.')[0].ToUpperInvariant();
+        if (new[] { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" }.Contains(stem))
+            throw new InvalidDataException("Reserved Windows export label.");
+    }
+
+    private static IEnumerable<object> Elements(object model)
+    {
+        foreach (object diagram in (IEnumerable)Get(model, "Diagrams"))
+            foreach (object participant in (IEnumerable)Get(diagram, "Participants"))
+                foreach (object element in FlowElements(Get(participant, "Process"))) yield return element;
+    }
+
+    private static IEnumerable<object> FlowElements(object container)
+    {
+        foreach (object element in (IEnumerable)Get(container, "FlowElements"))
+        {
+            yield return element;
+            // BPMN sub-processes expose their own collection; walk it instead of flattening it away.
+            if (element.GetType().GetProperty("FlowElements") != null)
+                foreach (object child in FlowElements(element)) yield return child;
+        }
     }
 }

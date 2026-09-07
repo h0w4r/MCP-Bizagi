@@ -66,6 +66,36 @@ public sealed class IntegrityTests : IDisposable
         using var handle = new FileStream(first.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         Assert.Throws<IOException>(() => Files.SaveBpmn("locked.bpmn", Xml, first.Revision));
     }
+    [Fact] public void NativeNormalizationIsReportedNotHidden()
+    {
+        var modified = Xml.Replace("id=\"task\"", "id=\"new-task\"").Replace("Original", "Changed");
+        var findings = BpmnFidelity.Compare(Xml, modified);
+        Assert.Contains(findings, f => f.Code == "identifiers_changed");
+        Assert.Contains(findings, f => f.Code == "names_changed");
+        Assert.Contains(findings, f => f.Code == "extensions_require_review");
+    }
+    [Fact] public void EncodingDeclarationMatchesPersistedBytes()
+    {
+        var saved = Files.SaveBpmn("encoding.bpmn", "<?xml version=\"1.0\" encoding=\"utf-16\"?>" + Xml);
+        var doc = XDocument.Load(saved.Path);
+        Assert.Equal("utf-8", doc.Declaration!.Encoding);
+    }
+    [Fact] public void ConcurrentWritersCannotBothCommitTheSameRevision()
+    {
+        var first = Files.SaveBpmn("concurrent.bpmn", Xml);
+        int succeeded = 0, rejected = 0;
+        Parallel.For(0, 8, i =>
+        {
+            try
+            {
+                Files.SaveBpmn("concurrent.bpmn", BpmnDocument.Apply(Xml, [new("task", "name", "Writer " + i)]), first.Revision);
+                Interlocked.Increment(ref succeeded);
+            }
+            catch (IOException) { Interlocked.Increment(ref rejected); }
+        });
+        Assert.Equal(1, succeeded);
+        Assert.Equal(7, rejected);
+    }
     public void Dispose()
     {
         // Delete only the test-owned directory after validating its known parent and prefix.

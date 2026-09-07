@@ -37,15 +37,22 @@ public sealed class WorkerClient(ServerOptions options)
         };
         start.ArgumentList.Add(Path.GetFullPath(options.Installation)); start.ArgumentList.Add(directory); start.ArgumentList.Add(pipeName);
         start.Environment["TEMP"] = directory; start.Environment["TMP"] = directory;
+        using var job = new WorkerJob();
         using var process = Process.Start(start) ?? throw new IOException("Worker could not start.");
         var errors = new StringBuilder();
         var stdout = new StringBuilder();
+        var desktopSamples = new List<WorkerDesktopObservation.Sample>();
         process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (errors) errors.AppendLine(e.Data); };
         process.OutputDataReceived += (_, e) => { if (e.Data != null) lock (stdout) stdout.AppendLine(e.Data); };
         process.BeginErrorReadLine(); process.BeginOutputReadLine();
         report("worker_started");
         try
         {
+            // Assign before sending native work; the worker is only waiting for its pipe at this point.
+            job.Assign(process);
+            desktopSamples.Add(WorkerDesktopObservation.Read(process.Id));
+            File.WriteAllText(Path.Combine(directory, "worker-process.json"), System.Text.Json.JsonSerializer.Serialize(new
+            { pid = process.Id, startedAt = process.StartTime.ToUniversalTime(), createNoWindow = true, jobObject = true }));
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             using var handshake = CancellationTokenSource.CreateLinkedTokenSource(token);
             handshake.CancelAfter(TimeSpan.FromSeconds(30)); // Connection only, never the operation duration.
@@ -64,6 +71,10 @@ public sealed class WorkerClient(ServerOptions options)
                 if (invocation.IsCompleted) break;
                 process.Refresh();
                 if (process.HasExited) throw new IOException("Worker exited before returning a result.");
+                var desktop = WorkerDesktopObservation.Read(process.Id);
+                desktopSamples.Add(desktop);
+                if (desktop.VisibleWindow || desktop.OwnsForeground)
+                    throw new InvalidOperationException("Native worker unexpectedly exposed a visible window or acquired foreground; diagnostic stopped.");
                 TimeSpan cpu = process.TotalProcessorTime;
                 int length; lock (errors) length = errors.Length;
                 if (cpu > previousCpu || length != previousLogLength)
@@ -84,6 +95,11 @@ public sealed class WorkerClient(ServerOptions options)
                 { process.Kill(entireProcessTree: true); await process.WaitForExitAsync(); }
             }
             process.WaitForExit();
+            File.WriteAllText(Path.Combine(directory, "worker-exit.json"), System.Text.Json.JsonSerializer.Serialize(new
+            { pid = process.Id, exited = process.HasExited, exitCode = process.ExitCode }));
+            File.WriteAllText(Path.Combine(directory, "desktop-observation.json"), System.Text.Json.JsonSerializer.Serialize(new
+            { samples = desktopSamples.Count, visibleWindowObserved = desktopSamples.Any(s => s.VisibleWindow),
+                workerForegroundObserved = desktopSamples.Any(s => s.OwnsForeground), method = "read_only_periodic_owned_pid_observation_not_continuous_proof" }));
             lock (errors) File.WriteAllText(Path.Combine(directory, "worker.stderr.log"), errors.ToString());
             lock (stdout) File.WriteAllText(Path.Combine(directory, "worker.stdout.log"), stdout.ToString());
         }
