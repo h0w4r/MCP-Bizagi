@@ -54,6 +54,22 @@ discovered in the sibling `worker/` directory unless explicitly overridden.
 Set `MCP_BIZAGI_ROOT` and opt into native diagnostics as described in
 [configuration](configuration.md).
 
+## Additional native acceptance families
+
+Run the focused clients against the same extracted package, using a reviewed
+native file with a task and incoming flow for the mutation test:
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --mutations-only --input C:/Processes/example.bpm
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --palette-only --input C:/Processes/example.bpm
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --publication-only --input C:/Processes/example.bpm
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --expanded-render-only
+```
+
+For a separately reviewed PDF downsampling test, add `--allow-image-resampling`
+to publication acceptance. This is explicit fidelity acceptance, not an automatic
+retry or a claim of pixel equivalence. Review generated document layout separately.
+
 ## Public CI boundary
 
 GitHub-hosted Windows CI restores, builds, runs unit tests, and executes the real

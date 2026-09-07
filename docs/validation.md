@@ -76,6 +76,41 @@ Transcript SHA-256: `6dff868d7dfb57315089d07cb7b8dfe62c05f5a242d629cdc979a30f569
 
 The 150 unit tests also passed after final formatting and rebuilding, with zero
 warnings/errors. Unit results remain separate from this native MCP circuit.
+## Extracted release package acceptance
+
+The **0.3.0-alpha.1** ZIP was built from clean source commit
+`80ef6ecc0c89529aa6b0337481f041df190045d9`. All **309** manifest entries matched
+before and after acceptance; **60** runtime dependencies have collected notices.
+The ZIP contains no Bizagi assemblies, native operator files or private evidence.
+
+ZIP SHA-256: `c8406f1d77bebfbb827cc21ddc99d3092ff3b03a4eec65d8a9528a4e528c7b11`.
+Size: **6,450,312 bytes**.
+
+All six circuits below ran the **extracted distribution**, not development host
+or worker binaries. The client used the official MCP SDK and actual stdio tools.
+
+| Packaged circuit | Transcript SHA-256 |
+| --- | --- |
+| Full native regression and recovery | `eeb677ea891e0f84ff8712d3034fb7a4b584a477b335fc41f0f6f0704468d5cb` |
+| Structural edits, real failure and recovery | `5307b2cde38b2457b5c915d4d0b0dce4d7d766e0ce7b3cda99f4ede29eb92c67` |
+| 22-type creation/deletion | `6b93e9c4aaba3f4ea6005b6d546e94c1e8793948d57f013721104055146451f3` |
+| Basic Excel/Word/PDF | `683ffaba234ef87572f66dc769a04d3460071e22724f48b3a66dd146edd6736f` |
+| Expanded import, all-level SVG and PDF | `13e00b37c39797c90a7fdb80991a3262eafae0eb2cfcb0018f764ce0a0d43375` |
+| Multi-diagram Excel/Word/PDF with explicit PDF resampling | `fe52a4b880e4f2f8b8504f3b1ae651e3fabd583974cbc4822fefd37a57549b7f` |
+
+There were **49** owned-worker desktop-observation records and **979** samples;
+none observed a visible owned window or owned foreground process. These are
+sampled observations, not continuous desktop traces. The acceptance client also
+verified owned-worker exit, source preservation and fresh-reader results in the
+applicable circuits. Expected failures remained failures and were followed by
+real recovery operations rather than simulated success.
+
+[Public CI for the source commit](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34102958821)
+passed restore, build, all 150 unit tests and the real MCP XML circuit. Public CI
+does not contain Bizagi and is separate from the local native package evidence.
+
+This record was added after building the immutable package. Its source commit
+and packaged documentation remain exactly those identified above.
 ## Full automation remains open
 
 - Native container creation/reparenting/deletion, the remaining BPMN categories,
