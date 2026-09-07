@@ -92,6 +92,174 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--expanded-render-only"))
+    {
+        if (!native) throw new ArgumentException("Expanded rendering acceptance requires --native.");
+        File.Copy(Path.Combine(repo, "examples", "collaboration-nested.bpmn"), Path.Combine(run, "nested.bpmn"));
+        var imported = await Call("native_roundtrip", new() { ["path"] = "nested.bpmn", ["modelName"] = "Expanded subprocess acceptance" });
+        string importId = imported.GetProperty("OperationId").GetString()!;
+        var result = (await WaitOperation(importId)).GetProperty("Result"); VerifyWorkerExit(importId);
+        var elements = result.GetProperty("reopened").GetProperty("Elements").EnumerateArray().ToArray();
+        var expanded = elements.Where(e => e.GetProperty("Kind").GetString() == "SubProcess").ToArray();
+        if (expanded.Length != 2 || result.GetProperty("saved").GetProperty("IntegrationAdjustments").GetArrayLength() != 2)
+            throw new InvalidDataException("Expanded import corrections were not recorded for both subprocess levels.");
+        foreach (var element in expanded)
+        {
+            var original = element.GetProperty("Geometry"); var bounds = element.GetProperty("ExpandedGeometry");
+            if (!bounds.GetProperty("Expanded").GetBoolean() || bounds.GetProperty("Width").GetDouble() != original.GetProperty("Width").GetDouble() ||
+                bounds.GetProperty("Height").GetDouble() != original.GetProperty("Height").GetDouble())
+                throw new InvalidDataException("Fresh native readback lost supplied expanded BPMN bounds.");
+        }
+        string nativePath = result.GetProperty("saved").GetProperty("Artifacts")[0].GetString()!;
+        byte[] nativeBytes = File.ReadAllBytes(nativePath);
+        string diagramId = elements.Single(e => e.GetProperty("Kind").GetString() == "Collaboration").GetProperty("Id").GetString()!;
+        var rendered = await Call("native_render_svg", new() { ["path"] = nativePath, ["diagramId"] = diagramId });
+        string renderId = rendered.GetProperty("OperationId").GetString()!;
+        var output = (await WaitOperation(renderId)).GetProperty("Result").GetProperty("result"); VerifyWorkerExit(renderId);
+        var svg = System.Xml.Linq.XDocument.Load(output.GetProperty("Artifacts")[0].GetString()!);
+        var graphical = svg.Descendants().Where(e => e.Attribute("data-element-id") != null).ToLookup(e => e.Attribute("data-element-id")!.Value);
+        // Root-level ID presence alone missed the asynchronous nested-content loss. Require every
+        // graphical corpus element at both expanded levels, and verify the actual rendered rectangles.
+        foreach (var element in elements.Where(e => e.GetProperty("Geometry").ValueKind != JsonValueKind.Null &&
+            e.GetProperty("Kind").GetString() is not "Collaboration" and not "Process" and not "LaneSet" and not "Resource"))
+            if (!graphical.Contains(element.GetProperty("Id").GetString()!)) throw new InvalidDataException("Expanded SVG omitted a native graphical element.");
+        foreach (var element in expanded)
+        {
+            var rect = graphical[element.GetProperty("Id").GetString()!].Single().Descendants().First(e => e.Name.LocalName == "rect");
+            var bounds = element.GetProperty("ExpandedGeometry");
+            if ((double)rect.Attribute("width")! != bounds.GetProperty("Width").GetDouble() || (double)rect.Attribute("height")! != bounds.GetProperty("Height").GetDouble())
+                throw new InvalidDataException("Expanded native renderer changed durable bounds.");
+        }
+        var publication = await Call("native_publish", new() { ["path"] = nativePath, ["format"] = "pdf", ["title"] = "Expanded subprocess acceptance" });
+        string publicationId = publication.GetProperty("OperationId").GetString()!;
+        await WaitOperation(publicationId); VerifyWorkerExit(publicationId);
+        if (!nativeBytes.SequenceEqual(File.ReadAllBytes(nativePath))) throw new InvalidDataException("Rendering or publication changed saved native geometry.");
+        Console.WriteLine("NATIVE_EXPANDED_IMPORT_BOUNDS_NESTED_RENDER_PDF_PASS evidence=" + run);
+        return 0;
+    }
+    if (args.Contains("--palette-only"))
+    {
+        int inputArgument = Array.IndexOf(args, "--input");
+        if (inputArgument < 0 || !native) throw new ArgumentException("--palette-only requires --native and --input <native file>.");
+        string input = Path.Combine(run, "palette-source.bpm"); File.Copy(Path.GetFullPath(args[inputArgument + 1]), input);
+        byte[] original = File.ReadAllBytes(input);
+        var inspection = await Call("native_inspect", new() { ["path"] = input });
+        string inspectId = inspection.GetProperty("OperationId").GetString()!;
+        var opened = (await WaitOperation(inspectId)).GetProperty("Result"); VerifyWorkerExit(inspectId);
+        string parent = opened.GetProperty("result").GetProperty("Elements").EnumerateArray().First(e => e.GetProperty("Kind").GetString() == "Process").GetProperty("Id").GetString()!;
+        // A disconnected palette is an editing/persistence corpus, not a behaviorally valid process claim.
+        string[] types = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask",
+            "NoneStart", "MessageStart", "TimerStart", "NoneEnd", "MessageEnd", "TerminateEnd", "NoneIntermediate", "MessageIntermediate", "TimerIntermediate",
+            "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway"];
+        var mutations = types.Select((type, index) => new
+        {
+            Operation = "create",
+            ElementId = Guid.NewGuid().ToString(),
+            ParentId = parent,
+            ElementType = type,
+            Name = "Palette " + type,
+            Geometry = new { X = 100 + index % 6 * 100, Y = 220 + index / 6 * 100, Width = 50, Height = 50 }
+        }).ToArray();
+        var created = await Call("native_mutate", new() { ["path"] = input, ["expectedRevision"] = opened.GetProperty("sourceRevision").GetString(), ["mutations"] = mutations });
+        string createId = created.GetProperty("OperationId").GetString()!;
+        var result = (await WaitOperation(createId)).GetProperty("Result"); VerifyWorkerExit(createId);
+        var deleted = await Call("native_mutate", new()
+        {
+            ["path"] = result.GetProperty("outputArtifact").GetString(),
+            ["expectedRevision"] = result.GetProperty("outputRevision").GetString(),
+            ["mutations"] = mutations.Select(m => new { Operation = "delete", m.ElementId }).ToArray()
+        });
+        string deleteId = deleted.GetProperty("OperationId").GetString()!;
+        await WaitOperation(deleteId); VerifyWorkerExit(deleteId);
+        if (!original.SequenceEqual(File.ReadAllBytes(input))) throw new InvalidDataException("Palette editing changed the original.");
+        Console.WriteLine("NATIVE_PALETTE_CREATE_DELETE_PASS types=" + types.Length + " evidence=" + run);
+        return 0;
+    }
+    if (args.Contains("--publication-only"))
+    {
+        int inputArgument = Array.IndexOf(args, "--input");
+        if (inputArgument < 0 || !native) throw new ArgumentException("--publication-only requires --native and --input <native file>.");
+        string input = Path.Combine(run, "publication-source.bpm"); File.Copy(Path.GetFullPath(args[inputArgument + 1]), input);
+        byte[] original = File.ReadAllBytes(input);
+        int formatArgument = Array.IndexOf(args, "--format");
+        string[] formats = formatArgument >= 0 ? [args[formatArgument + 1]] : ["excel", "word", "pdf"];
+        await Call("native_publish", new() { ["path"] = input, ["format"] = "unsupported" }, expectError: true);
+        foreach (string format in formats)
+        {
+            var publication = await Call("native_publish", new()
+            {
+                ["path"] = input,
+                ["format"] = format,
+                ["title"] = "Verified process documentation",
+                ["allowImageResampling"] = args.Contains("--allow-image-resampling")
+            });
+            string publicationId = publication.GetProperty("OperationId").GetString()!;
+            var result = (await WaitOperation(publicationId)).GetProperty("Result"); VerifyWorkerExit(publicationId);
+            if (!original.SequenceEqual(File.ReadAllBytes(input)) || result.GetProperty("verifiedNames").GetInt32() == 0)
+                throw new InvalidDataException("Publication did not verify durable names and source preservation.");
+            Console.WriteLine("NATIVE_PUBLICATION_" + format.ToUpperInvariant() + "_PASS evidence=" + run);
+        }
+        return 0;
+    }
+    if (args.Contains("--mutations-only"))
+    {
+        // A real existing archive is copied into a fresh operator workspace; every edit traverses MCP and two workers.
+        int inputArgument = Array.IndexOf(args, "--input");
+        if (inputArgument < 0 || !native) throw new ArgumentException("--mutations-only requires --native and --input <native file>.");
+        string input = Path.Combine(run, "mutation-source.bpm"); File.Copy(Path.GetFullPath(args[inputArgument + 1]), input);
+        byte[] original = File.ReadAllBytes(input);
+        var request = await Call("native_inspect", new() { ["path"] = input });
+        var opened = (await WaitOperation(request.GetProperty("OperationId").GetString()!)).GetProperty("Result");
+        var elements = opened.GetProperty("result").GetProperty("Elements").EnumerateArray().ToArray();
+        var mutationTask = elements.First(e => e.GetProperty("Kind").GetString()!.EndsWith("Task"));
+        string taskId = mutationTask.GetProperty("Id").GetString()!, parentId = mutationTask.GetProperty("ParentId").GetString()!;
+        var incoming = elements.First(e => e.GetProperty("Kind").GetString() == "SequenceFlow" && e.GetProperty("TargetId").GetString() == taskId);
+        // Reject a real dangling-connection edit and a stale revision, then recover with a valid native batch.
+        var invalid = await Call("native_mutate", new()
+        {
+            ["path"] = input,
+            ["expectedRevision"] = opened.GetProperty("sourceRevision").GetString(),
+            ["mutations"] = new[] { new { Operation = "delete", ElementId = taskId } }
+        });
+        string invalidId = invalid.GetProperty("OperationId").GetString()!;
+        await WaitOperation(invalidId, "failed"); VerifyWorkerExit(invalidId);
+        await Call("native_mutate", new()
+        {
+            ["path"] = input,
+            ["expectedRevision"] = new string('0', 64),
+            ["mutations"] = new[] { new { Operation = "update", ElementId = taskId, Name = "Must not overwrite" } }
+        }, expectError: true);
+        string addedTask = Guid.NewGuid().ToString(), addedFlow = Guid.NewGuid().ToString();
+        object[] mutations = [
+            new { Operation="create", ElementId=addedTask, ParentId=parentId, ElementType="UserTask", Name="Independent review — 東京", Documentation="New review step",
+                Geometry=new { X=170, Y=160, Width=90, Height=50, BackgroundArgb=-1249281, BorderArgb=-16777216 } },
+            new { Operation="update", ElementId=taskId, Name="Reviewed task", Documentation="Policy — 東京", Geometry=new { X=320, Y=90, Width=140, Height=70, BackgroundArgb=-1638505, BorderArgb=-10311914 } },
+            new { Operation="reconnect", ElementId=incoming.GetProperty("Id").GetString(), SourceId=incoming.GetProperty("SourceId").GetString(), TargetId=addedTask,
+                Points=new[] {new {X=150,Y=125},new {X=170,Y=185}} },
+            new { Operation="create", ElementId=addedFlow, ParentId=parentId, ElementType="SequenceFlow", SourceId=addedTask, TargetId=taskId,
+                Points=new[] {new {X=260,Y=185},new {X=320,Y=125}} }
+        ];
+        var edited = await Call("native_mutate", new() { ["path"] = input, ["expectedRevision"] = opened.GetProperty("sourceRevision").GetString(), ["mutations"] = mutations });
+        string editId = edited.GetProperty("OperationId").GetString()!;
+        var outcome = (await WaitOperation(editId)).GetProperty("Result"); VerifyWorkerExit(editId);
+        if (!outcome.GetProperty("fidelity").GetProperty("Preserved").GetBoolean()) throw new InvalidDataException("Native structural fidelity failed.");
+        // Undo structural insertion explicitly: detach/delete the connector before deleting the node.
+        object[] undo = [ new { Operation="delete", ElementId=addedFlow },
+            new {Operation="reconnect", ElementId=incoming.GetProperty("Id").GetString(), SourceId=incoming.GetProperty("SourceId").GetString(), TargetId=taskId,
+                Points=new[] {new {X=150,Y=125},new {X=320,Y=125}} }, new {Operation="delete", ElementId=addedTask} ];
+        var removed = await Call("native_mutate", new()
+        {
+            ["path"] = outcome.GetProperty("outputArtifact").GetString(),
+            ["expectedRevision"] = outcome.GetProperty("outputRevision").GetString(),
+            ["mutations"] = undo
+        });
+        string removeId = removed.GetProperty("OperationId").GetString()!;
+        var removedResult = (await WaitOperation(removeId)).GetProperty("Result"); VerifyWorkerExit(removeId);
+        if (!removedResult.GetProperty("fidelity").GetProperty("Preserved").GetBoolean() || !original.SequenceEqual(File.ReadAllBytes(input)))
+            throw new InvalidDataException("Native deletion fidelity or source preservation failed.");
+        Console.WriteLine("NATIVE_CREATE_GEOMETRY_STYLE_DOCUMENTATION_RECONNECT_DELETE_PASS evidence=" + run);
+        return 0;
+    }
     if (args.Contains("--settings-contention"))
     {
         if (!native) throw new ArgumentException("--settings-contention requires --native.");
@@ -135,13 +303,21 @@ try
     await Call("bpmn_create", new() { ["path"] = "Unicode path/Request.bpmn", ["xml"] = xml });
     var inspected = await Call("bpmn_inspect", new() { ["path"] = "Unicode path/Request.bpmn" });
     string revision = inspected.GetProperty("result").GetProperty("Revision").GetString()!;
-    await Call("bpmn_apply_changes", new() { ["path"] = "Unicode path/Request.bpmn", ["expectedRevision"] = revision,
-        ["changes"] = new[] { new { elementId = "Task_Review", property = "name", value = "Revisión — 東京" } } });
+    await Call("bpmn_apply_changes", new()
+    {
+        ["path"] = "Unicode path/Request.bpmn",
+        ["expectedRevision"] = revision,
+        ["changes"] = new[] { new { elementId = "Task_Review", property = "name", value = "Revisión — 東京" } }
+    });
     var readback = await Call("bpmn_inspect", new() { ["path"] = "Unicode path/Request.bpmn" });
     var task = readback.GetProperty("result").GetProperty("Elements").EnumerateArray().Single(e => e.GetProperty("Id").GetString() == "Task_Review");
     if (task.GetProperty("Name").GetString() != "Revisión — 東京") throw new InvalidDataException("Exact Unicode readback was not observed.");
-    await Call("bpmn_apply_changes", new() { ["path"] = "Unicode path/Request.bpmn", ["expectedRevision"] = revision,
-        ["changes"] = new[] { new { elementId = "Task_Review", property = "name", value = "Must not overwrite" } } }, expectError: true);
+    await Call("bpmn_apply_changes", new()
+    {
+        ["path"] = "Unicode path/Request.bpmn",
+        ["expectedRevision"] = revision,
+        ["changes"] = new[] { new { elementId = "Task_Review", property = "name", value = "Must not overwrite" } }
+    }, expectError: true);
     await Call("bpmn_inspect", new() { ["path"] = "../outside.bpmn" }, expectError: true);
     await Call("bpmn_validate", new() { ["path"] = "Unicode path/Request.bpmn" });
     Console.WriteLine("MCP_XML_E2E_PASS evidence=" + run);
@@ -227,8 +403,12 @@ try
             var multiInspect = await Call("native_inspect", new() { ["path"] = multiFile });
             string multiInspectId = multiInspect.GetProperty("OperationId").GetString()!;
             string multiRevision = (await WaitOperation(multiInspectId)).GetProperty("Result").GetProperty("sourceRevision").GetString()!;
-            var multiEdit = await Call("native_apply_changes", new() { ["path"] = multiFile, ["expectedRevision"] = multiRevision,
-                ["changes"] = new[] { new { elementId = Id(pack), name = "Nested durable edit — 東京" } } });
+            var multiEdit = await Call("native_apply_changes", new()
+            {
+                ["path"] = multiFile,
+                ["expectedRevision"] = multiRevision,
+                ["changes"] = new[] { new { elementId = Id(pack), name = "Nested durable edit — 東京" } }
+            });
             string multiEditId = multiEdit.GetProperty("OperationId").GetString()!;
             var multiEditResult = (await WaitOperation(multiEditId)).GetProperty("Result");
             if (!multiEditResult.GetProperty("fidelity").GetProperty("Preserved").GetBoolean() || multiEditResult.GetProperty("reopened").GetProperty("Diagrams").GetArrayLength() != 2)
@@ -268,8 +448,12 @@ try
             Console.WriteLine("NATIVE_OFFSCREEN_SVG_PASS");
         }
 
-        var invalidEdit = await Call("native_apply_changes", new() { ["path"] = "Unicode path/Existing model.bpm", ["expectedRevision"] = nativeRevision,
-            ["changes"] = new[] { new { elementId = "missing-element", name = "Must fail" } } });
+        var invalidEdit = await Call("native_apply_changes", new()
+        {
+            ["path"] = "Unicode path/Existing model.bpm",
+            ["expectedRevision"] = nativeRevision,
+            ["changes"] = new[] { new { elementId = "missing-element", name = "Must fail" } }
+        });
         string failureId = invalidEdit.GetProperty("OperationId").GetString()!;
         var failed = await WaitOperation(failureId, "failed");
         if (string.IsNullOrWhiteSpace(failed.GetProperty("Error").GetString())) throw new InvalidDataException("Native error was not reported.");

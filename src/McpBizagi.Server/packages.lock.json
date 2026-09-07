@@ -399,7 +399,10 @@
         "type": "Project"
       },
       "mcpbizagi.core": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "McpBizagi.Contracts": "[0.2.0-alpha.1, )"
+        }
       }
     }
   }

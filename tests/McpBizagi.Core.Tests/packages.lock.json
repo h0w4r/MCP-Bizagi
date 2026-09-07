@@ -87,8 +87,14 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "mcpbizagi.core": {
+      "mcpbizagi.contracts": {
         "type": "Project"
+      },
+      "mcpbizagi.core": {
+        "type": "Project",
+        "dependencies": {
+          "McpBizagi.Contracts": "[0.2.0-alpha.1, )"
+        }
       }
     }
   }

@@ -68,6 +68,8 @@ and cleanup stages have separate bounded deadlines.
 ## Explicitly not implemented
 
 No generic AI agent framework, hosted inference dependency, network API, UI
-automation fallback, live unsaved-document synchronization or documentation
-publisher is silently included. Simulation and offscreen rendering use explicit
-experimental tools with separate acceptance boundaries.
+automation fallback or live unsaved-document synchronization is silently included.
+Simulation, offscreen rendering, structural edits and local publication use explicit
+experimental tools with separate acceptance boundaries. Publication retains the
+installed generators and parsers. The Excel adapter excludes the native launcher's
+desktop-opening step while retaining native mapping, generation and persistence.

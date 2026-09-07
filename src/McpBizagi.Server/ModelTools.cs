@@ -14,7 +14,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 {
     private static CallToolResult Result(object data, bool error = false) => new()
     {
-        IsError = error, StructuredContent = JsonSerializer.SerializeToElement(data),
+        IsError = error,
+        StructuredContent = JsonSerializer.SerializeToElement(data),
         Content = [new TextContentBlock { Text = JsonSerializer.Serialize(data) }]
     };
     private static CallToolResult Guard(Func<object> action, bool xml = false)
@@ -26,20 +27,29 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     [McpServerTool(Name = "capabilities_get"), Description("Inspect installation and implemented capability boundaries. Availability is not operational accreditation.")]
     public CallToolResult Capabilities()
     {
-        string? version = options.Installation is {} p && File.Exists(Path.Combine(p, "BizagiModeler.exe"))
+        string? version = options.Installation is { } p && File.Exists(Path.Combine(p, "BizagiModeler.exe"))
             ? FileVersionInfo.GetVersionInfo(Path.Combine(p, "BizagiModeler.exe")).FileVersion : null;
-        return Result(new { ok = true, protocol = 1, nativeVersion = version, experimentalNativeEnabled = options.ExperimentalNative,
+        return Result(new
+        {
+            ok = true,
+            protocol = 1,
+            nativeVersion = version,
+            experimentalNativeEnabled = options.ExperimentalNative,
             nativePrerequisitesAvailable = version == "4.3.0.008" && options.ExperimentalNative && File.Exists(options.Worker),
             capabilities = new[] {
                 new { name = "bpmn_xml_inspect_create_rename_validate", status = "implemented", backend = "standards_xml" },
                 new { name = "bpm_native_import_save_reopen_export", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "bpm_native_graph_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
+                new { name = "native_structural_geometry_documentation_batches", status = "experimental_tested_palette_and_connection_batch_not_all_containers", backend = "bizagi_worker" },
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_simulation", status = "experimental_level_one_locally_verified_other_scenarios_pending", backend = "bizagi_worker" },
                 new { name = "native_offscreen_svg_png", status = "experimental_basic_diagram_locally_verified_rich_visual_fidelity_pending", backend = "bizagi_worker" },
-                new { name = "native_documentation", status = "investigated_not_implemented", backend = "bizagi_worker" }
-            }, operationalEvidence = "Run acceptance in this environment; a declaration never overrides an actual failure.", foregroundAutomation = false });
+                new { name = "native_documentation", status = "experimental_excel_word_pdf_verified_on_tested_inputs_not_all_publication_formats", backend = "bizagi_worker" }
+            },
+            operationalEvidence = "Run acceptance in this environment; a declaration never overrides an actual failure.",
+            foregroundAutomation = false
+        });
     }
 
     [McpServerTool(Name = "bpmn_inspect"), Description("Read BPMN XML element identities, nesting and SHA-256 revision. Does not invoke Bizagi.")]
@@ -68,6 +78,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     [McpServerTool(Name = "native_inspect"), Description("Read an existing unencrypted .bpm through a private native copy, returning native IDs, containment, geometry, documentation, scenarios and source revision. Poll operation_get.")]
     public CallToolResult InspectNative(string path) => Guard(() => native.Inspect(path));
 
+    [McpServerTool(Name = "native_mutate"), Description("Apply explicit create/update/delete/reconnect mutations to a native copy. Requires native IDs and revision, verifies fresh-worker readback and rejects unexplained container changes. Does not overwrite the input.")]
+    public CallToolResult MutateNative(string path, string expectedRevision, NativeMutation[] mutations) => Guard(() => native.Mutate(path, expectedRevision, mutations));
+
     [McpServerTool(Name = "native_apply_changes"), Description("Native name-change batch using native IDs and expected source revision. Writes ONLY a new artifact, verifies edits in a fresh worker, and rejects unexplained whole-container differences. Broad rich-model coverage remains experimental. Poll operation_get.")]
     public CallToolResult ApplyNative(string path, string expectedRevision, NativeNameChange[] changes) => Guard(() => native.ApplyNames(path, expectedRevision, changes));
 
@@ -82,7 +95,11 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
         Guard(() => native.Analyze(path, "simulate", diagramId, scenarioId, simulationLevel));
 
     [McpServerTool(Name = "native_render_svg"), Description("Experimental native offscreen SVG rendering of one diagram, using the installed renderer without clicks or foreground control. Produces a private operation artifact; failures remain explicit.")]
-    public CallToolResult RenderNative(string path, string diagramId) => Guard(() => native.Analyze(path, "render_svg", diagramId));
+    public CallToolResult RenderNative(string path, string diagramId, string subProcessId = "") => Guard(() => native.Analyze(path, "render_svg", diagramId, subProcessId: subProcessId));
+
+    [McpServerTool(Name = "native_publish"), Description("Publish local native model documentation to excel, word or pdf using installed generators, without opening a desktop application. Select native diagram IDs or omit for all. Fresh-worker text/image readback; source unchanged. Poll operation_get.")]
+    public CallToolResult PublishNative(string path, string format, string[]? diagramIds = null, string title = "Process documentation", bool allowImageResampling = false) =>
+        Guard(() => native.Publish(path, format, diagramIds, title, allowImageResampling));
 
     [McpServerTool(Name = "native_compare", ReadOnly = true, Destructive = false, OpenWorld = false), Description("Compare entire unencrypted native containers without converting them to BPMN. Includes nested diagram XML and binary attachments; reports unknown changes instead of silently discarding them.")]
     public CallToolResult CompareNative(string path, string otherPath, NativeNameChange[]? expectedNames = null) => Guard(() =>

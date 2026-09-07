@@ -20,6 +20,12 @@ public static class NativeFidelity
     public static NativeFidelityReport Compare(byte[] before, byte[] after, IReadOnlyList<ExpectedNativeName>? names = null)
     {
         var left = NativeArchive.ReadEntries(before); var right = NativeArchive.ReadEntries(after);
+        return CompareEntries(left, right, names);
+    }
+
+    internal static NativeFidelityReport CompareEntries(IReadOnlyDictionary<string, byte[]> left, IReadOnlyDictionary<string, byte[]> right,
+        IReadOnlyList<ExpectedNativeName>? names = null)
+    {
         var differences = new List<NativeDifference>();
         int checkedAtoms = 0;
         foreach (string entry in left.Keys.Union(right.Keys, StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal))
@@ -65,8 +71,12 @@ public static class NativeFidelity
     private static Dictionary<string, Atom> Atoms(byte[] bytes, string entry)
     {
         using var stream = new MemoryStream(bytes, writable: false);
-        using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null,
-            MaxCharactersInDocument = BpmnDocument.MaxXmlCharacters });
+        using var reader = XmlReader.Create(stream, new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            MaxCharactersInDocument = BpmnDocument.MaxXmlCharacters
+        });
         var doc = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
         var result = new Dictionary<string, Atom>(StringComparer.Ordinal);
         if (doc.Root == null) throw new InvalidDataException("Native XML has no document element.");

@@ -69,16 +69,22 @@ public sealed class EngineService
                 // Record the actual loaded vendor modules, not merely files discovered on disk.
                 string prefix = Path.GetFullPath(installation).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 var modules = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic && a.Location.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    .Select(a => { using var hash = SHA256.Create(); using var file = File.OpenRead(a.Location); return new
-                    { name = Path.GetFileName(a.Location), version = a.GetName().Version?.ToString(), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() }; }).ToArray();
+                    .Select(a =>
+                    {
+                        using var hash = SHA256.Create(); using var file = File.OpenRead(a.Location); return new
+                        { name = Path.GetFileName(a.Location), version = a.GetName().Version?.ToString(), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() };
+                    }).ToArray();
                 File.WriteAllText(Path.Combine(root, "loaded-engine-modules.json"), JsonConvert.SerializeObject(new
                 { architecture = IntPtr.Size == 8 ? "x64" : "x86", clr = Environment.Version.ToString(), apartment = Thread.CurrentThread.GetApartmentState().ToString(), modules }, Formatting.Indented));
-                if (request.Action == "render_svg")
+                if (request.Action == "render_svg" || (request.Action == "publish" && request.PublicationFormat != "excel"))
                 {
                     // Inventory the installed renderer assets separately from actually loaded managed modules.
                     var assets = Directory.GetFiles(Path.Combine(installation, "ModelerProcessEditor", "output"))
-                        .Select(path => { using var hash = SHA256.Create(); using var file = File.OpenRead(path); return new
-                        { name = Path.GetFileName(path), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() }; }).ToArray();
+                        .Select(path =>
+                        {
+                            using var hash = SHA256.Create(); using var file = File.OpenRead(path); return new
+                            { name = Path.GetFileName(path), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() };
+                        }).ToArray();
                     File.WriteAllText(Path.Combine(root, "renderer-assets.json"), JsonConvert.SerializeObject(new
                     { scope = "installed_renderer_inventory_not_network_response_capture", assets }, Formatting.Indented));
                 }
@@ -91,9 +97,14 @@ public sealed class EngineService
                 Console.Error.WriteLine(error);
                 Directory.CreateDirectory(root);
                 File.WriteAllText(Path.Combine(root, "native-error.txt"), error.ToString());
-                return new EngineReply { OperationId = request.OperationId, Success = false,
-                    Code = "native_engine_error", Message = error.GetType().Name + ": " + error.Message,
-                    EngineVersion = engine?.Version ?? "unknown" };
+                return new EngineReply
+                {
+                    OperationId = request.OperationId,
+                    Success = false,
+                    Code = "native_engine_error",
+                    Message = error.GetType().Name + ": " + error.Message,
+                    EngineVersion = engine?.Version ?? "unknown"
+                };
             }
         }
     }

@@ -15,10 +15,10 @@ This ledger distinguishes implementation from operational accreditation.
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |
 | Host death and state ownership | Locally verified | Actual host termination, Job Object worker cleanup, interrupted journal, restart, competing-host rejection |
 | Native validator | Real invocation locally verified | Exhaustive invalid-model categories still pending |
-| Native documentation | Investigated only | Real publisher and readable output |
+| Native documentation | Excel/Word/PDF locally verified on tested inputs | Installed generators, separate reader, actual text and image evidence; Web/other formats, custom templates and rich attachments remain open |
 | Native simulation | Level-one default locally verified | 1,000 completed instances; configured resources, calendars, advanced levels and what-if remain open |
-| Native offscreen SVG/PNG | Basic diagram locally verified | Explicit script checks, visible graphical IDs and transparent corners; rich visual corpus still pending |
-| Structural/geometry/style edits | Not implemented | Create/delete/reconnect/layout and preserve unrelated native content |
+| Native offscreen SVG/PNG | Basic and two-level expanded corpus locally verified | Native child completion, all-level graphical IDs, expanded bounds and transparent corners; rich visual corpus still pending |
+| Structural/geometry/style edits | Partial native acceptance | 22 task/event/gateway variants created/deleted; UserTask/SequenceFlow insertion, reconnection, bounds, colors, descriptions verified; containers, rich styles and layout remain open |
 | Extended attributes/attachments/resources editing | Not implemented | Native mutation/persistence/readback with untouched-content evidence |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |

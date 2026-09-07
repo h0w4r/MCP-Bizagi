@@ -28,11 +28,13 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_roundtrip` | `path`; optional `modelName`, `additionalPaths` | Import one BPMN file per native diagram, persist `.bpm`, reopen/export, report per-input bounded fidelity findings |
 | `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
 | `native_apply_changes` | `path`, `expectedRevision`, `changes` | Native name batch to a new copy, then fresh-reader verification |
+| `native_mutate` | `path`, `expectedRevision`, `mutations` | Ordered native create/update/delete/reconnect batch, fresh-reader and whole-container gates; [contract](native-editing.md) |
 | `native_save_copy` | `path`, `expectedRevision` | No-op native load/save/reopen with whole-container fidelity gate |
 | `native_compare` | `path`, `otherPath`; optional `expectedNames` | Immediate whole-container comparison; returns `NativeFidelityReport`, not an operation ID |
 | `native_validate` | `path` | Actual vendor validation messages with severity and native identities |
 | `native_simulate` | `path`, `diagramId`; optional `scenarioId`, `simulationLevel` | Actual simulation, real progress, input/results XML; level-one default scenario locally verified |
-| `native_render_svg` | `path`, `diagramId` | Installed offscreen renderer to native SVG and transparent PNG; basic-diagram scope |
+| `native_render_svg` | `path`, `diagramId`; optional `subProcessId` | Installed offscreen renderer for a diagram or nested subprocess surface to native SVG/transparent PNG |
+| `native_publish` | `path`, `format`; optional `diagramIds`, `title`, `allowImageResampling` | Native Excel/Word/PDF documentation and separate readback; [contract and fidelity](native-publication.md) |
 | `operation_get` | `operationId` | Durable state, latest phase, results or actual error |
 | `operation_cancel` | `operationId` | Cancel owned work and clean up its worker |
 

@@ -114,6 +114,13 @@ public sealed partial class NativeEngine
         object model = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.DiagramModel"));
         Set(model, "Name", request.ModelName);
         var reply = new EngineReply { OperationId = request.OperationId, EngineVersion = Version };
+        if (request.Action == "publication_read")
+        {
+            reply.Publication = ReadPublication(request, progress);
+            reply.Success = true;
+            reply.Code = "publication_read_completed";
+            return reply;
+        }
         if (request.Action == "probe")
         {
             progress("native_resolve_importer");
@@ -125,7 +132,7 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "import_save", "read_export", "edit_save", "inspect", "validate", "simulate", "render_svg" }.Contains(request.Action))
+        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "inspect", "validate", "simulate", "render_svg", "publish" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -133,11 +140,28 @@ public sealed partial class NativeEngine
         {
             progress("native_import_bpmn");
             object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
+            var adjustments = new List<string>();
             foreach (string input in request.InputPaths.Length > 0 ? request.InputPaths : new[] { request.InputPath })
             {
                 object diagram = Call(interop, "Import", input, model)!;
+                // The 4.3 importer copies BPMN DI bounds into Size, then unconditionally sets
+                // ExpandedSize to Size * 3. For an already expanded DI shape, those supplied bounds
+                // describe the expanded shape itself. Correct only newly imported native objects;
+                // rendering or opening an existing .bpm never changes its saved dimensions.
+                foreach (var entry in Visit(diagram, "", "", new HashSet<string>(StringComparer.Ordinal)))
+                {
+                    if (entry.Value.GetType().Name is not "SubProcess" and not "CallActivity") continue;
+                    object graphics = Get(entry.Value, "GraphicalProperties");
+                    if (!(bool)Get(graphics, "Expanded")) continue;
+                    float width = (float)Get(graphics, "Width"), height = (float)Get(graphics, "Height");
+                    if (float.IsNaN(width) || float.IsInfinity(width) || float.IsNaN(height) || float.IsInfinity(height) || width <= 0 || height <= 0)
+                        throw new InvalidDataException("Expanded BPMN DI bounds must be finite and positive.");
+                    Set(graphics, "ExpandedSize", new System.Drawing.SizeF(width, height));
+                    adjustments.Add("expanded_bpmn_di_bounds_preserved:" + Text(entry.Value, "Id"));
+                }
                 Call(Get(model, "Diagrams"), "Add", diagram);
             }
+            reply.IntegrationAdjustments = adjustments.ToArray();
             Set(model, "Path", request.OutputPath);
             progress("native_persist_bpm");
             Call(persistence, "Persist", model);
@@ -153,8 +177,10 @@ public sealed partial class NativeEngine
             if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
             if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
-            if (request.Action == "edit_save")
+            if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
+            if (request.Action is "edit_save" or "mutate_save")
             {
+                if (request.Action == "mutate_save") Mutate(model, request.Mutations, progress);
                 progress("native_edit_names");
                 var indexed = Graph(model).ToLookup(e => Get(e.Value, "Id").ToString());
                 // Validate the entire batch before mutating any native object.

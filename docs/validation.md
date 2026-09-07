@@ -1,4 +1,100 @@
-# Verification baseline — 0.2.0-alpha.1
+# Verification baseline — 0.3.0-alpha.1
+
+Real local acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
+The source contains 18 MCP tools; the checks below invoked the actual tools and
+native worker, not implementation methods or mock engine results.
+
+## New native circuits
+
+| Circuit | Observed result |
+| --- | --- |
+| Unit suite | 150 passed, zero failures/skips; separate from native acceptance |
+| Native structural batch | UserTask and SequenceFlow creation, existing flow reconnection, bounds/colors/descriptions, independent readback and whole-container proof |
+| Native deletion | Inserted connection/node removed in a subsequent revision; original archive unchanged |
+| Native palette | 22 task/event/gateway types created, persisted, reopened and deleted; every requested native type/parent verified |
+| Basic native publication | Excel, Word and PDF; documented Unicode tasks; separate native parser worker; source unchanged |
+| Multi-diagram publication | Two diagrams and two nested subprocess levels; six Excel sheets, seven-page Word/PDF documents |
+| Native document images | Four generated surfaces in the multi-diagram document: two diagrams and two embedded subprocesses |
+| PDF image fidelity | Large surfaces downsampled by the native persister; strict mode rejected them; explicit acceptance recorded dimensions and resampling warnings |
+
+The basic four-page native PDF was independently rasterized and visually reviewed.
+That review is not a claim about all layouts, all corpus files or visual matching
+inside the interactive Modeler application. Generated files can contain operator
+identity metadata and remain private.
+
+The first seven-page nested PDF exposed two real integration defects: an
+asynchronous child render was captured too early, and the native BPMN importer
+tripled dimensions even for already expanded DI shapes. Both failures were kept
+as evidence rather than accepted as visual success.
+
+The corrected route composes native render surfaces bottom-up and waits for each
+surface to finish. New imports preserve expanded DI bounds, record the correction
+in `EngineReply.IntegrationAdjustments`, and verify `NativeElement.ExpandedGeometry`
+after native persistence and fresh-worker loading. Existing native archives are
+never silently resized. The dedicated nested acceptance checks all graphical IDs
+at both levels and the actual SVG rectangle dimensions, then publishes PDF through
+MCP. Independent rasterization of that six-page PDF confirmed that the oversized
+subprocess overlap was removed. The installed template still leaves a diagram
+heading on a separate sparse page; document pagination and independent in-Modeler
+visual equivalence remain open. This is not a blanket visual-layout accreditation.
+
+## Traceable source evidence
+
+| Circuit | Transcript SHA-256 |
+| --- | --- |
+| Structural batch and deletion | `373d91544c298fd7f4e5d3919a75255efb4672ea62b831fcdd5088ce25703ba5` |
+| 22-type palette | `8d6cb28ee8052a4a65c3b67e0247278381d4e657f848d25a235b91b995141fc0` |
+| Basic publication with image dimensions | `60976acabee2b710e1a67599e17d01bc08792345a9b1f3205f97085f7d47a092` |
+| Multi-diagram/nested publication | `38f8fe5192fd91991d4673400934d89fed593915413741a11c3305012d15d152` |
+| Structural real failure, stale revision and recovery | `fe1e97e0702ae0b13a034aba383fffc6cf427a65b6f4f87cb70da52a4d0558c8` |
+| Corrected expanded import, all-level render and PDF | `2daa0cf83b833376553fc5a15383ab5c7f92889c89d8879c4c9c6916d41a88a8` |
+
+Structural creation/edit operation: `4923ad1023e249eda86432ee84eacfdb`;
+subsequent deletion: `dc7f8b6f966b449da89266a89b114390`.
+Palette creation/deletion: `5ad61458275f4cb0859ce56404f2d620` and
+`8127b572a489449faef26d40edb82084`.
+Multi-diagram publication operations: `81e390a1df0f4c968423b877377ab306`,
+`84abf0cc0d594537b4dd807eec0f039c`, `8876781f7e084a41a4863305c560ef98`.
+Corrected expanded import: `95bedf4241904bb6a0cc7620ce224b17`;
+render: `07a3a2f9f5004bfd89b52b0155f8e68d`;
+PDF: `39bdb1b8321742d199a5c7e1b7360be3`.
+
+Each successful native writer was followed by a separate reader. Operation
+directories retain native module hashes, phases, process exit records, sampled
+desktop independence, requests and readback. Native diagrams and proprietary
+research files are not included in public evidence.
+
+## Final source regression
+
+After the expanded rendering corrections, the full source acceptance was rerun:
+MCP XML, native roundtrip, batch names, no-op fidelity, multi-diagram/nested edits,
+validation, 1,000-instance simulation, offscreen rendering, real engine failures,
+active cancellation/recovery, cross-state native settings contention, host death,
+Job Object cleanup, journal restart and exclusive state ownership all passed.
+
+Transcript SHA-256: `6dff868d7dfb57315089d07cb7b8dfe62c05f5a242d629cdc979a30f569959ba`.
+
+The 150 unit tests also passed after final formatting and rebuilding, with zero
+warnings/errors. Unit results remain separate from this native MCP circuit.
+## Full automation remains open
+
+- Native container creation/reparenting/deletion, the remaining BPMN categories,
+  full style/layout semantics and independent Modeler visual compatibility.
+- Native extended-attribute, attachment and resource editing, plus broad
+  unknown-content preservation on a rich real-file corpus.
+- Configured simulation levels 2–4, scenarios, calendars, resources and what-if.
+- Additional publication/interchange formats, custom templates, selection/filter
+  options and rich document attachment workflows.
+- In-flight persistence faults, all commit/recovery boundaries, independent
+  missing-dependency/new-version installations, offline rendering and live unsaved sessions.
+
+These are missing capabilities or unaccredited gates, not features that a green
+build or unit suite can declare complete. This release does **not** close the
+full Modeler automation objective. See the [capability ledger](capabilities.md).
+
+---
+
+# Historical verification baseline — 0.2.0-alpha.1
 
 This latest section records real local execution on **2026-09-07 UTC** against
 **Bizagi Modeler 4.3.0.008**. The earlier baseline below is historical, not the

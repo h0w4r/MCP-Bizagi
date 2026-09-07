@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0-alpha.1
+
+- Add `native_mutate`: explicit create/update/delete/reconnect batches with native identities and revision checks.
+- Verify native bounds, colors, descriptions, endpoints and waypoints after fresh-worker readback.
+- Gate structural edits using an explicit mutation projection plus the existing whole-container comparator.
+- Exercise creation and deletion of 22 native task/event/gateway variants through a real MCP client.
+- Add Excel, Word and PDF publication using the installed generators and separate document-reader workers.
+- Exclude Excel's desktop-opening step; do not launch Office or a document viewer.
+- Add explicit publication titles, selection, image evidence and opt-in warnings for native PDF downsampling.
+- Render nested subprocess surfaces programmatically and reuse the native offscreen engine within a publication.
+- Wait for expanded children before composing parent SVGs; verify nested graphical IDs and dimensions through MCP.
+- Preserve supplied expanded BPMN DI bounds on new native imports instead of accepting the importer's threefold scaling; record integration adjustments and expose separate expanded geometry.
+- Expand unit tests for edit-plan validation, unknown-content rejection and publication image matching.
+- Keep container editing, extended-attribute/attachment/resource editing, advanced simulation, additional publication formats and full Modeler automation open.
+
 ## 0.2.0-alpha.1
 
 - Add whole-native-container comparison and a rejection gate for unexplained changes.

@@ -36,15 +36,49 @@ public sealed partial class NativeEngine
     {
         object element = entry.Value;
         NativeGeometry? geometry = null;
+        NativeGeometry? expandedGeometry = null;
         if (Optional(element, "GraphicalProperties") is object graphics)
         {
             double Number(string name) => Convert.ToDouble(Optional(graphics, name), CultureInfo.InvariantCulture);
             int? Color(string name) => Optional(graphics, name) is object color ? (int?)Call(color, "ToArgb") : null;
-            geometry = new NativeGeometry { X = Number("X"), Y = Number("Y"), Width = Number("Width"), Height = Number("Height"),
-                Expanded = (bool)Get(graphics, "Expanded"), BackgroundArgb = Color("BackgroundColor"), BorderArgb = Color("BorderColor") };
+            geometry = new NativeGeometry
+            {
+                X = Number("X"),
+                Y = Number("Y"),
+                Width = Number("Width"),
+                Height = Number("Height"),
+                Expanded = (bool)Get(graphics, "Expanded"),
+                BackgroundArgb = Color("BackgroundColor"),
+                BorderArgb = Color("BorderColor")
+            };
+            if (geometry.Expanded) expandedGeometry = new NativeGeometry
+            {
+                X = geometry.X,
+                Y = geometry.Y,
+                Width = Number("ExpandedWidth"),
+                Height = Number("ExpandedHeight"),
+                Expanded = true,
+                BackgroundArgb = geometry.BackgroundArgb,
+                BorderArgb = geometry.BorderArgb
+            };
         }
-        return new NativeElement { Id = Text(element, "Id"), Kind = element.GetType().Name, Name = Text(element, "DisplayName"),
-            ParentId = entry.ParentId, DiagramId = entry.DiagramId, Documentation = Text(element, "Documentation"), Geometry = geometry,
-            SourceRef = Text(element, "SourceRef"), TargetRef = Text(element, "TargetRef") };
+        return new NativeElement
+        {
+            Id = Text(element, "Id"),
+            Kind = element.GetType().Name,
+            ElementType = Text(element, "ElementType"),
+            Name = Text(element, "DisplayName"),
+            ParentId = entry.ParentId,
+            DiagramId = entry.DiagramId,
+            Documentation = Text(element, "Documentation"),
+            Geometry = geometry,
+            ExpandedGeometry = expandedGeometry,
+            SourceRef = Text(element, "SourceRef"),
+            TargetRef = Text(element, "TargetRef"),
+            SourceId = Optional(element, "Source") is object source ? Text(source, "Id") : "",
+            TargetId = Optional(element, "Target") is object target ? Text(target, "Id") : "",
+            Points = Optional(element, "Points") is IEnumerable points ? points.Cast<object>().Select(p => new NativePoint
+            { X = Convert.ToDouble(Get(p, "X")), Y = Convert.ToDouble(Get(p, "Y")) }).ToArray() : Array.Empty<NativePoint>()
+        };
     }
 }

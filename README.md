@@ -8,7 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.2.0--alpha.1-orange)](Directory.Build.props)
+[![Source version](https://img.shields.io/badge/source-0.3.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -19,7 +19,7 @@ foreground-window automation, or redistributing Bizagi binaries.
 
 </div>
 
-> **Experimental foundation, not full Modeler automation yet.**
+> **Experimental native editing and publishing—not full Modeler automation yet.**
 > BPMN XML tools are implemented. Native operations are opt-in diagnostics;
 > resolving internal services is not evidence of complete `.bpm` support.
 > See the [capability ledger](docs/capabilities.md) before relying on a feature.
@@ -27,6 +27,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > multi-diagram and nested name edits, whole-container fidelity checks, native
 > validation, a 1,000-instance simulation, offscreen rendering, and crash recovery have run against
 > Modeler 4.3.0.008. [Scope and evidence](docs/validation.md).
+> Native node creation/deletion, connection edits, geometry, colors, descriptions,
+> and Excel/Word/PDF publication now have real MCP acceptance, with separate
+> fidelity boundaries rather than a blanket compatibility claim.
 
 ## Why this project
 
@@ -54,11 +57,12 @@ every operation into a BPMN XML export.
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
 | Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
 | Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback and whole-container fidelity gate; tested nested/multi-diagram inputs |
+| Native structural batches | Opt-in, copy-only | 22 task/event/gateway types tested; create/delete, connection endpoints, bounds, colors and descriptions; [limits](docs/native-editing.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Native simulation | Experimental | Level-one default scenario verified; advanced scenarios remain open |
 | Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
-| Documentation publishing | Investigated, not implemented | No placeholder publisher or fabricated output |
+| Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
 
 The desktop GUI does not need to be controlled by this server. This does **not**
@@ -135,6 +139,12 @@ Try `native_save_copy` for no-op fidelity, `native_validate` for vendor findings
 or `native_simulate` with a native diagram ID. `native_render_svg` produces SVG
 and transparent PNG using the installed offscreen renderer—never desktop clicks.
 See [rendering boundaries](docs/rendering.md) and [native fidelity](docs/native-fidelity.md).
+
+Use `native_mutate` for explicit structural/geometry/documentation batches, and
+`native_publish` for Excel, Word or PDF. Both return operation IDs and retain
+original files. PDF image downsampling is rejected unless explicitly accepted;
+accepted resampling is reported, not hidden. Subprocess surfaces can be rendered
+with `native_render_svg` and its optional `subProcessId`.
 
 <details>
 <summary>Real native render from the acceptance run</summary>
