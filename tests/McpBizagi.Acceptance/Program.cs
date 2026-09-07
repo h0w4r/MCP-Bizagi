@@ -92,6 +92,23 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--commit-only"))
+    {
+        if (!native) throw new ArgumentException("Native commit acceptance requires --native.");
+        int inputArgument = Array.IndexOf(args, "--input");
+        McpClient? restartedCommitClient = null;
+        try
+        {
+            await NativeCommitAcceptance.Run(run, stateRoot, inputArgument >= 0 ? args[inputArgument + 1] : null,
+                (name, input, error) => Call(name, input, error), WaitOperation, VerifyWorkerExit, async () =>
+                {
+                    restartedCommitClient = await McpClient.CreateAsync(NewTransport());
+                    activeClient = restartedCommitClient;
+                });
+        }
+        finally { if (restartedCommitClient != null) await restartedCommitClient.DisposeAsync(); }
+        Console.WriteLine("NATIVE_COMMIT_REPLACEMENT_HOST_INTERRUPTION_RECONCILIATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--model-create-only"))
     {
         if (!native) throw new ArgumentException("Native model creation acceptance requires --native.");

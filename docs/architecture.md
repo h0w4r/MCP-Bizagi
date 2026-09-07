@@ -47,9 +47,18 @@ mutex: an unexpected replacement detected in the backup fails explicitly while
 retaining both versions. This is optimistic concurrency, not a filesystem-wide
 transaction or a defense against hostile code running as the same user.
 
-Native diagnostics are opt-in and cannot overwrite the operator's original model.
+Native editing/analysis are opt-in and artifact-first. Only the separate explicit
+`native_commit` tool adopts native bytes into a workspace destination, requiring
+source and previous-target revisions, native readers and a recoverable backup.
+`WorkspaceFiles.Commit` invokes its durable-intent callback before publication;
+native phase receipts are independent of ordinary operation status. Read-only
+file-outcome reconciliation never replays, deletes or rolls back model content.
+See the [native commit contract](native-commit.md).
+
 Operation state is durable. Server restart marks unfinished work `interrupted`,
-never automatically repeats a potentially completed write.
+never automatically repeats a potentially completed write. Cancellation after
+publication does not mean no side effect; the intent and destination/backup
+observations determine whether a fresh native read can verify the applied file.
 
 ## Concurrency and recovery
 

@@ -1,8 +1,63 @@
 # Verification baselines
 
+## Native adoption and interrupted-write reconciliation — 2026-09-07
+
+Current source exposes **29 MCP tools** and passes **427 unit tests**. A full
+non-incremental Release build completed with no warnings. The new
+`native_commit` and `native_commit_reconcile` tools have real MCP acceptance
+against installed Modeler **4.3.0.008**, using an existing rich attribute/file/image
+corpus and private state outside the workspace.
+
+Run `20260907-143049-af0801` completed the expanded adoption circuit:
+**21 operations** (14 completed, five expected failures, one cancelled and one
+interrupted), with 22 owned-worker observations / 106 periodic samples.
+Transcript SHA-256:
+`ab410d6b851df15412e7d0e5e2bfcc3018fddf532ec73968c4177acc75f6f53a`.
+
+The independent client verified:
+
+- Native source inspection, a native name edit and byte-exact workspace adoption.
+- Unicode/spaced paths, create-if-absent, revision-guarded replacement and an
+  original backup whose full byte hash matches the prior native revision.
+- Separate native readers before publication and from the actual destination.
+- Stale source and destination, absent expected target, omitted replacement
+  revision, locked target, corrupt source, wrong extension and path escape.
+- A real source-file change during native snapshot validation: the commit failed
+  before publication, retained its staged bytes and reconciled `not_applied`.
+- Cancellation after publication while a native destination reader was active:
+  the operation remained cancelled, but reconciliation verified the applied file.
+- Actual host death after publication and before native-readback completion:
+  Job Object child cleanup, interrupted status after restart, and two fresh
+  reconciliations with unchanged destination/backup bytes and timestamps.
+- Later external restoration of old bytes (`ambiguous`), divergent external
+  bytes (`conflict`) and temporarily removed intent evidence (`missing_intent`).
+  No case silently replayed or rolled back a file. Source content stayed intact.
+
+An earlier expanded attempt (`20260907-142758-3d038c`) failed in the harness:
+post-publication cancellation happened before the worker entered the native
+engine, while its verifier required native settings-isolation evidence. The
+successful circuit waits for actual native entry before cancelling that reader;
+it does not waive the isolation or process-exit checks. The failed run remains
+retained privately and is not counted as a pass.
+
+These are process-death and observed native-readback results, not a power-loss,
+network-storage, every persistence-boundary or desktop visual certification.
+See the [write/reconciliation contract](native-commit.md). Full Modeler automation
+remains open; the existing published 0.4 archive does not contain these new tools.
+
+The expanded source regression also passed:
+`20260907-143355-34219c`, 17 operations (13 completed, two expected failures, one
+cancelled and one interrupted), 21 owned-worker observations / 130 periodic
+samples, transcript
+`a4c2e38fb30d76f67f8515f64d389b61ae537e9a634028d346825efda615df9f`.
+It exercised the real XML protocol, nested/multi-diagram native roundtrip and
+edits, no-op fidelity, simulation, rendering, settings conflict/recovery and
+host-state ownership/Job Object cleanup. No complete Modeler GUI equivalence is
+inferred from those results.
+
 ## Native blank-model lifecycle — 2026-09-07
 
-Current source exposes **27 MCP tools** and passes **415 unit tests**. The new
+That source checkpoint exposed **27 MCP tools** and passed **415 unit tests**. The new
 `native_model_create` circuit uses the installed **4.3.0.008** native model
 constructor and domain defaults, with no BPMN input or import substitution.
 
@@ -709,8 +764,10 @@ not an interchangeable replacement for the native model.
 - Independent visual compatibility inside Modeler.
 - Rich semantic edits beyond names, documentation publishing, and simulation.
 
-Native editing remains opt-in and copy-only until these preservation gates are
-accredited. This restriction is explicit, not an XML conversion fallback.
+Native editing remains opt-in and artifact-first. Explicit workspace adoption
+uses the separate [native commit and recovery contract](native-commit.md), not
+an implicit overwrite or XML conversion fallback. Broader preservation and
+desktop equivalence are still separate gates.
 
 ## Packaged-server acceptance
 

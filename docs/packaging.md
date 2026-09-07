@@ -75,6 +75,8 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --pac
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --diagrams-only
 
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --model-create-only
+
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --commit-only --external-state
 ```
 
 Use `--containers-only --input C:/Processes/rich-model.bpm` to exercise the
@@ -82,6 +84,9 @@ container lifecycle while preserving an existing model's other native content.
 Run focused native circuits sequentially because the installed engine's settings
 namespace is protected by an exclusive worker lease. Attribute, container and diagram
 tools require the newer source snapshot, not the old published 0.4 ZIP.
+The commit suite additionally exercises real post-publication host death,
+cancellation, retained staged bytes and independent reconciliation. Add
+`--input C:/Processes/rich-model.bpm` for a rich native byte-preservation corpus.
 
 For a separately reviewed PDF downsampling test, add `--allow-image-resampling`
 to publication acceptance. This is explicit fidelity acceptance, not an automatic

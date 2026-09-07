@@ -61,8 +61,10 @@ all graphical children but does not require a shape for an invisible empty shell
 
 Pass `Result.outputArtifact` and `Result.outputRevision` to `native_mutate`,
 `native_diagrams_apply`, or the other explicit native edit tools. Every edit
-produces another independently verified artifact. File adoption/replacement,
-unsaved-session synchronization and visual compatibility have separate gates.
+produces another independently verified artifact. Explicit [file adoption and
+replacement](native-commit.md) use `native_commit`, with separate source/target
+revisions, backups and interruption reconciliation. Unsaved-session
+synchronization and visual compatibility still have separate open gates.
 
 ## Real acceptance
 

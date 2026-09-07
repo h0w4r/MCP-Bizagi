@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add explicit native workspace adoption/save-as with source and destination
+  revisions, byte-exact publication, installed-engine readers and recoverable
+  intent/backup receipts. Reconciliation observes applied, unapplied, conflicting,
+  unreadable or missing evidence without replaying or rolling back a write.
+
 - Add native blank-model creation without BPMN import, including initial diagram names/order, one-time native IDs, independent readback and whole-container no-op stability.
 - Stop presenting the transient native model scratch GUID as a durable root parent. Native root diagrams/resources now report an empty `ParentId`.
 - Handle first insertion/last deletion of native structural collections only after verified child lifecycle projection. Preserve unknown attributes, namespaces, comments, text and `xml:space`; reject native-name lookalikes in unknown extension paths.

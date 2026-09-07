@@ -5,7 +5,7 @@ namespace McpBizagi.Core;
 public sealed record FileResult(string Path, string Revision, string? BackupPath, long Bytes);
 
 /// <summary>Confines paths and uses staged writes with optimistic revision checks.</summary>
-public sealed class WorkspaceFiles
+public sealed partial class WorkspaceFiles
 {
     public string Root { get; }
     public WorkspaceFiles(string root)
@@ -63,8 +63,10 @@ public sealed class WorkspaceFiles
         return Commit(path, BpmnDocument.Encode(xml), expectedRevision);
     }
 
-    public FileResult Commit(string path, byte[] bytes, string? expectedRevision)
+    public FileResult Commit(string path, byte[] bytes, string? expectedRevision,
+        Action<FileCommitIntent>? prepared = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         string full = Resolve(path);
         // Cooperating MCP processes share a gate; stale writers fail rather than queue a blind overwrite.
         string identity = OperatingSystem.IsWindows() ? full.ToUpperInvariant() : full;
@@ -73,19 +75,38 @@ public sealed class WorkspaceFiles
         try { acquired = gate.WaitOne(0); }
         catch (AbandonedMutexException) { acquired = true; } // Revision checking still runs after a crashed writer.
         if (!acquired) throw new IOException("Destination is busy in another MCP writer; inspect its revision before retrying.");
-        try { return CommitLocked(full, bytes, expectedRevision); }
+        try { return CommitLocked(full, bytes, expectedRevision, prepared, cancellationToken); }
         finally { gate.ReleaseMutex(); }
     }
 
-    private FileResult CommitLocked(string full, byte[] bytes, string? expectedRevision)
+    private FileResult CommitLocked(string full, byte[] bytes, string? expectedRevision,
+        Action<FileCommitIntent>? prepared, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(full)!);
         Resolve(full);
         bool exists = File.Exists(full);
         if (exists && expectedRevision == null) throw new IOException("Destination exists; supply its expected revision to replace it.");
         if (!exists && expectedRevision != null) throw new IOException("Revision conflict: destination no longer exists.");
-        string stage = Path.Combine(Path.GetDirectoryName(full)!, ".mcp-bizagi-" + Guid.NewGuid().ToString("N") + ".tmp");
-        string? backup = null;
+        string transaction = Guid.NewGuid().ToString("N");
+        string stage = Path.Combine(Path.GetDirectoryName(full)!, ".mcp-bizagi-" + transaction + ".tmp");
+        string? backup = exists ? full + "." + transaction + ".bak" : null;
+        bool retainStage = false;
+        void Prepare()
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (prepared != null)
+            {
+                // Once a journal callback can have persisted an intent, retain an unconsumed stage
+                // even if that callback throws. Recovery observes evidence; it never replays it.
+                retainStage = true;
+                prepared(new(1, transaction, full, stage, backup, expectedRevision, BpmnDocument.Revision(bytes), bytes.LongLength));
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            Resolve(full); Resolve(stage);
+            if (backup != null && (File.Exists(Resolve(backup)) || Directory.Exists(backup)))
+                throw new IOException("Refusing to overwrite an existing commit backup.");
+            if (!Read(stage).AsSpan().SequenceEqual(bytes)) throw new IOException("Staged content changed before publication.");
+        }
         try
         {
             using (var write = new FileStream(stage, FileMode.CreateNew, FileAccess.Write, FileShare.None))
@@ -98,18 +119,19 @@ public sealed class WorkspaceFiles
                 guard.CopyTo(copy);
                 if (BpmnDocument.Revision(copy.ToArray()) != expectedRevision) throw new IOException("Revision conflict: file changed since inspection.");
                 Resolve(full);
-                backup = full + "." + Guid.NewGuid().ToString("N") + ".bak";
+                Prepare();
                 File.Replace(stage, full, backup);
                 // External programs do not honor our mutex. Detect a racing atomic replacement and retain both versions.
-                if (BpmnDocument.Revision(File.ReadAllBytes(backup)) != expectedRevision)
+                if (BpmnDocument.Revision(File.ReadAllBytes(backup!)) != expectedRevision)
                     throw new IOException("Concurrent external replacement detected. Both versions are retained; inspect backup " + backup + " before retrying.");
             }
-            else File.Move(stage, full, false);
+            else { Prepare(); File.Move(stage, full, false); }
+            // No cancellation check after the atomic publication: report its real side effect.
             byte[] persisted = Read(full);
             if (!persisted.AsSpan().SequenceEqual(bytes)) throw new IOException("Post-write verification failed; inspect the backup before retrying.");
             return new(full, BpmnDocument.Revision(persisted), backup, persisted.LongLength);
         }
-        finally { if (File.Exists(stage)) File.Delete(stage); }
+        finally { if (!retainStage && File.Exists(stage)) File.Delete(stage); }
     }
 
     public static void RequireBpmn(string path)

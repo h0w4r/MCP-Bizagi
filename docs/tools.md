@@ -28,6 +28,8 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_roundtrip` | `path`; optional `modelName`, `additionalPaths` | Import one BPMN file per native diagram, persist `.bpm`, reopen/export, report per-input bounded fidelity findings |
 | `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
 | `native_model_create` | `diagramNames` | Native blank `.bpm` without BPMN import; generated diagram IDs, ordered tabs, fresh-worker graph and no-op stability gate; [contract](native-models.md) |
+| `native_commit` | `path`, `expectedRevision`, `destinationPath`; optional `expectedDestinationRevision` | Explicit byte-exact workspace adoption with native readers, revision guard, durable intent and backup; [contract](native-commit.md) |
+| `native_commit_reconcile` | Original terminal `operationId` | Observe native publication outcome and independently read applied content; never replay, delete or roll back files |
 | `native_diagrams_get` | `path` | Native diagram IDs/names, persisted ordered tab preferences, native preference scope and source revision |
 | `native_diagrams_apply` | `path`, `expectedRevision`, `patch` | Create/rename/clone/delete diagrams and explicitly replace ordered tab preferences; native ID map and fresh-reader fidelity; [contract](native-diagrams.md) |
 | `native_metadata_get` | `path` | Native resource catalog, activity RACI, full diagram BPSim XML, element `Id` and `BpmnId`, source revision |
@@ -113,3 +115,9 @@ must be reviewed before forwarding results to an external service.
 
 Do not automatically retry a failed write. Inspect its state and artifacts;
 after a server restart, unfinished journal entries become `interrupted`.
+
+For native workspace publication, use the separate `native_commit` tool after
+reviewing the edit artifact. A cancelled/interrupted commit can already have
+changed its destination. `native_commit_reconcile` distinguishes the observed
+file outcome from ordinary operation state; its [recovery contract](native-commit.md)
+describes retained stages, backups and missing or conflicting evidence.

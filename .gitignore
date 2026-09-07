@@ -16,6 +16,7 @@ packages/
 *.zip
 *.log
 *.bak
+.mcp-bizagi-*.tmp
 *.user
 *.suo
 .env

@@ -1,0 +1,6 @@
+{
+  "path": "artifact:<completed-operation-id>:edited.bpm",
+  "expectedRevision": "<source-sha256-from-completed-edit-result>",
+  "destinationPath": "models/Reviewed process.bpm",
+  "expectedDestinationRevision": "<current-destination-sha256-or-omit-to-create>"
+}

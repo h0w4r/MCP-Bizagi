@@ -42,6 +42,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "bpm_native_graph_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_diagram_lifecycle_and_persisted_tabs", status = "experimental_copy_only_native_cloning_and_ordered_preferences_with_fresh_readback_not_live_session_control", backend = "bizagi_worker" },
                 new { name = "native_blank_model_creation", status = "experimental_native_constructor_fresh_readback_and_noop_stability_gate_not_live_desktop", backend = "bizagi_worker" },
+                new { name = "native_workspace_commit_and_reconciliation", status = "experimental_byte_exact_adoption_durable_intent_backup_and_fresh_native_readback_no_blind_replay", backend = "bizagi_worker" },
                 new { name = "native_structural_geometry_documentation_batches", status = "experimental_palette_connections_and_explicit_pool_lane_milestone_subprocess_lifecycle_not_full_editor", backend = "bizagi_worker" },
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
@@ -85,6 +86,13 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_model_create"), Description("Create a blank native .bpm with 1-100 explicitly named diagrams using installed model constructors and domain defaults, not BPMN import. IDs are generated once and retained in the receipt. Verify fresh-worker readback and no-op persistence before returning an artifact. No existing file is overwritten; initial tab order follows diagramNames.")]
     public CallToolResult CreateNativeModel(string[] diagramNames) => Guard(() => native.CreateModel(diagramNames));
+
+    [McpServerTool(Name = "native_commit", Destructive = true, OpenWorld = false), Description("Adopt exact native file/artifact bytes into a workspace .bpm after installed-engine validation. Requires source SHA-256. Omit expectedDestinationRevision only to create a new file; replacement requires the previous destination SHA-256 and retains a backup. Durable intent precedes publication; a fresh worker reads the committed bytes. Poll operation_get; after interruption use native_commit_reconcile, never blind replay.")]
+    public CallToolResult CommitNative(string path, string expectedRevision, string destinationPath, string? expectedDestinationRevision = null) =>
+        Guard(() => native.CommitNative(path, expectedRevision, destinationPath, expectedDestinationRevision));
+
+    [McpServerTool(Name = "native_commit_reconcile", Destructive = false, OpenWorld = false), Description("Observe a terminal native_commit intent, destination, stage and backup; never replay, roll back or delete model files. Distinguishes applied, not_applied, ambiguous, conflict, unreadable and missing_intent. Applied content must pass another real native reader. Original interrupted/cancelled status remains unchanged. Poll operation_get for the separate reconciliation result.")]
+    public CallToolResult ReconcileNativeCommit(string operationId) => Guard(() => native.ReconcileNativeCommit(operationId));
 
     [McpServerTool(Name = "native_diagrams_get"), Description("Inspect native diagram identities and names plus the persisted ordered OpenedItems preferences. Filesystem/ZIP enumeration order is not desktop tab order. Poll operation_get.")]
     public CallToolResult GetNativeDiagrams(string path) => Guard(() => native.ReadDiagrams(path));

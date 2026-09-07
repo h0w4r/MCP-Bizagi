@@ -11,6 +11,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Native container preservation | Partial corpus, explicit policy | Unknown-content checks are implemented; broad attributes/attachments/scenario corpora remain pending |
 | Existing `.bpm` inspection | Locally verified, copy-only | Source byte equality and actual native identities |
 | Blank native model creation | Experimental current source | Native constructor/domain defaults, exact durable diagram identities, ordered tabs and no-op stability; [contract](native-models.md) and [execution evidence](validation.md) |
+| Native workspace adoption and save-as | Experimental current source | Exact source bytes, real engine preflight, guarded replacement/backup, durable receipts, cancellation and host-death reconciliation; [contract](native-commit.md) |
 | `.bpm` name batches | Locally verified, copy-only | Task/event batch and task nested two subprocess levels; full archive checked on tested inputs |
 | Native no-op save and comparison | Basic native case locally verified | Unknown/binary changes rejected by comparator; broad rich-content no-op corpus pending |
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |
@@ -35,7 +36,7 @@ override a failed run.
 
 The local baseline is documented in [validation](validation.md). It is not a
 promise about all installations, files, or newer builds. Broad rich preservation,
-in-flight save cancellation, all publication boundaries, additional documentation
+all native engine-save cancellation boundaries, additional documentation
 formats, broader simulation cases and independent visual compatibility still require their own circuits.
 Full Modeler automation is **not** complete, and there is no invented overall
 completion percentage.
