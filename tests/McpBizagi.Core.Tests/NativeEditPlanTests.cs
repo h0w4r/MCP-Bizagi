@@ -96,6 +96,7 @@ public sealed class NativeEditPlanTests
         foreach (var type in NativeEditPlan.CreatableTypes)
         {
             var mutation = Create(type);
+            if (type == "Participant") mutation.ProcessId = TargetId;
             if (type is "SequenceFlow" or "MessageFlow")
             {
                 mutation.Geometry = null; mutation.SourceId = SourceId; mutation.TargetId = TargetId;

@@ -34,9 +34,13 @@ public sealed class NativeMutation
     public string ElementId { get; set; } = "";
     public string ParentId { get; set; } = "";
     public string ElementType { get; set; } = "";
+    /// <summary>Required only when creating a participant; identifies its durable native process.</summary>
+    public string ProcessId { get; set; } = "";
     public string? Name { get; set; }
     public string? Documentation { get; set; }
     public NativeGeometry? Geometry { get; set; }
+    /// <summary>Explicit latent/visible expanded size for an embedded subprocess; collapsed bounds remain separate.</summary>
+    public NativeSize? ExpandedSize { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
@@ -46,6 +50,12 @@ public sealed class NativePoint
 {
     public double X { get; set; }
     public double Y { get; set; }
+}
+
+public sealed class NativeSize
+{
+    public double Width { get; set; }
+    public double Height { get; set; }
 }
 
 public sealed class NativeNameChange

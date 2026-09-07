@@ -21,16 +21,20 @@ public sealed partial class NativeEngine
         string id = Text(value, "Id");
         if (string.IsNullOrEmpty(id) || !visited.Add(id)) yield break;
         string diagram = value.GetType().Name == "Collaboration" ? id : diagramId;
-        if (value.GetType().Name != "DiagramModel") yield return new(value, parent, diagram);
+        // LaneSet is a runtime grouping with a new GUID on every native load, not a durable model identity.
+        // Flatten it so operator-facing lanes retain their stable Process (or nested Lane) owner.
+        bool laneSet = value.GetType().Name == "LaneSet";
+        if (value.GetType().Name != "DiagramModel" && !laneSet) yield return new(value, parent, diagram);
+        string childParent = laneSet ? parent : id;
         // Explicit domain containment, not unrestricted reflection over arbitrary object graphs.
         foreach (string property in new[] { "Diagrams", "Participants", "MessageFlows", "Artifacts", "DataStore", "ConversationNodes",
             "FlowElements", "LaneSets", "Lanes", "Milestones", "Resources" })
             if (Optional(value, property) is IEnumerable children)
                 foreach (object child in children)
-                    foreach (var entry in Visit(child, id, diagram, visited)) yield return entry;
+                    foreach (var entry in Visit(child, childParent, diagram, visited)) yield return entry;
         foreach (string property in new[] { "Process", "ChildLaneSet" })
             if (Optional(value, property) is object child)
-                foreach (var entry in Visit(child, id, diagram, visited)) yield return entry;
+                foreach (var entry in Visit(child, childParent, diagram, visited)) yield return entry;
     }
     private static NativeElement Describe(GraphEntry entry)
     {
@@ -51,13 +55,13 @@ public sealed partial class NativeEngine
                 BackgroundArgb = Color("BackgroundColor"),
                 BorderArgb = Color("BorderColor")
             };
-            if (geometry.Expanded) expandedGeometry = new NativeGeometry
+            if (Text(element, "ElementType") is "SubProcess" or "CallActivity") expandedGeometry = new NativeGeometry
             {
                 X = geometry.X,
                 Y = geometry.Y,
                 Width = Number("ExpandedWidth"),
                 Height = Number("ExpandedHeight"),
-                Expanded = true,
+                Expanded = geometry.Expanded,
                 BackgroundArgb = geometry.BackgroundArgb,
                 BorderArgb = geometry.BorderArgb
             };

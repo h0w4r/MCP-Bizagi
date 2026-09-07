@@ -69,8 +69,11 @@ a valid executable business process. Use `native_validate` separately.
 
 ## Remaining boundaries
 
-The investigated allowlist is wider than the tested palette. Pool/lane/subprocess
-creation and deletion, data/artifact categories, reparenting, boundary-event modes,
+The investigated allowlist is wider than the tested palette. Current source adds
+a separate [container lifecycle contract](native-containers.md) for participants,
+stable process-owned lanes, milestones and nested embedded subprocesses. These
+unreleased additions are not covered by the old palette run or old release ZIP.
+Data/artifact categories, reparenting, boundary-event modes,
 conditional flow details, rich styles and automatic layout are not accredited by
 the palette test. Unknown native content is not excused merely because an edit
 was requested. Expanded coverage requires its own native persistence proof.

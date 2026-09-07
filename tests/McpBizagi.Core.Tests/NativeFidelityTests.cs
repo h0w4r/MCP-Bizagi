@@ -30,8 +30,8 @@ public sealed class NativeFidelityTests
     { var a = Archive("<Diagram><Task Id='a' Name='Old'/><Unknown flag='keep'/></Diagram>"); Assert.True(NativeFidelity.Compare(a, a).Preserved); }
     [Fact] public void RequestedNameDoesNotExcuseUnrelatedChanges()
     {
-        var a = Archive("<Diagram><Task Id='a' Name='Old'/><Unknown flag='keep'/></Diagram>");
-        var b = Archive("<Diagram><Task Id='a' Name='New'/><Unknown flag='lost'/></Diagram>");
+        var a = Archive($"<Package xmlns='{Ns}'><WorkflowProcesses><WorkflowProcess Id='p'><Activities><Activity Id='a' Name='Old'/></Activities></WorkflowProcess></WorkflowProcesses><Unknown flag='keep'/></Package>");
+        var b = Archive($"<Package xmlns='{Ns}'><WorkflowProcesses><WorkflowProcess Id='p'><Activities><Activity Id='a' Name='New'/></Activities></WorkflowProcess></WorkflowProcesses><Unknown flag='lost'/></Package>");
         var report = NativeFidelity.Compare(a, b, [new("a", "New")]);
         Assert.False(report.Preserved);
         Assert.Contains(report.Differences, d => d.Classification == "requested_name_change");

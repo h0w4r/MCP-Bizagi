@@ -59,7 +59,7 @@ public static class NativeFidelity
                     continue;
                 }
                 string classification = "unexpected_xml_change";
-                if (x != null && y != null && x.ElementId == y.ElementId && y.Property == "Name" &&
+                if (x != null && y != null && x.ElementId == y.ElementId && x.Property == "Name" && y.Property == "Name" &&
                     names?.Any(n => n.ElementId == y.ElementId && n.Name == y.Value) == true) classification = "requested_name_change";
                 else if (x?.Metadata != null && y?.Metadata == x.Metadata && DateTimeOffset.TryParse(x.Value, out _) && DateTimeOffset.TryParse(y.Value, out _)) classification = y.Metadata;
                 else if (x == null && y?.Audit == true) classification = "modification_audit_appended";
@@ -133,7 +133,7 @@ public static class NativeFidelity
             atoms.Add(location + "/#namespace/" + declaration.Name.LocalName, new(declaration.Value, id, null));
         foreach (var attribute in element.Attributes().Where(a => !a.IsNamespaceDeclaration))
             atoms.Add(location + "/@" + attribute.Name, new(attribute.Value, id,
-                attribute.Name.Namespace == XNamespace.None && (attribute.Name != "Name" || element.Attribute("Id") != null || element.Attribute("id") != null) ? attribute.Name.LocalName : null,
+                attribute.Name.Namespace == XNamespace.None && (attribute.Name != "Name" || nativeDiagram && IsNativeNameOwner(element)) ? attribute.Name.LocalName : null,
                 (modelInfo && element.Name == "BizAgiModelInfo" && attribute.Name == "ModifiedDate") || (audit && attribute.Name == "Date") ? "modification_timestamp" : null, audit));
         string? metadata = nativeDiagram && element.Name == XName.Get("ModificationDate", Xpdl) && element.Parent?.Name == XName.Get("PackageHeader", Xpdl) ? "modification_timestamp"
             : nativeDiagram && element.Name == XName.Get("Created", Xpdl) && element.Parent?.Name == XName.Get("ProcessHeader", Xpdl)
@@ -146,5 +146,36 @@ public static class NativeFidelity
             if (children[i] is XElement child) Walk(child, location + "/[" + i + "]", id, atoms, nativeDiagram, modelInfo);
             else atoms.Add(location + "/#node[" + i + "]", new(children[i] is XText text ? text.Value : children[i].ToString(), id, null, metadata, ImplicitDefault: defaulted, RuntimePath: element.Annotation<RuntimePathMarker>()?.Value));
         }
+    }
+    private static bool IsNativeNameOwner(XElement element)
+    {
+        if (element.Name.NamespaceName != Xpdl || element.Attribute("Id") == null) return false;
+        if (element.Name.LocalName == "Package") return element.Parent == null;
+        string? collection = element.Name.LocalName switch
+        {
+            "Activity" => "Activities", "Transition" => "Transitions", "Pool" => "Pools", "Lane" => "Lanes",
+            "Artifact" => "Artifacts", "MessageFlow" => "MessageFlows", "WorkflowProcess" => "WorkflowProcesses",
+            "ActivitySet" => "ActivitySets", "Milestone" => "Milestones", "DataObject" => "DataObjects", "DataStoreReference" => "DataStoreReferences",
+            _ => null
+        };
+        if (collection == null || element.Parent?.Name != XName.Get(collection, Xpdl)) return false;
+        var container = element.Parent.Parent;
+        return element.Name.LocalName switch
+        {
+            "Pool" or "WorkflowProcess" or "MessageFlow" => IsContainer(container, "Package"),
+            "Lane" or "Milestone" => IsContainer(container, "Pool"),
+            "ActivitySet" => IsContainer(container, "WorkflowProcess"),
+            "Artifact" => IsContainer(container, "Package") || IsContainer(container, "ActivitySet") || IsContainer(container, "WorkflowProcess"),
+            _ => IsContainer(container, "WorkflowProcess") || IsContainer(container, "ActivitySet")
+        };
+    }
+    private static bool IsContainer(XElement? element, string kind)
+    {
+        if (element?.Name != XName.Get(kind, Xpdl)) return false;
+        // Exact native containment prevents an unknown extension from impersonating an Activities list.
+        if (kind == "Package") return element.Parent == null;
+        string collection = kind switch { "WorkflowProcess" => "WorkflowProcesses", "ActivitySet" => "ActivitySets", "Pool" => "Pools", _ => "" };
+        return collection != "" && element.Parent?.Name == XName.Get(collection, Xpdl) &&
+            IsContainer(element.Parent.Parent, kind == "ActivitySet" ? "WorkflowProcess" : "Package");
     }
 }

@@ -29,8 +29,11 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
 | `native_metadata_get` | `path` | Native resource catalog, activity RACI, full diagram BPSim XML, element `Id` and `BpmnId`, source revision |
 | `native_metadata_apply` | `path`, `expectedRevision`, `patch` | Resource changes, full activity assignments and full diagram simulation replacements; new native artifact, fresh-worker readback and whole-archive fidelity |
+| `native_attributes_get` | `path` | Native definitions, per-element values, embedded file inventory and hashes; linked files are not opened |
+| `native_attributes_apply` | `path`, `expectedRevision`, `patch` | Explicit native definition XML, complete element values and byte transactions; [contract](native-attributes.md) |
+| `native_attachment_export` | `path`, `diagramId`, `elementId`, `fileName` | Export known native-loaded embedded bytes to an operation artifact, verify against the source archive and output hash |
 | `native_apply_changes` | `path`, `expectedRevision`, `changes` | Native name batch to a new copy, then fresh-reader verification |
-| `native_mutate` | `path`, `expectedRevision`, `mutations` | Ordered native create/update/delete/reconnect batch, fresh-reader and whole-container gates; [contract](native-editing.md) |
+| `native_mutate` | `path`, `expectedRevision`, `mutations` | Ordered native create/update/delete/reconnect batch, fresh-reader and whole-container gates; [element contract](native-editing.md), [containers and expanded sizes](native-containers.md) |
 | `native_save_copy` | `path`, `expectedRevision` | No-op native load/save/reopen with whole-container fidelity gate |
 | `native_compare` | `path`, `otherPath`; optional `expectedNames` | Immediate whole-container comparison; returns `NativeFidelityReport`, not an operation ID |
 | `native_validate` | `path` | Actual vendor validation messages with severity and native identities |

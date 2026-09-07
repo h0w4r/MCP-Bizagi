@@ -36,6 +36,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > **Current source adds experimental extended attributes and embedded files.**
 > These unreleased tools have their own [native contract and limits](docs/native-attributes.md);
 > they are not included in the existing 0.4.0-alpha.1 release archive.
+> Current source also adds [native container lifecycle](docs/native-containers.md):
+> pools/processes, stable lanes, milestones and two-level embedded subprocesses,
+> including explicit expanded sizes. The full-automation objective remains open.
 
 ## Why this project
 
@@ -64,6 +67,7 @@ every operation into a BPMN XML export.
 | Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
 | Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback and whole-container fidelity gate; tested nested/multi-diagram inputs |
 | Native structural batches | Opt-in, copy-only | 22 task/event/gateway types tested; create/delete, connection endpoints, bounds, colors and descriptions; [limits](docs/native-editing.md) |
+| Pools, lanes, milestones and embedded subprocesses | Experimental current source | Explicit process IDs, complete partitions, nested lifecycle and expanded/collapsed sizes; [contract](docs/native-containers.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

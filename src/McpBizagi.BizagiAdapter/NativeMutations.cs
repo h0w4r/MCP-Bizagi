@@ -29,9 +29,26 @@ public sealed partial class NativeEngine
                     ?? throw new NotSupportedException("Native factory does not create this element type.");
                 Set(element, "Id", Guid.Parse(change.ElementId));
                 Set(element, "DisplayName", change.Name ?? "");
+                if (change.ElementType == "Participant")
+                {
+                    if (graph.ContainsKey(change.ProcessId)) throw new InvalidDataException("Native process identity already exists.");
+                    Set(Get(element, "Process"), "Id", Guid.Parse(change.ProcessId));
+                }
+                if (change.ElementType is "Lane" or "Milestone")
+                {
+                    if (parent.GetType().Name != "Process") throw new InvalidDataException("Modeler lanes require a participant process, not an embedded subprocess or runtime lane set.");
+                    object participant = Require(graph[change.ParentId].ParentId);
+                    if (participant.GetType().Name != "Participant" || (bool)Get(participant, "IsMainParticipant"))
+                        throw new InvalidDataException("Lanes require a visible native participant.");
+                    Set(element, "ParentParticipant", participant);
+                    if (change.ElementType == "Milestone")
+                    {
+                        object runtime = Get(element, "Runtime");
+                        Set(runtime, "MilestoneType", Enum.Parse(runtime.GetType().GetProperty("MilestoneType")!.PropertyType, "Process"));
+                    }
+                }
                 Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnUtilFacade"), "SetDefaultBizAgiName", parent, element);
-                string collection = CollectionFor(parent, element);
-                Call(Get(parent, collection), "Add", element);
+                Call(MutationCollection(parent, element), "Add", element);
                 graph.Add(change.ElementId, new GraphEntry(element, change.ParentId, graph[change.ParentId].DiagramId));
             }
             else element = Require(change.ElementId);
@@ -41,27 +58,87 @@ public sealed partial class NativeEngine
                 case "create":
                 case "update":
                     if (change.Name != null) Set(element, "DisplayName", change.Name);
-                    if (change.Documentation != null) Set(element, "Documentation", change.Documentation);
+                    if (change.Documentation != null)
+                        // A cleared pool description must use the native absent value. Persisting "" leaves
+                        // a transient process-runtime JSON key that the next native load/save removes.
+                        Set(element, "Documentation", change.Documentation == "" && element.GetType().Name == "Participant" ? null! : change.Documentation);
                     if (change.Geometry != null) ApplyGeometry(element, change.Geometry);
+                    if (change.ExpandedSize is { } size)
+                    {
+                        if (Text(element, "ElementType") != "SubProcess") throw new InvalidDataException("ExpandedSize currently applies to embedded subprocesses only.");
+                        Set(Get(element, "GraphicalProperties"), "ExpandedSize", new SizeF((float)size.Width, (float)size.Height));
+                    }
                     if (!string.IsNullOrEmpty(change.SourceId)) Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
                     break;
                 case "reconnect":
                     Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
                     break;
                 case "delete":
-                    if (graph.Values.Any(e => e.ParentId == change.ElementId))
+                    string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
+                    if (processId != "" && ((bool)Get(element, "IsMainParticipant") || graph.Values.Count(e => e.DiagramId == graph[change.ElementId].DiagramId && e.Value.GetType().Name == "Participant") <= 1))
+                        throw new InvalidDataException("Deleting the main or last participant would invoke native implicit-model reconstruction.");
+                    if (graph.Values.Any(e => e.ParentId == change.ElementId && Text(e.Value, "Id") != processId || processId != "" && e.ParentId == processId))
                         throw new InvalidDataException("Delete child elements explicitly before deleting their container.");
                     if (graph.Values.Any(e => Text(Optional(e.Value, "Source") ?? e.Value, "Id") == change.ElementId && e.Value != element ||
                         Text(Optional(e.Value, "Target") ?? e.Value, "Id") == change.ElementId && e.Value != element))
                         throw new InvalidDataException("Delete or reconnect incident connections before deleting this element.");
                     object owner = Require(graph[change.ElementId].ParentId);
                     if (element.GetType().Name == "SequenceFlow") UnlinkSequence(element);
-                    if (!(bool)Call(Get(owner, CollectionFor(owner, element)), "Remove", element)!)
+                    if (!(bool)Call(MutationCollection(owner, element), "Remove", element)!)
                         throw new InvalidDataException("Native collection did not remove the requested element.");
                     break;
                 default: throw new NotSupportedException("Unknown native mutation: " + change.Operation);
             }
             progress("native_mutation:" + change.Operation + ":" + change.ElementId);
+        }
+        ValidateLanePartitions(model);
+    }
+
+    private object MutationCollection(object parent, object element)
+    {
+        if (element.GetType().Name != "Lane") return Get(parent, CollectionFor(parent, element));
+        if (parent.GetType().Name != "Process") throw new InvalidDataException("Lane ownership must be a stable native process identity.");
+        object sets = Get(parent, "LaneSets");
+        var groups = ((IEnumerable)sets).Cast<object>().ToArray();
+        if (groups.Length > 1) throw new InvalidDataException("Multiple runtime lane sets cannot be silently flattened during editing.");
+        if (groups.Length == 0)
+        {
+            object group = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.LaneSet"));
+            Call(sets, "Add", group); groups = new[] { group };
+        }
+        return Get(groups[0], "Lanes");
+    }
+
+    private static void ValidateLanePartitions(object model)
+    {
+        // Native loading partitions lanes at X=50 and consecutive Y offsets and derives the pool height.
+        // Require the complete intended layout instead of quietly accepting a lossy geometry request.
+        foreach (var entry in Graph(model).Where(e => e.Value.GetType().Name == "Participant"))
+        {
+            object pool = entry.Value, graphics = Get(pool, "GraphicalProperties");
+            var lanes = Items(Get(pool, "Process"), "LaneSets").SelectMany(s => Items(s, "Lanes")).OrderBy(l => Convert.ToDouble(Get(Get(l, "GraphicalProperties"), "Y"))).ToArray();
+            double y = 0, width = Convert.ToDouble(Get(graphics, "Width"));
+            foreach (object lane in lanes)
+            {
+                object g = Get(lane, "GraphicalProperties");
+                bool Same(string key, double expected) => Math.Abs(Convert.ToDouble(Get(g, key)) - expected) <= 0.001;
+                if (!Same("X", 50) || !Same("Y", y) || !Same("Width", width - 50))
+                    throw new InvalidDataException("Lane partitions require X=50, width=pool width-50 and consecutive Y offsets; include all affected bounds explicitly in the batch.");
+                y += Convert.ToDouble(Get(g, "Height"));
+            }
+            if (lanes.Length > 0 && Math.Abs(Convert.ToDouble(Get(graphics, "Height")) - y) > 0.001)
+                throw new InvalidDataException("The requested participant height must equal the sum of its lane heights.");
+            double x = 50, height = Convert.ToDouble(Get(graphics, "Height"));
+            var milestones = Items(Get(pool, "Process"), "Milestones").ToArray();
+            foreach (object milestone in milestones)
+            {
+                object g = Get(milestone, "GraphicalProperties");
+                if (Math.Abs(Convert.ToDouble(Get(g, "X")) - x) > 0.001 || Math.Abs(Convert.ToDouble(Get(g, "Height")) - height) > 0.001)
+                    throw new InvalidDataException("Milestones require consecutive X offsets starting at 50 and the complete pool height.");
+                x += Convert.ToDouble(Get(g, "Width"));
+            }
+            if (milestones.Length > 0 && Math.Abs(width - x) > 0.001)
+                throw new InvalidDataException("The requested pool width must equal 50 plus all milestone widths.");
         }
     }
 
@@ -84,6 +161,7 @@ public sealed partial class NativeEngine
 
     private static void ApplyGeometry(object element, NativeGeometry geometry)
     {
+        if (geometry.Expanded && Text(element, "ElementType") != "SubProcess") throw new InvalidDataException("Expanded geometry currently applies to embedded subprocesses only.");
         if ((bool?)Optional(element, "IsConnector") == true) throw new InvalidDataException("Connections require explicit points, not node bounds.");
         object graphics = Get(element, "GraphicalProperties");
         Set(graphics, "X", (float)geometry.X); Set(graphics, "Y", (float)geometry.Y);

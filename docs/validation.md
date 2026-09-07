@@ -1,5 +1,62 @@
 # Verification baselines
 
+## Unreleased native container lifecycle — 2026-09-07
+
+Current source exposes **24 MCP tools** and passes **327 unit tests**. The
+container circuit uses the official MCP client, stdio host, isolated worker,
+installed Modeler **4.3.0.008**, durable `.bpm` output and fresh-reader workers.
+No mocks or direct adapter calls accredit these operations.
+
+Run `20260907-114749-5fc8a6` passed **12 operations**: 10 completed and two
+expected failures, with **19 owned-worker observations / 103 periodic samples**.
+Transcript SHA-256:
+`304c10ef0decd06039e921a3c7e2b7eae54c28db627c2b0a8c043497afc826be`.
+
+- Created an explicit participant/process pair, two stable process-owned lanes,
+  two milestones and two embedded subprocess levels with two tasks and a flow.
+- Independently reloaded IDs and containment; runtime lane sets were not exposed
+  as durable identities.
+- Rejected deletion of a populated pool and an inconsistent lane partition;
+  subsequent valid operations succeeded.
+- Updated names, documentation and complete lane/milestone partitions; expanded
+  both subprocess levels with separate collapsed and expanded dimensions.
+- Ran the installed offscreen renderer with explicit top-level process and local
+  subprocess coordinates, not automatic layout.
+- Saved without edits, cleared documentation, collapsed both levels while
+  retaining expanded sizes, then deleted connections and children before their
+  containers. Original durable identities remained.
+
+The lifecycle also passed on an existing native model with **11 extended
+attribute definitions, table/scalar values and an embedded image**, checking all
+non-targeted archive leaves through every mutation. Run
+`20260907-113824-3244c6`: 11 operations, 17 worker observations / 107 samples;
+transcript `f5629f3a0dc3630a38c2be5b9523a1a35be7fa29177d924fc51f23a1e1bbe92a`.
+That earlier rich run predates the final fixture-coordinate refinement; it
+accredits native preservation, not graphical-layout quality.
+
+Related real regressions during this implementation:
+
+| Circuit | Run | Operations | Worker observations / samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Attributes and attachments | `20260907-114034-0a8fb2` | 18: 15 completed, 3 expected failures | 29 / 157 | `437a1dcea603cd5de17283c3c99b5e1691a6bd903b0cbd0316541cb0495e6c86` |
+| Resources, RACI, configured simulation and what-if | `20260907-114313-36ae75` | 16: 14 completed, 2 expected failures | 25 / 126 | `799798f40082d8094b98d857ddc142a7e30753e240e38ae4654c0c9ca37019f4` |
+| XML/native, nesting, rendering and recovery | `20260907-114528-3ae4bf` | 17: 13 completed, 2 failed, 1 cancelled, 1 interrupted as expected | 21 / 102 | `e80e0ce7d393163735549e49c4145a5e16331bd2029796a31caa626e862dbd4f` |
+
+Recovery includes real settings contention, host termination, Job Object cleanup
+and journal/state restart. No visible or foreground owned worker window was
+observed; periodic sampling is not continuous proof. The structural corpus does
+not claim an executable process or independent visual compatibility inside Modeler.
+
+Real serializer behavior is handled explicitly: an omitted `BlockActivity.View`
+means `COLLAPSED`; clearing pool documentation uses the native absent value to
+avoid a transient empty runtime key on the next save. Unknown XML/JSON changes
+are not suppressed. The final name policy also rejects unknown same-ID payloads
+that impersonate native name-bearing structures.
+
+These source changes are not in the published 0.4.0-alpha.1 archive. See the
+[container contract](native-containers.md) for open diagram, move, call-activity,
+layout and visual families. **Full automation remains open.**
+
 ## Current source — extended attributes and attachments (unreleased)
 
 Real MCP acceptance on **2026-09-07 UTC**, using installed **Modeler 4.3.0.008**.
