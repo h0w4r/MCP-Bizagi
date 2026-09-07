@@ -54,6 +54,35 @@ rendering, every simulation semantic, independent GUI equivalence or complete
 Modeler automation. See the [local call contract](native-calls.md). Raw evidence
 and proprietary integration research remain private.
 
+### Extracted native-call candidate
+
+Clean source `4a8fdd012cf6def20abda129aa09b301464bccc0` passed
+[public CI](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34138079559).
+Its framework-dependent Windows ZIP is **6,589,030 bytes**, SHA-256:
+`af635bdfb011e2079bff21331c14dd253beaf94e88fe037fa3eb9b3812687c8e`.
+All **319 immutable manifest entries / 320 files** matched before and after the
+following actual MCP circuits against the unmodified extracted host and worker:
+
+| Circuit | Run | Terminal operations | Worker observations / samples |
+| --- | --- | --- | --- |
+| Call lifecycle, wrong targets/kinds, deletion guards and native clone | `20260907-152450-887a36` | 17 completed / 5 expected failures | 37 / 224 |
+| Configured black-box simulation, four replications and Word/PDF | `20260907-152812-67c8ce` | 10 completed | 16 / 273 |
+| Expanded native/XML regression, settings contention and host recovery | `20260907-153020-44027b` | 13 completed / 2 expected failures / 1 cancelled / 1 interrupted | 21 / 108 |
+
+Transcript hashes, in table order:
+
+- `cd025fd0f7e0d1468658659d52b593c52ef7cd7b0bfdf6c4a09619980f897f52`
+- `6a1e4ff70ccdd66857ccc43a72faa203bd38bc3e7957852fed4e5a6a26f417bb`
+- `9a92928f0a2a6af345e561e7fe445baad59dd633d9fc6ce4d2f337233aa94209`
+
+The publication circuit explicitly asserts the call name/description and target
+diagram/task in the independent durable Word/PDF reader output. The regression
+includes cancellation, real host death, Job Object cleanup, journal restart and
+state/settings ownership. No owned MCP worker remained afterward. Desktop
+observations are periodic read-only samples, not continuous visual certification.
+This is a verified source candidate, not a replacement of the old public 0.4
+release or completion of full Modeler automation.
+
 ## Native adoption and interrupted-write reconciliation — 2026-09-07
 
 That source checkpoint exposed **29 MCP tools** and passed **427 unit tests**. A full
