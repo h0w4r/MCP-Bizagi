@@ -62,6 +62,7 @@ public static class NativeMutationFidelity
                 }
                 if (x.Length == 0 && y.Length == 0) continue;
                 if (x.Length != 1 || y.Length != 1) throw new InvalidDataException("Ambiguous native XML mutation identity.");
+                if (x[0].Name == Xpdl + "Artifact" && (c.ArtifactProperties != null || c.Name != null)) NativeArtifactPolicy.Project(x[0], y[0], c);
                 if (c.EventProperties != null) NativeEventPolicy.Project(x[0], y[0], c.EventProperties);
                 if (c.EventPayloads != null) NativeEventPayloadPolicy.Project(x[0], y[0], c.EventPayloads);
                 if (c.DataProperties != null || c.Documentation != null && x[0].Name.LocalName is "DataObject" or "DataStore") NativeDataPolicy.Project(x[0], y[0], c, reopened);

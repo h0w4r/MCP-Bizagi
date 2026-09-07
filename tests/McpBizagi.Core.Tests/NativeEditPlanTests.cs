@@ -96,6 +96,9 @@ public sealed class NativeEditPlanTests
         foreach (var type in NativeEditPlan.CreatableTypes)
         {
             var mutation = Create(type);
+            // Content/header artifacts do not durably store DisplayName; their text/context contract is separate.
+            if (type is "TextAnnotation" or "FormattedTextArtifact" or "HeaderArtifact") mutation.Name = null;
+            if (type == "Group") { mutation.Documentation = null; mutation.Geometry!.Expanded = true; }
             if (type == "Participant") mutation.ProcessId = TargetId;
             if (type == "DataStore") mutation.Geometry = null;
             if (type == "DataStoreReference") mutation.DataProperties = new() { StoreId = TargetId };

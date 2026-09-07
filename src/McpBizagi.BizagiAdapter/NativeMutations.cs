@@ -54,10 +54,12 @@ public sealed partial class NativeEngine
                     }
                 }
                 if (change.ElementType != "DataStore") Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnUtilFacade"), "SetDefaultBizAgiName", parent, element);
+                PrepareArtifact(element, parent, Require(graph[change.ParentId].DiagramId));
                 Call(MutationCollection(parent, element), "Add", element);
                 graph.Add(change.ElementId, new GraphEntry(element, change.ParentId, graph[change.ParentId].DiagramId));
             }
             else element = Require(change.ElementId);
+            ValidateArtifactMutation(element, change);
             object? previousSource = element.GetType().Name == "SequenceFlow" ? Optional(element, "Source") : null;
 
             switch (change.Operation)
@@ -68,6 +70,7 @@ public sealed partial class NativeEngine
                     if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
                     if (change.EventPayloads != null) ApplyEventPayloads(element, change.EventPayloads, graph);
                     if (change.DataProperties != null) ApplyDataProperties(element, change.DataProperties, graph);
+                    if (change.ArtifactProperties != null) ApplyArtifactProperties(element, change.ArtifactProperties);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
                     if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
@@ -218,12 +221,14 @@ public sealed partial class NativeEngine
 
     private static void ApplyGeometry(object element, NativeGeometry geometry)
     {
-        if (geometry.Expanded && Text(element, "ElementType") != "SubProcess") throw new InvalidDataException("Expanded geometry currently applies to embedded subprocesses only.");
+        if (geometry.Expanded && Text(element, "ElementType") is not "SubProcess" and not "Group") throw new InvalidDataException("Expanded geometry applies to embedded subprocesses or the native intrinsic group view.");
         if ((bool?)Optional(element, "IsConnector") == true) throw new InvalidDataException("Connections require explicit points, not node bounds.");
         object graphics = Get(element, "GraphicalProperties");
         Set(graphics, "X", (float)geometry.X); Set(graphics, "Y", (float)geometry.Y);
         Set(graphics, "Width", (float)geometry.Width); Set(graphics, "Height", (float)geometry.Height);
         Set(graphics, "Expanded", geometry.Expanded);
+        // Group load materializes these derived dimensions from its visible bounds.
+        if (Text(element, "ElementType") == "Group") Set(graphics, "ExpandedSize", new SizeF((float)geometry.Width, (float)geometry.Height));
         if (geometry.BackgroundArgb.HasValue) Set(graphics, "BackgroundColor", Color.FromArgb(geometry.BackgroundArgb.Value));
         if (geometry.BorderArgb.HasValue) Set(graphics, "BorderColor", Color.FromArgb(geometry.BorderArgb.Value));
     }

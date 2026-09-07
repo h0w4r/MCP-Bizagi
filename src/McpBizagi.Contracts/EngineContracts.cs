@@ -53,6 +53,7 @@ public sealed class NativeMutation
     public NativeEventProperties? EventProperties { get; set; }
     public NativeEventPayloadPatch[]? EventPayloads { get; set; }
     public NativeDataProperties? DataProperties { get; set; }
+    public NativeArtifactProperties? ArtifactProperties { get; set; }
     /// <summary>Creation-only native embedded subclass: SubProcess, Transaction or AdHoc.</summary>
     public string? SubProcessKind { get; set; }
     public NativeSubProcessProperties? SubProcessProperties { get; set; }
@@ -126,6 +127,7 @@ public sealed class NativeElement
     public string DiagramId { get; set; } = "";
     public string Documentation { get; set; } = "";
     public NativeDataInfo? Data { get; set; }
+    public NativeArtifactInfo? Artifact { get; set; }
     public NativeDataFlowInfo? DataFlow { get; set; }
     public NativeGeometry? Geometry { get; set; }
     /// <summary>Native expanded bounds are distinct from the collapsed shape's size.</summary>

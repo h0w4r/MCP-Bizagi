@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add typed native annotation/formatted-text content, diagram-owned groups and
+  header context, with original-preserving native cloning and exact XPDL text
+  and duplicate group-reference fidelity. Group geometry uses its actual native
+  intrinsic expanded view; unsupported display names and group documentation
+  fail instead of disappearing after reload.
+- Record five successful circuits against one clean extracted data/event package,
+  including 106 terminal native operations and unchanged distribution hashes.
+
 - Native event data bindings use installed catch/throw I/O utilities, including
   nested native record restoration and original-preserving clone maps.
 - Native artifact geometry cannot silently change pool containment. Mutation

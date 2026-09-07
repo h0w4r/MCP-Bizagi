@@ -191,6 +191,8 @@ public static class NativeDiagramPolicy
                         reference |= owner && node.Name == Xpdl + "DataStoreReference" && attr.Name == "DataStoreRef";
                         reference |= owner && node.Name == Xpdl + "DataAssociation" && (attr.Name == "From" || attr.Name == "To");
                         reference |= NativeDataFlowPolicy.IsSetReference(node) && attr.Name == "ArtifactId";
+                        // The nested Group.Id duplicates its owning Artifact.Id, not an additional graph identity.
+                        reference |= NativeArtifactPolicy.IsGroupIdentityReference(node) && attr.Name == "Id";
                         // Only the persisted boundary target is a cloned native activity reference.
                         // Same-named Target attributes on unknown extensions remain compared verbatim.
                         reference |= node.Name == Xpdl + "IntermediateEvent" && attr.Name == "Target" && (string?)node.Attribute("IsAttached") == "true" &&

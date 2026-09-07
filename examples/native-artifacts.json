@@ -1,0 +1,19 @@
+[
+  {
+    "Operation": "update",
+    "ElementId": "11111111-1111-4111-8111-111111111111",
+    "ArtifactProperties": { "Text": "Review evidence before approval.\nUnicode: Ω 日本語" },
+    "Documentation": "Supporting annotation documentation"
+  },
+  {
+    "Operation": "update",
+    "ElementId": "22222222-2222-4222-8222-222222222222",
+    "ArtifactProperties": { "Text": "<p><b>Review notes</b></p><p>Preserve the native model.</p>" }
+  },
+  {
+    "Operation": "update",
+    "ElementId": "33333333-3333-4333-8333-333333333333",
+    "Name": "Review group",
+    "Geometry": { "X": 50, "Y": 60, "Width": 650, "Height": 320, "Expanded": true }
+  }
+]

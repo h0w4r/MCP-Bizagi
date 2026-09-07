@@ -1,5 +1,49 @@
 # Verification baselines
 
+## Native content artifacts — 2026-09-07
+
+The final source circuit `20260907-220740-15048c` passed **18 terminal operations**
+(14 completed, four expected native worker failures). It created and changed
+annotation/formatted-text content, root/nested artifacts, a diagram group and a
+native header; preserved them during unrelated edits and native cloning; checked
+header context remapping; updated group/header geometry; and completed clearing,
+deletion, no-op persistence and original-revision verification.
+
+The native root and subprocess renderers verified **8/8** and **2/2** graphical
+identities respectively. The client also required both SVG and PNG artifacts for
+the exact requested surface, not merely a successful render of another diagram.
+Word readback reported **6 pages and 23 images**, including document icons.
+This is not a complete rich-text-layout or independent Modeler GUI review.
+
+Actual failed worker paths covered incident-connected artifact deletion,
+artifact content on a task, process-owned group creation and a geometric change
+that would silently move a root artifact to another pool. Subsequent native
+requests completed; failed outputs were not adopted as the next revision.
+
+| Source circuit | Run | Terminal states | Worker observations / periodic samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Final artifact lifecycle | `20260907-220740-15048c` | 14 completed, 4 expected failures | 30 / 303 | `d4fe6190cad14ffb8495aab65ee51ba7d49a24baa9bd8e010aa5ec13ffe844c9` |
+| Earlier artifact lifecycle | `20260907-215207-d6f8d3` | 14 completed, 4 expected failures | 30 / 1,025 | `c7c4ebcbd04b84ddaab03331f4642e4576eb166566f75912cca636baf79ce26a` |
+| Data/activity regression | `20260907-220000-e1b918` | 16 completed, 4 expected failures | 35 / 440 | `1d4b7c20cdbc1b9e3a17688400abd986241a4e2ea859dfa543f8783f602d3098` |
+| General native/recovery regression | `20260907-220513-fd80b2` | 13 completed, 2 expected failures, 1 cancelled, 1 interrupted | 21 / 130 | `3730c88724d7832ab4321aae9ed2c3377edefca78a8fae29c906f849f98b0c2a` |
+
+No visible owned-worker window or worker foreground was observed in these
+sampled checks. Long native initialization continued while real activity was
+observed; total elapsed duration was not used as an automatic cancellation rule.
+Release builds completed without warnings/errors and **748 unit/component tests**
+passed. Those tests are separate from the native circuits above.
+
+The first artifact development run correctly failed on native group geometry:
+the installed group reader materializes an intrinsic expanded view. The adapter
+now requires that actual view explicitly instead of normalizing the difference
+away. A later harness failure treated an operation artifact reference as a disk
+path; the client was corrected to use the native MCP revision/inspection path.
+No native comparison was weakened to turn either failed run into a pass.
+
+See the [artifact contract and remaining families](native-artifacts.md).
+This source milestone is not a new release and is not present in the older ZIP
+described below. Full Modeler automation remains open.
+
 ## Consolidated native data package — 2026-09-07
 
 Five actual MCP circuits passed against the same clean, freshly extracted package

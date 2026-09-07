@@ -148,6 +148,12 @@ try
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--artifacts-only"))
+    {
+        if (!native) throw new ArgumentException("Artifact acceptance requires --native.");
+        await NativeArtifactAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_ARTIFACT_LIFECYCLE_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--event-data-only"))
     {
         if (!native) throw new ArgumentException("Event data acceptance requires --native.");

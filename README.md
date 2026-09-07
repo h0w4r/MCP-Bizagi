@@ -19,44 +19,20 @@ foreground-window automation, or redistributing Bizagi binaries.
 
 </div>
 
-> **Experimental native editing and publishing—not full Modeler automation yet.**
-> BPMN XML tools are implemented. Native operations are opt-in diagnostics;
-> resolving internal services is not evidence of complete `.bpm` support.
-> See the [capability ledger](docs/capabilities.md) before relying on a feature.
-> **Real local acceptance:** stdio MCP, native import/persistence/reload/export,
-> multi-diagram and nested name edits, whole-container fidelity checks, native
-> validation, a 1,000-instance simulation, offscreen rendering, and crash recovery have run against
-> Modeler 4.3.0.008. [Scope and evidence](docs/validation.md).
-> Native node creation/deletion, connection edits, geometry, colors, descriptions,
-> and Excel/Word/PDF publication now have real MCP acceptance, with separate
-> fidelity boundaries rather than a blanket compatibility claim.
-> Resource catalogs, activity RACI assignments, configured simulation levels 2–4,
-> calendars, costs, and four what-if replications now have quantitative real MCP
-> acceptance. [Native metadata and simulation](docs/native-simulation.md).
-> **Current source adds experimental extended attributes and embedded files.**
-> These unreleased tools have their own [native contract and limits](docs/native-attributes.md);
-> they are not included in the existing 0.4.0-alpha.1 release archive.
-> Current source also adds [native container lifecycle](docs/native-containers.md):
-> pools/processes, stable lanes, milestones and two-level embedded subprocesses,
-> including explicit expanded sizes. The full-automation objective remains open.
-> [Native diagram lifecycle](docs/native-diagrams.md) adds creation, renaming,
-> native cloning, deletion and durable tab preferences, with fresh-worker readback.
-> [Local reusable subprocess calls](docs/native-calls.md) add explicit process
-> links, guarded target deletion and clone remapping. Simulation reports expose
-> Modeler's native black-box behavior rather than claiming linked-task execution.
-> [Native events and boundaries](docs/native-events.md) add explicit catch/throw
-> creation, interruption, same-container activity references and guarded deletion,
-> with native clone remapping. Event payload editing and simulator behavior remain
-> separate from successful native persistence.
-> [Special subprocesses](docs/native-subprocesses.md) add explicit transaction,
-> ad hoc and event-triggered native types, context-specific events and durable
-> properties. Modeling support does not imply transactional or ad hoc simulation.
-> [Event definition payloads](docs/native-event-payloads.md) add typed names,
-> conditions, timer values, error/escalation codes and compensation targets.
-> Editing existing definitions is distinct from collection editing or execution.
-> [Native data and activity/event I/O](docs/native-data.md) adds data objects, shared
-> stores, visible references and association-derived bindings, with explicit
-> nested-loader and clone identity checks. General I/O editing remains separate.
+> **Experimental—not full Modeler automation yet.** Native operations are opt-in,
+> version-gated integrations with the installed Modeler **4.3.0.008** engine.
+> Files and isolated workers come first; live unsaved desktop sessions and
+> independent GUI compatibility remain open.
+>
+> **Real execution, explicit boundaries.** Native persistence, structural edits,
+> documentation, configured simulation, offscreen rendering and recovery have
+> their own [acceptance records](docs/validation.md), not a blanket fidelity claim.
+> A clean extracted package passed [106 terminal native operations across five circuits](docs/validation-native-data-package.md).
+>
+> **Source is ahead of the published archive.** New native modeling and metadata
+> families below are not retroactively included in the existing **0.4.0-alpha.1**
+> release ZIP. Check each contract and the [capability ledger](docs/capabilities.md)
+> before relying on a feature. A green build is not native accreditation.
 
 ## Why this project
 
@@ -93,7 +69,10 @@ every operation into a BPMN XML export.
 | Native activity/flow properties | Experimental current source | Activity quantities/compensation/state, gateway direction and conditions/default references; actual simulation input checked, nondefault token behavior unaccredited; [contract](docs/native-semantics.md) |
 | Native activity loops | Experimental current source | Standard/multi-instance configuration and removal through native persistence; iteration simulation is a separate boundary; [contract and evidence](docs/native-loops.md) |
 | Special subprocesses | Experimental current source | Transaction, ad hoc and event-triggered native lifecycle, nested surfaces and context guards; [contract and evidence](docs/native-subprocesses.md) |
+| Native events and boundaries | Experimental current source | Explicit catch/throw/boundary modes, interruption, same-container references and clone remapping; [contract](docs/native-events.md) |
 | Event definition payloads | Experimental current source | Existing-kind names, conditions, timers, codes and same-container compensation references; no implied collection editing or execution; [contract](docs/native-event-payloads.md) |
+| Native data and activity/event I/O | Experimental current source | Data objects, shared stores, references and association-derived bindings; explicit nested-loader adjustments and clone checks; [contract](docs/native-data.md) |
+| Native content artifacts | Experimental current source | Annotations, formatted text, diagram groups and native headers; exact text, geometry and clone fidelity; [contract](docs/native-artifacts.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

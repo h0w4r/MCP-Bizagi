@@ -8,7 +8,7 @@ public static class NativeEditPlan
     public static readonly string[] CreatableTypes = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask",
         "NoneStart", "MessageStart", "TimerStart", "NoneEnd", "MessageEnd", "TerminateEnd", "NoneIntermediate", "MessageIntermediate", "TimerIntermediate",
         "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway", "SubProcess", "CallActivity", "Participant", "Lane", "Milestone",
-        "SequenceFlow", "MessageFlow", "Association", "DataStore", "TextAnnotation", "Group", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
+        "SequenceFlow", "MessageFlow", "Association", "DataStore", "TextAnnotation", "Group", "FormattedTextArtifact", "HeaderArtifact", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
 
     public static void Validate(NativeMutation[] changes)
     {
@@ -38,12 +38,12 @@ public static class NativeEditPlan
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
             }
             else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
-            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null))
+            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null || c.ArtifactProperties != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
-            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null && c.ArtifactProperties == null) throw new InvalidDataException("An update must specify an actual property.");
             NativeSemanticPolicy.Validate(c);
             NativeEventPolicy.Validate(c);
-            NativeEventPayloadPolicy.Validate(c); NativeDataPolicy.Validate(c);
+            NativeEventPayloadPolicy.Validate(c); NativeDataPolicy.Validate(c); NativeArtifactPolicy.Validate(c);
             NativeSubProcessPolicy.Validate(c);
             if (c.ActivityLoop != null)
             {
@@ -60,8 +60,8 @@ public static class NativeEditPlan
             if (c.Geometry is { } g)
             {
                 Number(g.X); Number(g.Y); Number(g.Width); Number(g.Height);
-                if (g.Width <= 0 || g.Height <= 0 || g.Expanded && c.ExpandedSize == null)
-                    throw new InvalidDataException("Positive node bounds are required; expanding requires an explicit ExpandedSize.");
+                if (g.Width <= 0 || g.Height <= 0 || g.Expanded && c.ExpandedSize == null && c.Operation == "create" && c.ElementType != "Group")
+                    throw new InvalidDataException("Positive node bounds are required; subprocess expansion requires an explicit ExpandedSize. Native groups use their intrinsic expanded view.");
             }
             if (c.ExpandedSize is { } size)
             {
@@ -88,9 +88,11 @@ public static class NativeEditPlan
             if (c.Operation == "delete") { if (matches.Length != 0) throw new InvalidDataException("Deleted native element survived readback."); continue; }
             if (matches.Length != 1) throw new InvalidDataException("Native identity did not survive readback exactly once.");
             var e = matches[0];
+            if (c.Geometry?.Expanded == true && c.ExpandedSize == null && e.Kind != "Group")
+                throw new InvalidDataException("Only a native group's intrinsic expanded view omits ExpandedSize.");
             NativeSemanticPolicy.Verify(c, e, elements);
             NativeEventPolicy.Verify(c, e, elements);
-            NativeEventPayloadPolicy.Verify(c, e, elements); NativeDataPolicy.Verify(c, e, elements);
+            NativeEventPayloadPolicy.Verify(c, e, elements); NativeDataPolicy.Verify(c, e, elements); NativeArtifactPolicy.Verify(c, e, elements);
             NativeSubProcessPolicy.Verify(c, e);
             if (c.ActivityLoop != null) NativeLoopPolicy.Verify(c.ActivityLoop, e.ActivityLoop);
             if (c.Operation == "create" && (e.ParentId != c.ParentId || (c.ElementType == "DataStore" ? e.Kind != "DataStore" || e.ElementType != "Other" : e.ElementType != c.ElementType))) throw new InvalidDataException("Created native type/containment differs from the request.");
