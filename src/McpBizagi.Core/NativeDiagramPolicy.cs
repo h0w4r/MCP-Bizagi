@@ -32,7 +32,7 @@ public static class NativeDiagramPolicy
     private static XDocument Read(byte[] bytes) => NativeMetadataPolicy.Read(Encoding.UTF8.GetString(bytes));
     private static byte[] Bytes(XDocument doc) => Encoding.UTF8.GetBytes(doc.ToString(SaveOptions.DisableFormatting));
     private static string Prefix(string id) => id + ".diag!/";
-    private static Dictionary<string, string> Diagrams(IReadOnlyDictionary<string, byte[]> entries)
+    internal static Dictionary<string, string> Diagrams(IReadOnlyDictionary<string, byte[]> entries)
     {
         var result = new Dictionary<string, string>();
         foreach (var pair in entries.Where(p => p.Key.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)))

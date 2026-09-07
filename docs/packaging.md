@@ -73,6 +73,8 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --pac
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --attributes-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --containers-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --diagrams-only
+
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --model-create-only
 ```
 
 Use `--containers-only --input C:/Processes/rich-model.bpm` to exercise the

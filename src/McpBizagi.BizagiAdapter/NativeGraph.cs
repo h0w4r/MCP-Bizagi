@@ -23,9 +23,11 @@ public sealed partial class NativeEngine
         string diagram = value.GetType().Name == "Collaboration" ? id : diagramId;
         // LaneSet is a runtime grouping with a new GUID on every native load, not a durable model identity.
         // Flatten it so operator-facing lanes retain their stable Process (or nested Lane) owner.
-        bool laneSet = value.GetType().Name == "LaneSet";
-        if (value.GetType().Name != "DiagramModel" && !laneSet) yield return new(value, parent, diagram);
-        string childParent = laneSet ? parent : id;
+        bool laneSet = value.GetType().Name == "LaneSet", modelRoot = value.GetType().Name == "DiagramModel";
+        if (!modelRoot && !laneSet) yield return new(value, parent, diagram);
+        // The model's GUID is also regenerated for scratch storage on every load. Root-level
+        // diagrams/resources have no durable native parent ID; never leak that runtime GUID as one.
+        string childParent = laneSet || modelRoot ? parent : id;
         // Explicit domain containment, not unrestricted reflection over arbitrary object graphs.
         foreach (string property in new[] { "Diagrams", "Participants", "MessageFlows", "Artifacts", "DataStore", "ConversationNodes",
             "FlowElements", "LaneSets", "Lanes", "Milestones", "Resources" })
@@ -71,6 +73,7 @@ public sealed partial class NativeEngine
             Id = Text(element, "Id"),
             BpmnId = Text(element, "BpmnId"),
             Kind = element.GetType().Name,
+            IsMainParticipant = element.GetType().Name == "Participant" ? (bool?)Get(element, "IsMainParticipant") : null,
             ElementType = Text(element, "ElementType"),
             Name = Text(element, "DisplayName"),
             ParentId = entry.ParentId,

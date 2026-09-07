@@ -92,6 +92,13 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--model-create-only"))
+    {
+        if (!native) throw new ArgumentException("Native model creation acceptance requires --native.");
+        await Call("native_model_create", new() { ["diagramNames"] = new[] { "Collision", "collision" } }, expectError: true);
+        await NativeModelCreationAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_MODEL_CREATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--diagrams-only"))
     {
         if (!native) throw new ArgumentException("Diagram acceptance requires --native.");

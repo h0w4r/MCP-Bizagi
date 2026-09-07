@@ -1,5 +1,67 @@
 # Verification baselines
 
+## Native blank-model lifecycle — 2026-09-07
+
+Current source exposes **27 MCP tools** and passes **415 unit tests**. The new
+`native_model_create` circuit uses the installed **4.3.0.008** native model
+constructor and domain defaults, with no BPMN input or import substitution.
+
+Run `20260907-135214-c0e048` passed nine real native operations: eight completed
+and one expected failure, with 15 owned-worker observations / 338 periodic
+samples. Transcript SHA-256:
+`37d1091090f73555202c189468b31bf4eeda033bb92f1740b294ea68757b885a`.
+
+The MCP client created single- and two-diagram native files, checked exact
+fresh-worker identities/preferences and whole-container no-op stability, inserted
+start/task/end nodes and connecting flows into a blank process, rendered the
+result and ran the installed simulator. The explicitly identified user task
+completed **1,000** instances. Rejected deletion of an opened diagram preserved
+the output; subsequent independent reads confirmed both edited and original
+revisions. Finally, explicit removal of all added nodes/flows restored a file
+equivalent to the original blank model under the native whole-container policy,
+without an expected-change waiver. Duplicate initial names were also rejected at
+the real MCP tool boundary before starting a native operation.
+
+Earlier failed attempts exposed concrete boundary mistakes, which were corrected
+instead of weakening the acceptance result:
+
+- The native model GUID is regenerated for scratch storage. Root-level
+  `NativeElement.ParentId` is now empty, rather than presenting that transient
+  GUID as a durable owner.
+- Native first insertion/last deletion can materialize/omit structural XML
+  collections. The comparison projects only empty, known native wrappers touched
+  by verified child lifecycle; unknown attributes, namespaces, comments, content
+  and `xml:space` remain checked. Native-name lookalikes in extension paths cannot
+  impersonate the actual mutation target.
+- An empty native main participant has an invisible boundary and no required SVG
+  shape. Render checks exclude only that shell, retain all graphical children,
+  and record the required/excluded identities. `NativeElement.IsMainParticipant`
+  exposes this distinction without localized-name heuristics.
+- Native simulation also emits generated black-box task rows. Acceptance now
+  selects the requested task by exact `NativeElement.BpmnId`; raw generated
+  metrics remain in the report rather than being removed or mistaken for it.
+
+No visible or foreground owned worker window was observed in the periodic
+samples. This does not accredit independent desktop visual compatibility or
+live unsaved sessions. Package and broader regression evidence are separate;
+this source circuit alone does not complete full Modeler automation. See the
+[native model contract](native-models.md).
+
+The corrected source also passed the configured clone and expanded recovery
+regressions through the actual MCP client:
+
+| Circuit | Run | Operations | Workers / samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Native diagram cloning with resource/RACI/calendar behavior | `20260907-135534-bdb521` | 12 completed, 3 expected failures | 22 / 151 | `fc02d7324512af6d27b5e19a3347ee8d61d26cdebfc4ffad64963bf14c4d1ce1` |
+| Expanded native, simulation, rendering and host/worker recovery | `20260907-135753-e78f68` | 13 completed, 2 expected failures, 1 cancelled, 1 interrupted | 21 / 223 | `2cd5bb345870d4a60d734cb04a58623d3de2eea9916637256ce4ba258559270f` |
+
+The configured cloned scenarios retained their real quantitative timing, cost,
+resource-contention and calendar assertions. The full regression also exercised
+nested/multi-diagram fidelity, corrupt input, stale revisions, settings contention,
+active cancellation, host termination, owned Job Object cleanup and journal/state
+lease recovery. The new-blank-model final comparison checked 20 native archive
+entries and 435 atoms and reported preservation of the original blank semantics.
+
 ## Native configuration observer correction — 2026-09-07
 
 The clean `025df56` diagram candidate failed its rich packaged lifecycle at native

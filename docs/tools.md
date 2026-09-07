@@ -27,6 +27,7 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_probe` | None | Resolve actual native services in an isolated worker |
 | `native_roundtrip` | `path`; optional `modelName`, `additionalPaths` | Import one BPMN file per native diagram, persist `.bpm`, reopen/export, report per-input bounded fidelity findings |
 | `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
+| `native_model_create` | `diagramNames` | Native blank `.bpm` without BPMN import; generated diagram IDs, ordered tabs, fresh-worker graph and no-op stability gate; [contract](native-models.md) |
 | `native_diagrams_get` | `path` | Native diagram IDs/names, persisted ordered tab preferences, native preference scope and source revision |
 | `native_diagrams_apply` | `path`, `expectedRevision`, `patch` | Create/rename/clone/delete diagrams and explicitly replace ordered tab preferences; native ID map and fresh-reader fidelity; [contract](native-diagrams.md) |
 | `native_metadata_get` | `path` | Native resource catalog, activity RACI, full diagram BPSim XML, element `Id` and `BpmnId`, source revision |
@@ -51,6 +52,13 @@ submission returns an `OperationView`, **not** the completed engine result.
 expected byte revision from `sourceRevision`. Do not reuse IDs from the original
 BPMN XML: the importer may regenerate them.
 
+Root-level diagram/resource `NativeElement.ParentId` is empty. The native model
+scratch GUID is regenerated on each load and is not a durable parent identity.
+Process-owned and nested elements still expose their actual stable parent IDs.
+`NativeElement.IsMainParticipant` is `true` for the native invisible main pool
+boundary, `false` for visible participants and `null` for other element kinds.
+The invisible boundary's graphical children are still required by render checks.
+
 Native `path` arguments also accept completed `artifact:<operation-id>:model.bpm`
 and `artifact:<operation-id>:edited.bpm` references. These are returned as
 `nativeArtifact` and `outputArtifact` by writers. They work when state is outside
@@ -62,6 +70,13 @@ explicitly requests the active/default native scenario. The installed manager
 may initialize missing duration and trigger settings in memory; it does not save
 them back to the source. Defaults and configured levels 2–4 have local quantitative
 acceptance on the documented corpus. See [scenario and metadata contracts](native-simulation.md).
+
+Match simulation rows by `NativeSimulationElement.Id` against the requested
+element's `NativeElement.BpmnId`, not just `Kind` or a localized display name.
+The native simulator also emits generated black-box tasks and flows. An empty
+process can therefore contribute an additional zero-completion `Task` row and
+undefined (`NaN`) duration strings. Raw rows are retained; they are not evidence
+that a different, explicitly identified task did or did not execute.
 
 `native_validate` completion means the validator executed; inspect
 `EngineReply.Validation` before deciding whether the model is valid. Likewise,

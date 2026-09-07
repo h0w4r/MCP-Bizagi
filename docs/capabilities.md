@@ -10,6 +10,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Native import/save/reload/export | Locally verified, experimental | Basic and two-diagram cases; warnings expose normalization |
 | Native container preservation | Partial corpus, explicit policy | Unknown-content checks are implemented; broad attributes/attachments/scenario corpora remain pending |
 | Existing `.bpm` inspection | Locally verified, copy-only | Source byte equality and actual native identities |
+| Blank native model creation | Experimental current source | Native constructor/domain defaults, exact durable diagram identities, ordered tabs and no-op stability; [contract](native-models.md) and [execution evidence](validation.md) |
 | `.bpm` name batches | Locally verified, copy-only | Task/event batch and task nested two subprocess levels; full archive checked on tested inputs |
 | Native no-op save and comparison | Basic native case locally verified | Unknown/binary changes rejected by comparator; broad rich-content no-op corpus pending |
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add native blank-model creation without BPMN import, including initial diagram names/order, one-time native IDs, independent readback and whole-container no-op stability.
+- Stop presenting the transient native model scratch GUID as a durable root parent. Native root diagrams/resources now report an empty `ParentId`.
+- Handle first insertion/last deletion of native structural collections only after verified child lifecycle projection. Preserve unknown attributes, namespaces, comments, text and `xml:space`; reject native-name lookalikes in unknown extension paths.
+
 - Observe asynchronous native graphical defaults without denying the initializer write/delete sharing; wait for in-memory readiness before sampling a bounded, parsed XML snapshot. Retain scoped settings I/O diagnostics and real repeated-render acceptance, including settings contention and recovery.
 
 - Add native diagram creation, renaming, cloning, deletion and persisted ordered/selected tab preferences through two revision-checked MCP tools.

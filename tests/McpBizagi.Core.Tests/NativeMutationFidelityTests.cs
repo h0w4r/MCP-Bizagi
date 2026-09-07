@@ -15,7 +15,8 @@ public sealed class NativeMutationFidelityTests
     private const string TargetId = "33333333-4444-4555-8666-777777777777";
     private const string Ns = "http://www.wfmc.org/2009/XPDL2.2";
 
-    private static byte[] Archive(string body, byte[]? attachment = null, string extra = "<Unknown keep='yes'/>")
+    private static byte[] Archive(string body, byte[]? attachment = null, string extra = "<Unknown keep='yes'/>", bool omitCollection = false,
+        string collectionAttributes = "", string processAttributes = "")
     {
         using var stream = new MemoryStream();
         using (var outer = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
@@ -26,7 +27,10 @@ public sealed class NativeMutationFidelityTests
             using (var diagram = new ZipArchive(diagramBytes, ZipArchiveMode.Create, leaveOpen: true))
             {
                 using var writer = new StreamWriter(diagram.CreateEntry("Diagram.xml").Open(), Encoding.UTF8);
-                writer.Write($"<Package xmlns='{Ns}'><WorkflowProcesses><WorkflowProcess Id='{ParentId}'><Activities>{body}</Activities>{extra}</WorkflowProcess></WorkflowProcesses></Package>");
+                // Native transitions belong to Transitions, never an Activities extension lookalike.
+                string collection = body.StartsWith("<Transition ", StringComparison.Ordinal) ? "Transitions" : "Activities";
+                string list = omitCollection ? "" : $"<{collection} {collectionAttributes}>{body}</{collection}>";
+                writer.Write($"<Package xmlns='{Ns}'><WorkflowProcesses><WorkflowProcess Id='{ParentId}' {processAttributes}>{list}{extra}</WorkflowProcess></WorkflowProcesses></Package>");
             }
             using var target = outer.CreateEntry("own-diagram.diag").Open(); target.Write(diagramBytes.ToArray());
         }
@@ -244,5 +248,50 @@ public sealed class NativeMutationFidelityTests
     {
         Assert.Throws<InvalidDataException>(() => NativeMutationFidelity.Compare(Archive(Activity() + Activity()),
             Archive(Activity("Updated") + Activity("Updated")), [Update()], [Readback()]));
+    }
+
+    [Theory]
+    [InlineData(false, "none")] [InlineData(true, "none")]
+    [InlineData(false, "attribute")] [InlineData(true, "attribute")]
+    [InlineData(false, "namespace")] [InlineData(true, "namespace")]
+    [InlineData(false, "comment")] [InlineData(true, "comment")]
+    [InlineData(false, "text")] [InlineData(true, "text")]
+    [InlineData(false, "unknown")] [InlineData(true, "unknown")]
+    [InlineData(false, "preserve")] [InlineData(true, "preserve")]
+    [InlineData(false, "ancestor-preserve")] [InlineData(true, "ancestor-preserve")]
+    [InlineData(false, "unrelated")] [InlineData(true, "unrelated")]
+    public void FirstInsertionAndLastDeletionProjectOnlyEmptyNativeStructuralLists(bool delete, string fault)
+    {
+        string attributes = fault switch { "attribute" => "unknown='keep'", "namespace" => "xmlns:extra='urn:keep'", "preserve" => "xml:space='preserve'", _ => "" };
+        string decoration = fault switch { "comment" => "<!--keep-->", "text" => "meaningful", "unknown" => "<Unknown/>", _ => "\n   " };
+        string processAttributes = fault == "ancestor-preserve" ? "xml:space='preserve'" : "";
+        var empty = Archive("", omitCollection: true, processAttributes: processAttributes);
+        var populated = Archive(Activity("Created") + decoration, collectionAttributes: attributes, processAttributes: processAttributes,
+            extra: fault == "unrelated" ? "<Unknown keep='lost'/>" : "<Unknown keep='yes'/>");
+        NativeMutation change = delete ? new() { Operation = "delete", ElementId = ElementId }
+            : new() { Operation = "create", ElementId = ElementId, ParentId = ParentId, ElementType = "UserTask", Name = "Created" };
+        var report = NativeMutationFidelity.Compare(delete ? populated : empty, delete ? empty : populated, [change], delete ? [] : [Readback("Created")]);
+        Assert.Equal(fault == "none", report.Preserved);
+        if (fault == "none") Assert.Contains(report.Differences, d => d.Classification == "verified_empty_collection_projection");
+    }
+
+    [Fact] public void ExistingEmptyCollectionMetadataCannotDisappearDuringInsertion()
+    {
+        NativeMutation change = new() { Operation = "create", ElementId = ElementId, ParentId = ParentId, ElementType = "UserTask", Name = "Created" };
+        Assert.False(NativeMutationFidelity.Compare(Archive("", collectionAttributes: "unknown='keep'"), Archive(Activity("Created")), [change], [Readback("Created")]).Preserved);
+        Assert.False(NativeMutationFidelity.Compare(Archive("", collectionAttributes: "xmlns:q='urn:keep'"), Archive(Activity("Created")), [change], [Readback("Created")]).Preserved);
+    }
+
+    [Fact] public void AnUnknownExtensionCannotImpersonateAnOwnedNativeActivity()
+    {
+        NativeMutation change = new() { Operation = "create", ElementId = ElementId, ParentId = ParentId, ElementType = "UserTask", Name = "Created" };
+        Assert.Throws<InvalidDataException>(() => NativeMutationFidelity.Compare(Archive(""),
+            Archive("", extra: $"<Unknown><Activities>{Activity("Created")}</Activities></Unknown>"), [change], [Readback("Created")]));
+    }
+
+    [Fact] public void UnrequestedEmptyListChangesAreNotAGlobalNoopWaiver()
+    {
+        Assert.False(NativeMutationFidelity.Compare(Archive(Activity()),
+            Archive(Activity("Updated"), extra: "<Unknown keep='yes'/><Transitions/>"), [Update()], [Readback()]).Preserved);
     }
 }

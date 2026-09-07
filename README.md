@@ -67,6 +67,7 @@ every operation into a BPMN XML export.
 | Native engine bootstrap | Opt-in diagnostic | Internal interfaces, not a supported vendor API |
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
 | Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
+| Create a blank native `.bpm` | Experimental current source | Native model constructor, one or more named diagrams, ordered tabs, fresh-reader and no-op stability gates; [contract](docs/native-models.md) |
 | Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback and whole-container fidelity gate; tested nested/multi-diagram inputs |
 | Native structural batches | Opt-in, copy-only | 22 task/event/gateway types tested; create/delete, connection endpoints, bounds, colors and descriptions; [limits](docs/native-editing.md) |
 | Pools, lanes, milestones and embedded subprocesses | Experimental current source | Explicit process IDs, complete partitions, nested lifecycle and expanded/collapsed sizes; [contract](docs/native-containers.md) |

@@ -18,6 +18,7 @@ public static class NativeMutationFidelity
         var left = NativeArchive.ReadEntries(before).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(after).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var coverage = changes.ToDictionary(c => c.ElementId, _ => 0, StringComparer.Ordinal);
+        var collections = new List<NativeDifference>();
         foreach (string entry in left.Keys.Intersect(right.Keys, StringComparer.OrdinalIgnoreCase).Where(p => p.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)).ToArray())
         {
             var a = Read(left[entry]); var b = Read(right[entry]);
@@ -120,7 +121,13 @@ public static class NativeMutationFidelity
             }
             // Defer removals until every identity has been checked. Parent-first creation and child-first
             // deletion batches must not hide subsequent members from the fidelity comparison.
+            var leftParents = removeLeft.Select(e => e.Parent).OfType<XElement>().Distinct().ToArray();
+            var rightParents = removeRight.Select(e => e.Parent).OfType<XElement>().Distinct().ToArray();
             RemoveContainers(removeLeft, changes, "delete"); RemoveContainers(removeRight, changes, "create");
+            // The serializer omits some empty structural lists, then materializes them when their first
+            // requested child is inserted. Only lists touched by verified child projection are eligible.
+            ProjectEmptyCollections(leftParents, b, entry, collections);
+            ProjectEmptyCollections(rightParents, a, entry, collections);
             left[entry] = Encoding.UTF8.GetBytes(a.ToString(SaveOptions.DisableFormatting));
             right[entry] = Encoding.UTF8.GetBytes(b.ToString(SaveOptions.DisableFormatting));
         }
@@ -130,12 +137,40 @@ public static class NativeMutationFidelity
         // Keep a visible record that authorized intent was projected; callers also retain the full request and readback.
         return report with
         {
-            Differences = report.Differences.Concat(changes.Select(c => new NativeDifference("request", c.Operation,
+            Differences = report.Differences.Concat(collections).Concat(changes.Select(c => new NativeDifference("request", c.Operation,
             "verified_requested_mutation", c.ElementId, null, "fresh-worker postconditions verified"))).ToArray()
         };
     }
-    private static XElement[] Identified(XDocument doc, string id) => doc.Descendants().Where(e => e.Name.Namespace == Xpdl &&
+    private static XElement[] Identified(XDocument doc, string id) => doc.Descendants().Where(e => NativeFidelity.IsNativeNameOwner(e) &&
         (string?)e.Attribute("Id") == id && new[] { "Activity", "Transition", "Pool", "Lane", "Milestone", "Artifact", "MessageFlow" }.Contains(e.Name.LocalName)).ToArray();
+
+    private static void ProjectEmptyCollections(XElement[] candidates, XDocument peer, string entry, List<NativeDifference> evidence)
+    {
+        bool Empty(XElement element) => !element.HasAttributes && element.Nodes().All(n => n is XText t && string.IsNullOrWhiteSpace(t.Value)) &&
+            element.AncestorsAndSelf().Select(e => (string?)e.Attribute(XNamespace.Xml + "space")).FirstOrDefault(v => v != null) != "preserve";
+        foreach (var collection in candidates)
+        {
+            var owner = collection.Parent;
+            if (collection.Document == null || owner == null || !NativeFidelity.IsNativeNameOwner(owner) || collection.Name.Namespace != Xpdl || !Empty(collection)) continue;
+            string[] allowed = owner.Name.LocalName switch
+            {
+                "Package" => ["Pools", "WorkflowProcesses", "MessageFlows", "Artifacts"],
+                "WorkflowProcess" => ["Activities", "Transitions", "ActivitySets", "Artifacts"],
+                "ActivitySet" => ["Activities", "Transitions", "Artifacts"],
+                "Pool" => ["Lanes", "Milestones"],
+                _ => []
+            };
+            if (!allowed.Contains(collection.Name.LocalName) || owner.Elements(collection.Name).Count() != 1) continue;
+            var owners = peer.Descendants().Where(e => e.Name == owner.Name && (string?)e.Attribute("Id") == (string?)owner.Attribute("Id") && NativeFidelity.IsNativeNameOwner(e)).ToArray();
+            if (owners.Length != 1) continue;
+            var opposite = owners[0].Elements(collection.Name).ToArray();
+            if (opposite.Length > 1 || opposite.Length == 1 && !Empty(opposite[0])) continue;
+            // Attributes, namespace declarations, comments, unknown children, meaningful text and
+            // xml:space=preserve remain outside this narrow structural-list projection.
+            evidence.Add(new(entry, collection.Name.LocalName, "verified_empty_collection_projection", (string?)owner.Attribute("Id"), "verified child lifecycle", "empty structural wrapper only"));
+            collection.Remove(); if (opposite.Length == 1) opposite[0].Remove();
+        }
+    }
     private static XElement? Companion(XDocument doc, XElement owner)
     {
         // Bizagi persists pools/processes and embedded subprocesses/activity sets as linked structures.

@@ -69,6 +69,8 @@ public sealed class NativeElement
 {
     public string Id { get; set; } = "";
     public string Kind { get; set; } = "";
+    /// <summary>Native hidden main-participant boundary flag; null for non-participant elements. Its child elements remain visible.</summary>
+    public bool? IsMainParticipant { get; set; }
     public string ElementType { get; set; } = "";
     public string Name { get; set; } = "";
     public string BpmnId { get; set; } = "";

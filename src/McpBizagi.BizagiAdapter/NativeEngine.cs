@@ -145,11 +145,24 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
+        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
-        if (request.Action == "import_save")
+        if (request.Action == "create_save")
+        {
+            var patch = request.DiagramPatch ?? throw new InvalidDataException("Missing native model creation request.");
+            if (patch.Changes == null || patch.Changes.Length is < 1 or > 100 || patch.Changes.Any(c => c == null || c.Operation != "create"))
+                throw new InvalidDataException("New native models require 1-100 explicit create-diagram changes.");
+            progress("native_create_model");
+            EditDiagrams(model, persistence, patch, progress);
+            Set(model, "Path", request.OutputPath);
+            progress("native_persist_created_bpm");
+            Call(persistence, "Persist", model);
+            if (!File.Exists(request.OutputPath) || new FileInfo(request.OutputPath).Length == 0) throw new IOException("Native creation returned without a persisted model.");
+            reply.Artifacts = new[] { request.OutputPath };
+        }
+        else if (request.Action == "import_save")
         {
             progress("native_import_bpmn");
             object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
@@ -232,7 +245,7 @@ public sealed partial class NativeEngine
             .Select(d => Get(d, "DisplayName")?.ToString() ?? "").ToArray();
         reply.Elements = Graph(model).Select(Describe).ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
-        if (request.Action is "diagrams_read" or "diagrams_save") reply.DiagramState = DiagramState(model);
+        if (request.Action is "diagrams_read" or "diagrams_save" or "create_save") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);
         if (request.Action is "documentation_read" or "documentation_save") reply.Documentation = Documentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)

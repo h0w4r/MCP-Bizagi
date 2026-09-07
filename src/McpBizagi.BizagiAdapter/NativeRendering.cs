@@ -99,8 +99,14 @@ public sealed partial class NativeEngine
                 return false;
             }
             var expected = graph.Where(e => Optional(e.Value, "GraphicalProperties") != null &&
-                !new[] { "Collaboration", "Process", "LaneSet", "Resource" }.Contains(e.Value.GetType().Name) && InSurface(e))
+                !new[] { "Collaboration", "Process", "LaneSet", "Resource" }.Contains(e.Value.GetType().Name) && InSurface(e) &&
+                // Native main participants have BoundaryVisible=false. An empty invisible shell need
+                // not have an SVG identity, but every graphical child remains required independently.
+                !(e.Value.GetType().Name == "Participant" && (bool)Get(e.Value, "IsMainParticipant")))
                 .Select(e => Text(e.Value, "Id")).ToArray();
+            File.WriteAllLines(Path.Combine(workRoot, "render-required-identities-" + id + ".txt"), expected);
+            File.WriteAllLines(Path.Combine(workRoot, "render-invisible-main-participants-" + id + ".txt"), graph
+                .Where(e => e.Value.GetType().Name == "Participant" && (bool)Get(e.Value, "IsMainParticipant") && InSurface(e)).Select(e => Text(e.Value, "Id")));
             string result = WaitForCompleteSvg(expected, request.InactivitySeconds, progress);
             rendering.Remove(id); completed.Add(id, result);
             return result;
