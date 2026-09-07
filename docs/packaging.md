@@ -87,6 +87,9 @@ tools require the newer source snapshot, not the old published 0.4 ZIP.
 The commit suite additionally exercises real post-publication host death,
 cancellation, retained staged bytes and independent reconciliation. Add
 `--input C:/Processes/rich-model.bpm` for a rich native byte-preservation corpus.
+The clean `50f9566` candidate passed both commit routes and the expanded general
+circuit with external state; all 317 manifest entries remained unchanged.
+Exact archive and transcript hashes are in [verification baselines](validation.md#extracted-native-commit-candidate).
 
 For a separately reviewed PDF downsampling test, add `--allow-image-resampling`
 to publication acceptance. This is explicit fidelity acceptance, not an automatic

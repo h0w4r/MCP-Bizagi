@@ -55,6 +55,33 @@ edits, no-op fidelity, simulation, rendering, settings conflict/recovery and
 host-state ownership/Job Object cleanup. No complete Modeler GUI equivalence is
 inferred from those results.
 
+### Extracted native-commit candidate
+
+A clean framework-dependent ZIP from source
+`50f956671d0bb18372848336b2a90889c65793f8` was extracted without modification.
+Its **317 immutable manifest entries / 318 total files** matched before and after
+all three actual MCP circuits. Archive size: **6,577,293 bytes**. SHA-256:
+`8e31732d1261071848dc84d62c3b70f7573a2e4852c4bfee517e06c364c789f9`.
+
+All runs used private state outside the workspace:
+
+| Circuit | Run | Terminal operations | Worker observations / samples |
+| --- | --- | --- | --- |
+| Rich native adoption, cancellation and host-death reconciliation | `20260907-143919-d9484c` | 14 completed / 5 expected failures / 1 cancelled / 1 interrupted | 22 / 117 |
+| Native constructor → new model → edit → workspace adoption and recovery | `20260907-144218-7bd2d7` | 15 completed / 5 expected failures / 1 cancelled / 1 interrupted | 25 / 123 |
+| Expanded native/XML regression, rendering, simulation and host recovery | `20260907-144441-a4f50f` | 13 completed / 2 expected failures / 1 cancelled / 1 interrupted | 21 / 121 |
+
+Transcript hashes, in the same order:
+
+- `86de933983d99f58cb1b481bc1f8fa2450366bc60d5a72589720ba00682c1225`
+- `901ebb1acdfcc04bd165e8ae5326811abbb3696502ee07c67a5a7de777e4c0e0`
+- `e9f5da0aff852311d162d2fa87ec9be5598518c363a71ce80df6824fde88e753`
+
+No owned MCP worker remained after the circuits. Desktop observations are
+periodic read-only samples, not continuous proof or independent Modeler visual
+accreditation. This is a verified source candidate, **not** a replacement of the
+older published 0.4 release or completion of the full-automation objective.
+
 ## Native blank-model lifecycle — 2026-09-07
 
 That source checkpoint exposed **27 MCP tools** and passed **415 unit tests**. The new
