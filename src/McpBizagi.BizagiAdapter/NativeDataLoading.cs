@@ -9,15 +9,23 @@ public sealed partial class NativeEngine
     private string[] RestoreNestedDataFlows(object model, Action<string> progress)
     {
         var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"));
-        var nested = graph.Values.Where(e => e.Value.GetType().GetProperty("IoSpecification") != null &&
+        var nested = graph.Values.Where(e => DescribeDataFlow(e) != null &&
             graph.TryGetValue(e.ParentId, out var parent) && IsNativeSubProcess(parent.Value)).ToArray();
         if (nested.Length == 0) return Array.Empty<string>();
         XNamespace ns = "http://www.wfmc.org/2009/XPDL2.2";
+        // A custom-root XmlSerializer emits a generated assembly per construction on
+        // .NET Framework. Reuse each exact contract within this serialized load operation.
+        var serializers = new Dictionary<(string TypeName, string RootName), XmlSerializer>();
         object Adapter(string name, params object[] args) => New(Type("Bizagi.ProcessModeler.Persistence.dll", "Bizagi.ProcessModeler.Persistence.Interop.XPDL.BPMNXPDL22Adapters." + name), args);
         object Deserialize(XElement node, string typeName)
         {
-            var type = Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.XPDL22." + typeName);
-            var serializer = new XmlSerializer(type, new XmlRootAttribute(node.Name.LocalName) { Namespace = ns.NamespaceName });
+            var key = (typeName, node.Name.LocalName);
+            if (!serializers.TryGetValue(key, out var serializer))
+            {
+                var type = Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.XPDL22." + typeName);
+                serializer = new XmlSerializer(type, new XmlRootAttribute(node.Name.LocalName) { Namespace = ns.NamespaceName });
+                serializers.Add(key, serializer);
+            }
             using var reader = node.CreateReader(); return serializer.Deserialize(reader)!;
         }
         var adjustments = new List<string>();
@@ -54,8 +62,20 @@ public sealed partial class NativeEngine
                 if (expected.Length == 0 || expected.OrderBy(v => v).SequenceEqual(current.Inputs.Concat(current.Outputs).Select(e => e.Id).OrderBy(v => v))) continue;
                 if (current.Inputs.Length != 0 || current.Outputs.Length != 0 || current.InputAssociations.Length != 0 || current.OutputAssociations.Length != 0)
                     throw new InvalidDataException("Partially loaded nested I/O cannot be replaced implicitly.");
-                Set(owner.Value, "IoSpecification", null!);
-                Call(loader, "LoadInputAndOutputSets", graphics, ids, connections, Deserialize(nodes[0], "Activity"), all, owner.Value);
+                object persistedActivity = Deserialize(nodes[0], "Activity");
+                if (owner.Value.GetType().GetProperty("IoSpecification") != null)
+                {
+                    Set(owner.Value, "IoSpecification", null!);
+                    Call(loader, "LoadInputAndOutputSets", graphics, ids, connections, persistedActivity, all, owner.Value);
+                }
+                else
+                {
+                    // Event sets are singular and have native event-specific overloads.
+                    // Do not coerce events into activities or manufacture a specification.
+                    bool input = DescribeEvent(owner.Value)?.Mode is "Throw" or "End";
+                    Set(owner.Value, input ? "InputSet" : "OutputSet", null!);
+                    Call(loader, input ? "LoadInputSets" : "LoadOutputSets", graphics, ids, connections, persistedActivity, all, owner.Value);
+                }
                 foreach (string direction in new[] { "Input", "Output" })
                     foreach (object association in OptionalItems(owner.Value, "Data" + direction + "Associations"))
                     {

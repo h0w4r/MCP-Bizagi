@@ -3,7 +3,7 @@ using McpBizagi.Contracts;
 
 namespace McpBizagi.Core;
 
-/// <summary>Verifies native activity I/O derived from explicit graphical association edits.</summary>
+/// <summary>Verifies native activity/event I/O derived from explicit graphical association edits.</summary>
 public static class NativeDataFlowPolicy
 {
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";
@@ -51,8 +51,7 @@ public static class NativeDataFlowPolicy
         var result = new Dictionary<string, Link>();
         void Add(string owner, string item, bool input)
         {
-            if (!nodes.TryGetValue(owner, out var activity) || activity.Name != Ns + "Activity" ||
-                activity.Element(Ns + "Implementation") == null && activity.Element(Ns + "BlockActivity") == null) return;
+            if (!nodes.TryGetValue(owner, out var activity) || !SupportsDirection(activity, input)) return;
             var link = new Link(owner, item, input); result[link.Key] = link;
         }
         void Connect(string item, string owner, bool input)
@@ -68,6 +67,34 @@ public static class NativeDataFlowPolicy
             Connect(source, target, true); Connect(target, source, false);
         }
         return result;
+    }
+    public static bool SupportsDirection(XElement activity, bool input)
+    {
+        if (activity.Name != Ns + "Activity" || !NativeFidelity.IsNativeNameOwner(activity)) return false;
+        if (activity.Element(Ns + "Implementation") != null || activity.Element(Ns + "BlockActivity") != null) return true;
+        var wrappers = activity.Elements(Ns + "Event").ToArray();
+        if (wrappers.Length == 0) return false;
+        if (wrappers.Length != 1) throw new InvalidDataException("Ambiguous native event I/O owner.");
+        var modes = wrappers[0].Elements().ToArray();
+        if (modes.Length != 1) throw new InvalidDataException("Ambiguous native event I/O mode.");
+        var mode = modes[0];
+        if (mode.Name == Ns + "StartEvent") return !input;
+        if (mode.Name == Ns + "EndEvent") return input;
+        if (mode.Name != Ns + "IntermediateEvent") throw new InvalidDataException("Unknown native event I/O mode.");
+        if ((string?)mode.Attribute("Target") is { Length: > 0 } || (string?)mode.Attribute("IsAttached") == "true") return !input;
+        string trigger = (string?)mode.Attribute("Trigger") ?? "None";
+        if (trigger is "None" or "Escalation" or "Compensation") return input;
+        if (trigger is "Timer" or "Conditional" or "ParallelMultiple" or "Error" or "Cancel") return !input;
+        // Mode markers belong to the exact direct native trigger, never a nested
+        // lookalike or an individual definition inside a multiple event.
+        string marker = trigger switch { "Message" => "TriggerResultMessage", "Signal" => "TriggerResultSignal", "Link" => "TriggerResultLink", "Multiple" => "TriggerIntermediateMultiple", _ => "" };
+        if (marker == "") throw new InvalidDataException("Unknown native event I/O trigger.");
+        var payloads = mode.Elements(Ns + marker).ToArray();
+        if (payloads.Length != 1) throw new InvalidDataException("Native event I/O direction marker is absent or ambiguous.");
+        string value = (string?)payloads[0].Attribute(trigger == "Multiple" ? "IsThrow" : "CatchThrow") ?? (trigger == "Multiple" ? "false" : "CATCH");
+        bool throws = value is "true" or "THROW";
+        if (trigger == "Multiple" ? value is not "true" and not "false" : value is not "CATCH" and not "THROW") throw new InvalidDataException("Unknown native event I/O direction marker.");
+        return input == throws;
     }
     private static Dictionary<string, Binding> Bindings(XDocument doc, Dictionary<string, XElement> nodes)
     {
@@ -188,7 +215,7 @@ public static class NativeDataFlowPolicy
         var oldBindings = Bindings(before, oldNodes); var newBindings = Bindings(after, newNodes);
         foreach (var required in newRequirements)
         {
-            if (!newBindings.TryGetValue(required.Key, out var binding)) throw new InvalidDataException("A graphical data association has no durable native activity I/O binding.");
+            if (!newBindings.TryGetValue(required.Key, out var binding)) throw new InvalidDataException("A graphical data association has no durable native activity/event I/O binding.");
             VerifyReadback(binding, graph);
         }
         var changedOwners = new HashSet<string>();
@@ -198,6 +225,9 @@ public static class NativeDataFlowPolicy
             if (!newRequirements.ContainsKey(pair.Key) || oldRequirements.ContainsKey(pair.Key) || oldNodes.ContainsKey(Id(pair.Value.Port)) || oldNodes.ContainsKey(Id(pair.Value.Association)))
                 throw new InvalidDataException("Native I/O creation is not derived from a new graphical data relationship.");
             NativeMetadataPolicy.RequireId(Id(pair.Value.Port)); NativeMetadataPolicy.RequireId(Id(pair.Value.Association));
+            // The installed helper creates default owned nodes, not authored metadata.
+            // Do not hide unexpected rich/unknown payload merely because the IDs are new.
+            RequireDefaultRemoval(pair.Value);
             changedOwners.Add(pair.Value.Link.OwnerId);
             newContainers.Add(pair.Value.Port.Parent!); newContainers.Add(pair.Value.Association.Parent!); RemoveForComparison(pair.Value);
         }

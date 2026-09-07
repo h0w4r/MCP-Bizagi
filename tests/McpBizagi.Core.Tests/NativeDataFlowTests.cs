@@ -51,6 +51,48 @@ public sealed class NativeDataFlowTests
         Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.ProjectDerived(Document(false, false), Document(true, true), [], graph));
     }
     [Fact] public void AGraphicalAssociationAloneDoesNotProveADataBinding() => Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.ProjectDerived(Document(false, false), Document(true, false), [], Graph()));
+    public static TheoryData<string, bool> EventDirections => new()
+    {
+        { "<StartEvent Trigger='Message'/>", false }, { "<EndEvent Result='Message'/>", true },
+        { "<IntermediateEvent Trigger='None'/>", true }, { "<IntermediateEvent Trigger='Timer'/>", false },
+        { "<IntermediateEvent Trigger='Conditional'/>", false }, { "<IntermediateEvent Trigger='Escalation'/>", true },
+        { "<IntermediateEvent Trigger='Compensation'/>", true }, { "<IntermediateEvent Trigger='Error'/>", false },
+        { "<IntermediateEvent Trigger='Message'><TriggerResultMessage/></IntermediateEvent>", false },
+        { "<IntermediateEvent Trigger='Message'><TriggerResultMessage CatchThrow='THROW'/></IntermediateEvent>", true },
+        { "<IntermediateEvent Trigger='Signal'><TriggerResultSignal CatchThrow='THROW'/></IntermediateEvent>", true },
+        { "<IntermediateEvent Trigger='Link'><TriggerResultLink/></IntermediateEvent>", false },
+        { "<IntermediateEvent Trigger='Multiple'><TriggerIntermediateMultiple IsThrow='true'/></IntermediateEvent>", true },
+        { "<IntermediateEvent Trigger='Multiple'><TriggerIntermediateMultiple/></IntermediateEvent>", false },
+        { "<IntermediateEvent Trigger='ParallelMultiple'><TriggerIntermediateMultiple/></IntermediateEvent>", false },
+        { "<IntermediateEvent Trigger='Escalation' IsAttached='true'/>", false },
+        { "<IntermediateEvent Trigger='Compensation' Target='activity'/>", false }
+    };
+    private static XElement EventOwner(XDocument doc, string xml)
+    {
+        var owner = doc.Descendants(Ns + "Activity").Single();
+        owner.Element(Ns + "Implementation")!.ReplaceWith(XElement.Parse($"<Event xmlns='{Ns}'>{xml}</Event>"));
+        return owner;
+    }
+    [Theory] [MemberData(nameof(EventDirections))]
+    public void NativeEventDirectionsRequireTheActualMode(string xml, bool input)
+    {
+        var a = Document(false, false, input); var b = Document(true, true, input);
+        var owner = EventOwner(a, xml); EventOwner(b, xml);
+        Assert.True(NativeDataFlowPolicy.SupportsDirection(owner, input));
+        Assert.False(NativeDataFlowPolicy.SupportsDirection(owner, !input));
+        NativeDataFlowPolicy.ProjectDerived(a, b, [], Graph(input));
+    }
+    [Theory]
+    [InlineData("<IntermediateEvent Trigger='Unknown'/>")]
+    [InlineData("<IntermediateEvent Trigger='Message'><TriggerResultMessage xmlns='urn:unknown'/></IntermediateEvent>")]
+    [InlineData("<IntermediateEvent Trigger='Message'><Unknown><TriggerResultMessage/></Unknown></IntermediateEvent>")]
+    [InlineData("<IntermediateEvent Trigger='Message'><TriggerResultMessage CatchThrow='maybe'/></IntermediateEvent>")]
+    [InlineData("<IntermediateEvent Trigger='Multiple'><TriggerIntermediateMultiple/><TriggerIntermediateMultiple/></IntermediateEvent>")]
+    public void InvalidOrLookalikeEventDirectionMarkersFail(string xml)
+    {
+        var owner = EventOwner(Document(false, false), xml);
+        Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.SupportsDirection(owner, true));
+    }
     [Fact] public void RemovingALiveBindingOrInventingUnrelatedIoFails()
     {
         Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.ProjectDerived(Document(true, true), Document(true, false), [], Graph()));
@@ -67,6 +109,15 @@ public sealed class NativeDataFlowTests
         if (fault == "comment") port.Add(new XComment("Keep"));
         if (fault == "reference-attribute") before.Descendants(Ns + "Input").Single().SetAttributeValue("Unknown", "Keep");
         Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.ProjectDerived(before, Document(false, false), [], []));
+    }
+    [Theory] [InlineData("port")] [InlineData("association")] [InlineData("unknown")]
+    public void AutomaticCreationCannotHideUnexpectedOwnedPayload(string fault)
+    {
+        var after = Document(true, true);
+        if (fault == "port") after.Descendants(Ns + "DataInput").Single().Element(Ns + "Documentation")!.Value = "Unrequested";
+        else if (fault == "association") after.Descendants(Ns + "DataAssociation").Single().Element(Ns + "ExtendedAttributes")!.Add(new XElement(Ns + "ExtendedAttribute", "Unknown"));
+        else after.Descendants(Ns + "DataInput").Single().Add(new XElement(Ns + "Unknown"));
+        Assert.Throws<InvalidDataException>(() => NativeDataFlowPolicy.ProjectDerived(Document(false, false), after, [], Graph()));
     }
     [Theory] [InlineData("Input")] [InlineData("Output")]
     public void SetReferencesRequireExactNativeOwnerAndNamespace(string kind)

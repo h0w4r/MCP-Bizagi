@@ -125,6 +125,29 @@ public sealed partial class NativeEngine
         ValidateSubProcessContexts(model, changes);
         ValidateDataStateOwnership(model, changes);
         ValidateLanePartitions(model);
+        ValidateArtifactContainment(model);
+    }
+
+    private static void ValidateArtifactContainment(object model)
+    {
+        foreach (object diagram in Items(model, "Diagrams"))
+        {
+            var participants = Items(diagram, "Participants").ToArray();
+            foreach (object participant in participants)
+                foreach (object artifact in Items(Get(participant, "Process"), "Artifacts"))
+                {
+                    // Native XPDL stores root-process artifacts in a shared diagram list.
+                    // Its loader assigns them to the first visible pool containing their
+                    // native center, otherwise the main pool. Check the same installed
+                    // geometry predicate before saving rather than silently moving them.
+                    object center = Get(Get(artifact, "GraphicalProperties"), "Center");
+                    object? selected = participants.FirstOrDefault(p => !(bool)Get(p, "IsMainParticipant") &&
+                        (bool)Call(Get(p, "GraphicalProperties"), "IsPointInRectangle", center)!);
+                    selected ??= participants.SingleOrDefault(p => (bool)Get(p, "IsMainParticipant"));
+                    if (selected == null || Text(selected, "Id") != Text(participant, "Id"))
+                        throw new InvalidDataException("Artifact geometry would change native containment after restart: " + Text(artifact, "Id") + ". An implicit containment move is not permitted.");
+                }
+        }
     }
 
     private object MutationCollection(object parent, object element)
@@ -248,6 +271,12 @@ public sealed partial class NativeEngine
         Set(connection, "TargetRef", kind != "SequenceFlow" ? new System.Xml.XmlQualifiedName(Text(target, "BpmnId")) : (object)Text(target, "BpmnId"));
         object vertices = Get(connection, "Points"); Call(vertices, "Clear");
         foreach (var point in points) Call(vertices, "Add", new PointF((float)point.X, (float)point.Y));
+        // The installed connector loader anchors GraphicalProperties at the first
+        // persisted point with zero shape size. Keep that derived native state current
+        // before containment checks; editing PointCollection alone does not update it.
+        object graphics = Get(connection, "GraphicalProperties");
+        Set(graphics, "X", (float)points[0].X); Set(graphics, "Y", (float)points[0].Y);
+        Set(graphics, "Size", SizeF.Empty);
         if (kind == "SequenceFlow")
         {
             // Event subprocesses exist outside their parent's normal sequence flow.

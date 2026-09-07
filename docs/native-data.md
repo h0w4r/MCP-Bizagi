@@ -1,4 +1,4 @@
-# Native data objects, stores and activity I/O
+# Native data objects, stores and activity/event I/O
 
 The current source provides typed native data mutations. It uses the locally
 installed Modeler 4.3.0.008 engine and keeps `.bpm` as the authoritative format.
@@ -45,23 +45,35 @@ interchangeable identifiers invented by the server.
 
 Create an `Association` with explicit `SourceId`, `TargetId` and `Points` in the
 same native flow container. Reconnection uses the existing `reconnect` operation.
-The adapter reconciles native activity data bindings through the installed
+The adapter reconciles native activity and event data bindings through the installed
 `BPMN20ModelUtil.AddDataInput`, `AddDataOutput`, `RemoveDataInput` and
 `RemoveDataOutput` methods.
 
 - Data object/store reference → activity creates an input binding.
 - Activity → data object/store reference creates an output binding.
+- Data object/store reference → throw/end event creates an input binding.
+- Start/catch/boundary event → data object/store reference creates an output
+  binding. Events have a singular native set and no activity I/O specification.
+- Associations in the opposite event direction remain graphical only. They do
+  not manufacture unsupported input/output collections on that event.
 - A data association attached to a sequence flow creates the applicable output
-  on its source activity and input on its target activity.
+  on its source activity/catch event and input on its target activity/throw event.
 - Parallel graphical associations share a logical binding. Removing one does
   not delete or recreate the binding still used by another association.
 - Reconnecting the sequence flow also reconciles the affected data bindings.
-- Automatic event I/O binding and arbitrary authored I/O graph editing are not
-  yet supported by this mutation contract. They are not inferred from native
-  enum membership or the existence of an internal class.
+- Arbitrary authored I/O graph editing is not yet supported by this mutation
+  contract. Event data editing does not accredit event execution or simulation.
 - Automatic cleanup rejects nonempty names, states, collection semantics,
   documentation, extended attributes and unrecognized payload on owned I/O.
   Rendering metadata on a deleted auto-managed port is part of that deletion.
+  Unexpected rich or unknown content on newly generated ports is also rejected.
+
+Root-process artifacts are assigned to pools geometrically by the installed
+native loader. The adapter checks its actual point-in-rectangle predicate before
+saving. Geometry that would silently move an artifact to another pool/main
+process fails rather than changing ownership on the next load. Every mutation
+also compares all durable identities, kinds and parents across worker restart.
+An explicit containment-move workflow remains separate.
 
 `NativeElement.DataFlow` exposes owned `Inputs`, `Outputs`, `InputAssociations`,
 `OutputAssociations`, ordered `InputSets` / `OutputSets`, and `HasSpecification`.
@@ -76,7 +88,8 @@ records to its nested activity loader. The adapter rehydrates missing nested
 ports using the original durable XPDL records and the installed
 `InputAndOutputSetsAdapter`, not synthesized data or a replacement serializer.
 `EngineReply.IntegrationAdjustments` records each
-`nested_native_io_rehydrated:<activity-id>` adjustment. Partially loaded or
+`nested_native_io_rehydrated:<owner-id>` adjustment. Activity and event owners
+use their respective installed load overloads. Partially loaded or
 unresolved state fails instead of being silently replaced.
 
 The installed collaboration cloner also shallow-copies some collection items
@@ -108,6 +121,7 @@ Run the independent SDK acceptance client from the repository root:
 
 ```powershell
 dotnet run --project tests/McpBizagi.Acceptance -c Release -- . --native --data-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release -- . --native --event-data-only
 ```
 
 The circuit covers multiple diagrams, Unicode text, shared and nested store
@@ -135,3 +149,23 @@ and host-interruption/recovery paths) and the event-payload regression
 `20260907-204255-686c71` (19 operations). The Release build had no warnings or
 errors; 691 unit/component tests passed separately. These are source acceptance
 results, not a new distribution release or a full-automation completion claim.
+
+The event extension subsequently passed `NATIVE_EVENT_DATA_LIFECYCLE_PASS` in
+source run `20260907-210612-b6e852`: 21 event owners (including two nested levels),
+17 terminal operations (13 completed and four expected guarded failures),
+29 worker lifecycles and 1,251 periodic desktop samples with neither visible
+worker windows nor worker foreground observed. It verified applicable/opposite
+directions, duplicate associations, sequence-flow and direct reconnection,
+original-preserving clone identities and ordered sets, 37/37 root-surface
+graphical IDs, native Word output (10 pages, 27 images including icons),
+explicit cleanup and final no-op save/readback. Its private transcript SHA-256 is
+`d7b9395cacb15e791057f88a0db793b51beb9f5dff4b57fae0dde08d225d2134`.
+The independent unit/component suite passed 721 tests. Full event execution,
+general authored I/O editing and independent desktop compatibility remain open.
+
+That event-enabled source also passed the activity/store data regression
+`20260907-211230-8526a9` (20 operations) and expanded general regression
+`20260907-211614-d9c265` (17 operations, including cancellation and host-death
+recovery). Their private transcript SHA-256 values are respectively
+`5265a54c3d31c87486e8288bb00c84a9a35a9185ae5327822c731f81052d4618`
+and `01ac724f83e1aa29afc982567a81eaaa1db61cf0221eecfce8f9e513ac1bac0f`.

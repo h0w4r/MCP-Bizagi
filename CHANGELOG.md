@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Native event data bindings use installed catch/throw I/O utilities, including
+  nested native record restoration and original-preserving clone maps.
+- Native artifact geometry cannot silently change pool containment. Mutation
+  readback also checks every durable node's type, diagram and parent.
+
 - Add native data object properties, shared store catalogs/references and exact
   data-state, collection, capacity, unlimited flag and documentation fidelity.
 - Reconcile association-derived activity I/O using installed native utilities;

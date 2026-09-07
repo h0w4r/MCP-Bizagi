@@ -124,5 +124,14 @@ public static class NativeEditPlan
                 throw new InvalidDataException("Native expanded subprocess size differs from the request.");
         }
     }
+    public static void VerifyRestartContainment(NativeElement[] edited, NativeElement[] reopened)
+    {
+        // Root/native runtime group identities are already excluded by the adapter.
+        // A successful request must not silently lose, retype or reparent any durable node.
+        var expected = edited.ToDictionary(e => e.Id); var actual = reopened.ToDictionary(e => e.Id);
+        if (expected.Count != actual.Count || expected.Any(p => !actual.TryGetValue(p.Key, out var e) ||
+            p.Value.ParentId != e.ParentId || p.Value.DiagramId != e.DiagramId || p.Value.Kind != e.Kind || p.Value.ElementType != e.ElementType))
+            throw new InvalidDataException("Native identity/type/containment changed during independent worker restart.");
+    }
     private static bool Same(double a, double b) => Math.Abs((double)(float)a - b) <= 0.001;
 }

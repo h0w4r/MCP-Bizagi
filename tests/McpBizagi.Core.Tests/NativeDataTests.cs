@@ -8,6 +8,18 @@ namespace McpBizagi.Core.Tests;
 /// <summary>Policy fixtures stay distinct from installed-engine data lifecycle acceptance.</summary>
 public sealed class NativeDataTests
 {
+    [Theory] [InlineData("parent")] [InlineData("diagram")] [InlineData("kind")] [InlineData("type")] [InlineData("missing")]
+    public void RestartCannotSilentlyMoveOrRetypeNativeNodes(string fault)
+    {
+        var before = new NativeElement { Id = "shape", ParentId = "process", DiagramId = "diagram", Kind = "Association", ElementType = "Association" };
+        var after = new NativeElement { Id = "shape", ParentId = "process", DiagramId = "diagram", Kind = "Association", ElementType = "Association" };
+        NativeEditPlan.VerifyRestartContainment([before], [after]);
+        if (fault == "parent") after.ParentId = "other";
+        if (fault == "diagram") after.DiagramId = "other";
+        if (fault == "kind") after.Kind = "other";
+        if (fault == "type") after.ElementType = "other";
+        Assert.Throws<InvalidDataException>(() => NativeEditPlan.VerifyRestartContainment([before], fault == "missing" ? [] : [after]));
+    }
     private const string Id = "11111111-1111-4111-8111-111111111111", Store = "22222222-2222-4222-8222-222222222222";
     private static NativeMutation Patch(NativeDataProperties p) => new() { Operation = "update", ElementId = Id, DataProperties = p };
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";

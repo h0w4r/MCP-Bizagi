@@ -33,8 +33,11 @@ public sealed partial class NativeEngine
         void Add(object? owner, object item, bool input)
         {
             if (owner == null || Optional(owner, input ? "DataInputAssociations" : "DataOutputAssociations") == null) return;
-            if (owner.GetType().GetProperty("IoSpecification") == null)
-                throw new InvalidDataException("Automatic association data bindings currently require an activity owner, not an event.");
+            // Activities own both directions. Throw/end events consume data; catch/start/
+            // boundary events produce it through the same installed native utility.
+            if (owner.GetType().GetProperty("IoSpecification") == null &&
+                (DescribeEvent(owner)?.Mode is not { } mode || (input ? mode is not "Throw" and not "End" : mode is not "Catch" and not "Start" and not "Boundary")))
+                throw new InvalidDataException("Unsupported native owner for this data-binding direction.");
             links[Text(owner, "Id") + ":" + Text(item, "Id") + ":" + input] = (owner, item, input);
         }
         void Connect(object? item, object? owner, bool input)
