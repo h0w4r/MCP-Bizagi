@@ -51,6 +51,7 @@ public sealed class NativeMutation
     /// <summary>Intermediate creation mode; cannot convert an existing native event implicitly.</summary>
     public string? EventMode { get; set; }
     public NativeEventProperties? EventProperties { get; set; }
+    public NativeEventPayloadPatch[]? EventPayloads { get; set; }
     /// <summary>Creation-only native embedded subclass: SubProcess, Transaction or AdHoc.</summary>
     public string? SubProcessKind { get; set; }
     public NativeSubProcessProperties? SubProcessProperties { get; set; }

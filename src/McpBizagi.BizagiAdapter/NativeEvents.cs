@@ -18,7 +18,8 @@ public sealed partial class NativeEngine
             Mode = mode, IsInterrupting = Optional(element, "IsInterrupting") as bool?, IsParallelMultiple = Optional(element, "IsParallelMultiple") as bool?,
             AttachedToActivityId = activity == null ? "" : Text(activity, "Id"), AttachedToBpmnName = qname?.Name ?? "", AttachedToBpmnNamespace = qname?.Namespace ?? "",
             AttachedToCatalogActivityId = catalogId == Guid.Empty.ToString() ? "" : catalogId,
-            DefinitionKinds = Items(element, "EventDefinitions").Select(d => Text(d, "EventDefinitionType")).ToArray()
+            DefinitionKinds = Items(element, "EventDefinitions").Select(d => Text(d, "EventDefinitionType")).ToArray(),
+            Definitions = Items(element, "EventDefinitions").Select(DescribeEventDefinition).ToArray()
         };
     }
 

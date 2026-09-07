@@ -70,6 +70,8 @@ claim complete BPMN validation; use the native validation tool separately.
   `AttachedToCatalogActivityId`: separate native reference representations.
 - `DefinitionKinds`: actual native definition kinds, **not** an exhaustive
   payload serialization or an assertion that referenced data exists.
+- `Definitions`: typed observations of representable payload values and separate
+  compensation aliases; see the [payload patch contract](native-event-payloads.md).
 
 `NativeElement.EventGateway` reports native `Instantiate` and `Kind` independently
 of `NativeElement.GatewayDirection`.
@@ -103,3 +105,6 @@ publication. A completed palette circuit does not accredit event execution by
 the simulator, arbitrary event-definition payload editing, GUI rendering
 equivalence or full Modeler automation. Special subprocesses have their own
 separate acceptance entry point and evidence.
+
+Existing-definition payload patches have their own `--event-payloads-only`
+acceptance corpus. They do not implicitly change this event-mode contract.

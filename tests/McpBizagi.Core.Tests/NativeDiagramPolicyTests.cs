@@ -128,6 +128,20 @@ public sealed class NativeDiagramPolicyTests
         state.DiagramClones = [new() { SourceId = A, TargetId = B, Identities = new[] { (A, B), (P, Q), (T, U) }.Select(e => new NativeCloneIdentity { SourceId = e.Item1, TargetId = e.Item2 }).ToArray() }];
         return state;
     }
+    [Theory] [InlineData("native", true)] [InlineData("multiple", true)] [InlineData("intermediate", true)] [InlineData("wrong-mode", false)] [InlineData("unknown", false)] [InlineData("namespace", false)]
+    public void CloneProjectsOnlyNativeCompensationReferences(string mode, bool expected)
+    {
+        string Content(string id) => mode switch {
+            "wrong-mode" => $"<Event><StartEvent><TriggerIntermediateMultiple><TriggerResultCompensation ActivityId='{id}'/></TriggerIntermediateMultiple></StartEvent></Event>",
+            "intermediate" => $"<Event><IntermediateEvent><TriggerIntermediateMultiple><TriggerResultCompensation ActivityId='{id}'/></TriggerIntermediateMultiple></IntermediateEvent></Event>",
+            "multiple" => $"<Event><EndEvent><ResultMultiple><TriggerResultCompensation ActivityId='{id}'/></ResultMultiple></EndEvent></Event>",
+            "unknown" => $"<Event><EndEvent><Unknown><TriggerResultCompensation ActivityId='{id}'/></Unknown></EndEvent></Event>",
+            "namespace" => $"<Event><EndEvent><TriggerResultCompensation xmlns='urn:unknown' ActivityId='{id}'/></EndEvent></Event>",
+            _ => $"<Event><EndEvent><TriggerResultCompensation ActivityId='{id}'/></EndEvent></Event>" };
+        string Body(string process, string task) => Flow(process, task).Replace($"<Activity Id='{task}' Name='Task'/>", $"<Activity Id='{task}' Name='Task'>{Content(task)}</Activity>");
+        string source = Diagram(A, "Original", Body(P, T)), target = Diagram(B, "Copy Ω", Body(Q, U)); var state = CloneState();
+        Assert.Equal(expected, NativeDiagramPolicy.Compare(Archive(new() { [A] = source }), Archive(new() { [A] = source, [B] = target }), Patch("clone", A, "Copy Ω"), state, state).Preserved);
+    }
     [Fact] public void CloneVerifiesDurableIdentityBijectionAndPreservesTheOriginal()
     {
         string source = Diagram(A, "Original", Flow(P, T));

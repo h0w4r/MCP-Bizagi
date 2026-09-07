@@ -200,6 +200,7 @@ public sealed partial class NativeEngine
             Set(model, "Path", request.InputPath);
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
+            ResolveCompensationReferences(model);
             // Capture input references before the native simulation pipeline clears its in-memory
             // calledElement QNames. Simulation deliberately does not expand reusable subprocesses.
             var simulationActivities = request.Action is "simulate" or "what_if" ? ExpectedSimulationActivities(model, request.DiagramId) : Array.Empty<NativeSimulationActivityInput>();

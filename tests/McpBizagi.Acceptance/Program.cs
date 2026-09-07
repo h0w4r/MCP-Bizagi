@@ -107,9 +107,11 @@ try
         var types = advertised.GetProperty("nativeMutationTypes").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var modes = advertised.GetProperty("intermediateCreationModes").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var subprocesses = advertised.GetProperty("nativeSubProcessKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        var payloads = advertised.GetProperty("nativeEventPayloadKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         if (types.Length == 0 || types.Distinct(StringComparer.Ordinal).Count() != types.Length ||
             !types.Contains("TimerIntermediate") || !types.Contains("CancelEnd") || !types.Contains("EventBasedGatewayParallel") ||
-            !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }) || !subprocesses.SequenceEqual(new[] { "SubProcess", "Transaction", "AdHoc" }))
+            !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }) || !subprocesses.SequenceEqual(new[] { "SubProcess", "Transaction", "AdHoc" }) ||
+            !payloads.SequenceEqual(new[] { "Message", "Timer", "Conditional", "Link", "Signal", "Error", "Escalation", "Compensation" }))
             throw new InvalidDataException("Native mutation schema inventory is absent, ambiguous or incomplete.");
     }
     if (args.Contains("--connection-failure"))
@@ -145,6 +147,12 @@ try
         string recoveredId = (await Call("native_probe")).GetProperty("OperationId").GetString()!;
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--event-payloads-only"))
+    {
+        if (!native) throw new ArgumentException("Event payload acceptance requires --native.");
+        await NativeEventPayloadAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_EVENT_PAYLOAD_LIFECYCLE_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--subprocesses-only"))
     {

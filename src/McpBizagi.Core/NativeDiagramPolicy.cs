@@ -184,6 +184,7 @@ public static class NativeDiagramPolicy
                         bool reference = owner && (node.Name.LocalName, attr.Name.LocalName) is ("Pool", "Process") or ("Lane", "ParentPool") or ("Milestone", "ParentPool") or ("Transition", "From") or ("Transition", "To") or ("MessageFlow", "Source") or ("MessageFlow", "Target");
                         reference |= node.Name == Xpdl + "BlockActivity" && attr.Name == "ActivitySetId" && node.Parent?.Name == Xpdl + "Activity" && NativeFidelity.IsNativeNameOwner(node.Parent);
                         reference |= NativeCallFidelity.IsCallReference(node) && attr.Name == "Id";
+                        reference |= NativeEventPayloadPolicy.IsCompensationReference(node) && attr.Name == "ActivityId";
                         // Only the persisted boundary target is a cloned native activity reference.
                         // Same-named Target attributes on unknown extensions remain compared verbatim.
                         reference |= node.Name == Xpdl + "IntermediateEvent" && attr.Name == "Target" && (string?)node.Attribute("IsAttached") == "true" &&

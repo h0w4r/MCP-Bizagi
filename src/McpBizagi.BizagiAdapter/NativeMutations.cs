@@ -63,6 +63,7 @@ public sealed partial class NativeEngine
                 case "update":
                     if (change.SubProcessProperties != null) ApplySubProcessProperties(element, change.SubProcessProperties);
                     if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
+                    if (change.EventPayloads != null) ApplyEventPayloads(element, change.EventPayloads, graph);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
                     if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
@@ -91,6 +92,7 @@ public sealed partial class NativeEngine
                 case "delete":
                     string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
                     RequireNoAttachedBoundaries(graph.Values, change.ElementId);
+                    RequireNoCompensationTargets(graph.Values, change.ElementId);
                     RequireNoIncomingCalls(graph.Values, new HashSet<string>(new[] { change.ElementId, processId }.Where(v => v != ""), StringComparer.Ordinal));
                     if (processId != "" && ((bool)Get(element, "IsMainParticipant") || graph.Values.Count(e => e.DiagramId == graph[change.ElementId].DiagramId && e.Value.GetType().Name == "Participant") <= 1))
                         throw new InvalidDataException("Deleting the main or last participant would invoke native implicit-model reconstruction.");

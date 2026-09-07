@@ -20,6 +20,7 @@ public sealed class NativeEventInfo
     public string AttachedToCatalogActivityId { get; set; } = "";
     /// <summary>Native definition kinds only. This does not flatten or expose all definition payloads.</summary>
     public string[] DefinitionKinds { get; set; } = System.Array.Empty<string>();
+    public NativeEventDefinitionInfo[] Definitions { get; set; } = System.Array.Empty<NativeEventDefinitionInfo>();
 }
 
 /// <summary>Native instantiation and gateway kind, independent of gateway direction.</summary>

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add typed existing-event definition payload patches, canonical native timer
+  values, conditional text, names and error/escalation codes with independent
+  restart verification and exact field-level archive comparison.
+- Resolve only exact same-container compensation aliases after native loading,
+  keep native reference representations consistent, guard activity deletion and
+  remap compensation targets during native cloning. Definition collection editing
+  and event execution remain separate capabilities.
+
 - Add explicit native transaction/ad hoc creation and event-triggered subprocess
   properties, typed fresh-worker readback and exact ActivitySet fidelity checks.
 - Add context-specific start/cancel events, guard incompatible parent changes and

@@ -163,6 +163,7 @@ public sealed partial class NativeEngine
         // The low-level collaboration cloner does not remap called-process links. Invoke the
         // installed recursive updater with its real identity map, not a string replacement pass.
         Call(NativeCloner("CallActivity.IRerefenceUpdater"), "Update", model, clone, parameters);
+        RemapCompensationTargets(model, sourceId, targetId, map);
         var cloned = Graph(model).Where(e => e.DiagramId == targetId).Select(Describe).ToDictionary(e => e.Id);
         var identities = original.Select(e =>
         {

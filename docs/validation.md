@@ -1,5 +1,66 @@
 # Verification baselines
 
+## Native event definition payloads — 2026-09-07
+
+Source circuit `20260907-193023-a3bfd1` passed **19 terminal operations**:
+15 completed and four expected failures, through the independent official SDK
+MCP stdio client, restricted worker pipe and installed Modeler **4.3.0.008**.
+It retained **33 worker observations / 294 periodic desktop samples** with no
+observed visible worker window or worker foreground. Transcript SHA-256:
+`88ec142ddc1c5756a17eb0f7ddf061d77b336d82d6e4c42f8090ee76fbf0feaf`.
+Periodic observation is not continuous proof or independent Modeler GUI review.
+
+The native creation batch verified **49 requested elements**, including typed
+message, timer, conditional, link, signal, error, escalation and compensation
+definitions; mode-specific multiple defaults; parallel-multiple catch/boundary
+events; and context-specific starts in nested event-triggered subprocesses.
+Unicode names, conditional expressions, error/escalation codes, canonical cycle
+text and zone-less date values survived durable native save and fresh readback.
+Nonempty updates, one-field patches within a multiple event, unrelated renames,
+explicit clearing and subsequent deletion/no-op save passed archive fidelity.
+
+Compensation references survived fresh native loading, retargeting and cloning,
+including nested targets. The native clone retained original diagram contents
+while remapping target identities into the cloned diagram. Actual native
+operations rejected referenced activity deletion, payloads on a task, an absent
+definition kind and a cross-container target; later successful operations proved
+recovery without adopting failed artifacts.
+
+Offscreen native rendering and Word publication completed. Independent document
+readback reported **17 pages and 76 images** (including document icons, not just
+diagrams). This verifies the publication path and tested image/text requirements,
+not every event payload's printed appearance or independent document layout.
+
+Development runs exposed real issues rather than being declared successful:
+
+- The acceptance client initially assumed one multiple-definition set for every
+  mode. The installed factory's actual mode-specific sets replaced that assumption.
+- Intermediate multiple events use `TriggerIntermediateMultiple`; comparison
+  now recognizes only its exact native mode and ancestry.
+- Link names use native NMTOKEN encoding; only that field receives the matching
+  framework encoding in requested-value comparison.
+- The collaboration cloner shared compensation definitions with its source.
+  Native definition cloning now detaches them before remapping references.
+- Clearing a condition to null produced an unstable artifact: another load/save
+  materialized an empty expression. Clearing now persists the native empty
+  expression immediately, and the later deletion/no-op circuit proves stability.
+
+The source builds with zero warnings/errors and passes **648 unit/component
+tests**. Those fixtures are not the native acceptance evidence. See the
+[payload contract](native-event-payloads.md) for fields, timer limitations and
+reference semantics. Definition collection editing, event execution, independent
+GUI compatibility, a new packaged release and full automation remain separate.
+
+The same source then passed expanded regression `20260907-193449-1a68eb`:
+**17 terminal operations** (13 completed, two expected failures, one requested
+cancellation and one interrupted operation), **21 worker observations / 120
+periodic samples**. Transcript SHA-256:
+`16770449fe70e889a90c98ef1fe304e02b022b2d1126eb1ef7fffb0f4d300a99`.
+This exercised native interchange, inspection, validation, simulation, rendering,
+settings contention, corrupt input, active cancellation/recovery and host-death
+Job Object cleanup, journal restart and state ownership. No worker remained after
+completion. The 648 unit/component tests also passed again afterward.
+
 ## Native special subprocesses — 2026-09-07
 
 First source circuit `20260907-181529-eaf638` passed **25 terminal operations**:

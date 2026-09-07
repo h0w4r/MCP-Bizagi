@@ -51,6 +51,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > [Special subprocesses](docs/native-subprocesses.md) add explicit transaction,
 > ad hoc and event-triggered native types, context-specific events and durable
 > properties. Modeling support does not imply transactional or ad hoc simulation.
+> [Event definition payloads](docs/native-event-payloads.md) add typed names,
+> conditions, timer values, error/escalation codes and compensation targets.
+> Editing existing definitions is distinct from collection editing or execution.
 
 ## Why this project
 
@@ -87,6 +90,7 @@ every operation into a BPMN XML export.
 | Native activity/flow properties | Experimental current source | Activity quantities/compensation/state, gateway direction and conditions/default references; actual simulation input checked, nondefault token behavior unaccredited; [contract](docs/native-semantics.md) |
 | Native activity loops | Experimental current source | Standard/multi-instance configuration and removal through native persistence; iteration simulation is a separate boundary; [contract and evidence](docs/native-loops.md) |
 | Special subprocesses | Experimental current source | Transaction, ad hoc and event-triggered native lifecycle, nested surfaces and context guards; [contract and evidence](docs/native-subprocesses.md) |
+| Event definition payloads | Experimental current source | Existing-kind names, conditions, timers, codes and same-container compensation references; no implied collection editing or execution; [contract](docs/native-event-payloads.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

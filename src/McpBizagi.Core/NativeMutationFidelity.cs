@@ -61,6 +61,7 @@ public static class NativeMutationFidelity
                 if (x.Length == 0 && y.Length == 0) continue;
                 if (x.Length != 1 || y.Length != 1) throw new InvalidDataException("Ambiguous native XML mutation identity.");
                 if (c.EventProperties != null) NativeEventPolicy.Project(x[0], y[0], c.EventProperties);
+                if (c.EventPayloads != null) NativeEventPayloadPolicy.Project(x[0], y[0], c.EventPayloads);
                 if (c.CallTarget != null) NativeCallFidelity.ProjectTarget(x[0], y[0], c.CallTarget);
                 if (c.ActivityLoop != null) NativeLoopPolicy.Project(x[0], y[0], c.ActivityLoop);
                 if (c.ActivityProperties != null || c.FlowCondition != null || c.GatewayDirection != null) NativeSemanticPolicy.Project(x[0], y[0], c);
