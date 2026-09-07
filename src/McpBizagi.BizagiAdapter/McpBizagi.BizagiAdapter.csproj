@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../McpBizagi.Contracts/McpBizagi.Contracts.csproj" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

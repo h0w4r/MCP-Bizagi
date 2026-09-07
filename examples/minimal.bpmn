@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             id="Definitions_Example" targetNamespace="https://github.com/h0w4r/MCP-Bizagi/examples">
+  <!-- Original synthetic input; acceptance still executes the actual native engine. -->
+  <process id="Process_Request" name="Request handling" isExecutable="false">
+    <startEvent id="Start_Request" name="Request received"><outgoing>Flow_1</outgoing></startEvent>
+    <task id="Task_Review" name="Review request"><incoming>Flow_1</incoming><outgoing>Flow_2</outgoing></task>
+    <endEvent id="End_Request" name="Request completed"><incoming>Flow_2</incoming></endEvent>
+    <sequenceFlow id="Flow_1" sourceRef="Start_Request" targetRef="Task_Review" />
+    <sequenceFlow id="Flow_2" sourceRef="Task_Review" targetRef="End_Request" />
+  </process>
+  <collaboration id="Collaboration_Request" name="Request handling">
+    <participant id="Pool_Request" name="Operations" processRef="Process_Request" />
+  </collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_Request">
+    <bpmndi:BPMNPlane id="Plane_Request" bpmnElement="Collaboration_Request">
+      <bpmndi:BPMNShape id="Shape_Pool" bpmnElement="Pool_Request" isHorizontal="true"><dc:Bounds x="20" y="20" width="600" height="180" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="Start_Request"><dc:Bounds x="100" y="90" width="30" height="30" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task" bpmnElement="Task_Review"><dc:Bounds x="240" y="65" width="120" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End" bpmnElement="End_Request"><dc:Bounds x="470" y="90" width="30" height="30" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_1" bpmnElement="Flow_1"><di:waypoint x="130" y="105" /><di:waypoint x="240" y="105" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_2" bpmnElement="Flow_2"><di:waypoint x="360" y="105" /><di:waypoint x="470" y="105" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

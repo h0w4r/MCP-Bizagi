@@ -1,0 +1,28 @@
+# Build outputs and dependency caches
+**/bin/
+**/obj/
+.vs/
+TestResults/
+artifacts/
+packages/
+# Local research, proprietary binaries, operator data, and evidence
+.local/
+.tools/
+*.bpm
+*.dll
+*.exe
+*.pdb
+*.nupkg
+*.zip
+*.log
+*.bak
+*.user
+*.suo
+.env
+.env.*
+!.env.example
+# Never publish internal planning or credentials
+plans/
+internal/
+secrets/
+**/appsettings.Local.json

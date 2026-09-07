@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Version>0.1.0-alpha.1</Version>
+    <Authors>h0w4r</Authors>
+    <RepositoryUrl>https://github.com/h0w4r/MCP-Bizagi</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+</Project>

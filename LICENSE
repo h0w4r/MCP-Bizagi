@@ -1,0 +1,55 @@
+MCP-Bizagi Attribution License 1.0
+License identifier: LicenseRef-MCP-Bizagi-Attribution-1.0
+
+Copyright (c) 2026 h0w4r
+
+1. Permission
+Permission is granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to use, copy,
+modify, merge, publish, distribute, sublicense, and sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to
+the following conditions.
+
+2. Preservation of notices
+The copyright notice, this license, and applicable third-party notices must
+accompany all copies or substantial portions of the Software. Sublicensing
+does not remove these preservation or attribution obligations.
+
+3. Visible attribution upon redistribution
+Anyone redistributing the Software, or a derivative containing a substantial
+portion of it, must include a reasonably visible credit in the derivative's
+main README, when a README is provided, and in the documentation accompanying
+the distribution. If no README or documentation is otherwise provided, include
+an ATTRIBUTION.txt file with the distribution. The credit must identify h0w4r
+and the original MCP-Bizagi project, including this project URL:
+
+https://github.com/h0w4r/MCP-Bizagi
+
+An acceptable credit is:
+"Based on MCP-Bizagi by h0w4r: https://github.com/h0w4r/MCP-Bizagi"
+
+Equivalent wording and translations are permitted if the author, project,
+and URL remain clearly identifiable. This credit does not imply endorsement.
+
+4. User content and private use
+This license does not require attribution in models, diagrams, process
+documentation, or other user content merely created or processed using the
+Software, unless that output itself includes a substantial portion of the
+Software. No watermark or advertising in user output is required. Private
+use or modification without redistribution does not require public credit.
+
+5. Third-party components
+Third-party components retain their respective licenses. This license grants
+no rights to Bizagi software, trademarks, accounts, or proprietary components.
+
+6. Disclaimer
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+This is a custom license. It is not the standard MIT License and does not
+claim approval by the Open Source Initiative.

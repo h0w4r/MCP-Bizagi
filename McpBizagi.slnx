@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/McpBizagi.BizagiAdapter/McpBizagi.BizagiAdapter.csproj" />
+    <Project Path="src/McpBizagi.Contracts/McpBizagi.Contracts.csproj" />
+    <Project Path="src/McpBizagi.Core/McpBizagi.Core.csproj" />
+    <Project Path="src/McpBizagi.Server/McpBizagi.Server.csproj" />
+    <Project Path="src/McpBizagi.Worker/McpBizagi.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/McpBizagi.Acceptance/McpBizagi.Acceptance.csproj" />
+    <Project Path="tests/McpBizagi.Core.Tests/McpBizagi.Core.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    # Never run unreviewed public contributions on an operator's native-engine machine.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore pinned dependencies
+        run: dotnet restore --locked-mode
+      - name: Build
+        run: dotnet build -c Release --no-restore
+      - name: Unit tests
+        run: dotnet test tests/McpBizagi.Core.Tests -c Release --no-build --logger trx
+      - name: Real MCP XML acceptance (native engine not installed)
+        run: dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- .
