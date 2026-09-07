@@ -45,6 +45,7 @@ public sealed class NativeMutation
     /// <summary>Null preserves the call target; an empty ProcessId explicitly unlinks a call activity.</summary>
     public NativeCallTarget? CallTarget { get; set; }
     public NativeActivityProperties? ActivityProperties { get; set; }
+    public NativeActivityLoop? ActivityLoop { get; set; }
     public NativeFlowCondition? FlowCondition { get; set; }
     public string? GatewayDirection { get; set; }
     public string SourceId { get; set; } = "";
@@ -105,6 +106,7 @@ public sealed class NativeElement
     /// <summary>Raw native call-reference representations; null for non-call elements. No external model is fetched.</summary>
     public NativeCallReference? CallReference { get; set; }
     public NativeActivityProperties? ActivityProperties { get; set; }
+    public NativeActivityLoop? ActivityLoop { get; set; }
     public NativeFlowCondition? FlowCondition { get; set; }
     public string? GatewayDirection { get; set; }
     /// <summary>Derived from actual outgoing native sequence-flow conditions, not a guessed catalog alias.</summary>
@@ -168,6 +170,7 @@ public sealed class NativeSimulationLimitation
     public string DocumentationUrl { get; set; } = "";
     public NativeCallReference? CallReference { get; set; }
     public NativeActivityProperties? ActivityProperties { get; set; }
+    public NativeActivityLoop? ActivityLoop { get; set; }
 }
 
 /// <summary>Native activity quantities checked against the actual XML consumed by the installed simulator.</summary>

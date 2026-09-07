@@ -61,6 +61,7 @@ public static class NativeMutationFidelity
                 if (x.Length == 0 && y.Length == 0) continue;
                 if (x.Length != 1 || y.Length != 1) throw new InvalidDataException("Ambiguous native XML mutation identity.");
                 if (c.CallTarget != null) NativeCallFidelity.ProjectTarget(x[0], y[0], c.CallTarget);
+                if (c.ActivityLoop != null) NativeLoopPolicy.Project(x[0], y[0], c.ActivityLoop);
                 if (c.ActivityProperties != null || c.FlowCondition != null || c.GatewayDirection != null) NativeSemanticPolicy.Project(x[0], y[0], c);
                 var oldCompanion = Companion(a, x[0]); var newCompanion = Companion(b, y[0]);
                 if ((string?)oldCompanion?.Attribute("Id") != (string?)newCompanion?.Attribute("Id"))

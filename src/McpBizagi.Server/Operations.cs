@@ -76,7 +76,7 @@ public sealed class Operations : IHostedService
                     entry.Cancellation.Token.ThrowIfCancellationRequested();
                     lock (entry.Sync) entry.View = entry.View with { State = "completed", Phase = "finished", Result = result, UpdatedAt = DateTimeOffset.UtcNow };
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (entry.Cancellation.IsCancellationRequested)
                 { lock (entry.Sync) entry.View = entry.View with { State = "cancelled", Phase = "stopped", UpdatedAt = DateTimeOffset.UtcNow }; }
                 catch (Exception error)
                 { lock (entry.Sync) entry.View = entry.View with { State = "failed", Error = error.Message, UpdatedAt = DateTimeOffset.UtcNow }; }

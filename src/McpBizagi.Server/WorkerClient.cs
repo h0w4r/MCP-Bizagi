@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using McpBizagi.Contracts;
+using McpBizagi.Core;
 using StreamJsonRpc;
 
 namespace McpBizagi.Server;
@@ -70,9 +71,22 @@ public sealed class WorkerClient(ServerOptions options)
             File.WriteAllText(Path.Combine(directory, "worker-process.json"), System.Text.Json.JsonSerializer.Serialize(new
             { pid = process.Id, startedAt = process.StartTime.ToUniversalTime(), createNoWindow = true, jobObject = true }));
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            using var handshake = CancellationTokenSource.CreateLinkedTokenSource(token);
-            handshake.CancelAfter(TimeSpan.FromSeconds(options.ConnectionSeconds)); // Connection only, never the operation duration.
-            await pipe.ConnectAsync(handshake.Token);
+            report("worker_connecting");
+            var connectionTimer = Stopwatch.StartNew();
+            try { await WorkerHandshake.ConnectAsync(pipe, TimeSpan.FromSeconds(options.ConnectionSeconds), token); }
+            catch (Exception error)
+            {
+                // Preserve the distinction between failure before dispatch and uncertain operation writes.
+                var connectionActivity = job.Activity();
+                File.WriteAllText(Path.Combine(directory, "worker-connection-error.json"), System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    stage = "pipe_connection", requestDispatched = false, deadlineSeconds = options.ConnectionSeconds,
+                    elapsedSeconds = connectionTimer.Elapsed.TotalSeconds, exceptionType = error.GetType().Name,
+                    message = error.Message, operationCancellationRequested = token.IsCancellationRequested,
+                    workerExited = process.HasExited, ownedJobActivity = new { connectionActivity.CpuTicks, connectionActivity.IoBytes }
+                }));
+                throw;
+            }
             long lastActivity = Stopwatch.GetTimestamp();
             var notifications = new Notifications(phase => { Interlocked.Exchange(ref lastActivity, Stopwatch.GetTimestamp()); report(phase); });
             using var rpc = new JsonRpc(pipe, pipe);

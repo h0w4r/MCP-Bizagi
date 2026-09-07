@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add typed native standard and multi-instance loop configuration, explicit loop
+  removal, fresh-worker inspection and exact known-subtree fidelity checks.
+  Keep native iteration behavior separate from editing and expose the vendor's
+  unsupported multi-instance simulation boundary.
+- Distinguish initial worker pipe deadline failures from operator cancellation,
+  record pre-dispatch connection evidence and exercise actual missing-dependency
+  failure followed by a fresh installed-engine worker.
+
 - Add explicit native activity token quantities, compensation/state, gateway
   direction and sequence-flow conditions/default references with fresh-worker
   verification and derived transition-quantity fidelity.

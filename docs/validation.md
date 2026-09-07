@@ -1,5 +1,51 @@
 # Verification baselines
 
+## Native loops and initial connection failure classification — 2026-09-07
+
+This source checkpoint exposes **29 MCP tools** and passes **524 independent
+unit/component tests**. Three of those new component tests use real OS pipes;
+they test connection/error policy, not native modeling. Release compilation
+completed with no warnings or errors.
+
+Native run `20260907-163046-36c2cc` passed **17 terminal operations**:
+16 completed and one expected wrong-kind failure, with **30 worker observations
+/ 270 periodic samples**. Transcript SHA-256:
+`45c3f5191f389c602523fff2fc615bd9c3201bee3ffc2dd7b53ca71bb43084f6`.
+
+The independent MCP client created native standard loops on eight task
+subclasses, an embedded subprocess and a reusable call. It verified exact
+maximum/counter/test-time/Unicode-condition metadata, switched to parallel and
+sequential multi-instance configurations across All/One/None/Complex behavior,
+checked both expression fields, removed loops and returned to explicit native
+defaults. Fresh-worker inspection, no-op save, an unrelated name change,
+offscreen rendering and native Word publication passed. Real simulation of a
+separate single-task diagram returned input-specific loop limitations and actual
+metrics. This accredits editing and diagnostics, **not iteration execution**.
+See [the loop contract](native-loops.md).
+
+Expanded run `20260907-163455-8168dd` also passed **19 terminal operations**:
+18 completed and one expected failure, with **34 worker observations / 284
+periodic samples**. Transcript SHA-256:
+`96e520e42b25341b75ce12ccc01f08dd14b39bb364e314abdbfde3e5d53a36e6`.
+It adds separate native clones of the standard-loop and multi-instance palette,
+correlates every cloned activity through the actual native `Identities` map and
+asserts exact loop metadata in the independent reader. Subsequent original edits,
+native no-op save and four-diagram Word publication retain both clones. This
+does not imply simulation of those disconnected palette diagrams.
+
+Run `20260907-163015-aa4d50` passed an actual missing-worker-dependency failure
+followed by installed-engine recovery: **one expected failure / one completion**,
+with **two worker observations / five periodic samples**. Transcript SHA-256:
+`eb85f7290ac7272e5a14889929407b0604ce502d1bfa26ade2e221c281be0c38`.
+Only a private copied worker dependency set omitted `StreamJsonRpc.dll`; neither
+the vendor installation nor source/release binaries were altered. The actual
+worker error identifies the missing assembly. A three-second initial connection
+deadline produced `failed`, `TimeoutException`, `requestDispatched: false` and
+`operationCancellationRequested: false`, followed by verified worker exit. The
+restarted host used the intact worker and completed real native initialization.
+No write was replayed. This is a startup/recovery circuit, not a full modeling
+acceptance by itself.
+
 ## Native activity properties and flow semantics — 2026-09-07
 
 This source checkpoint exposes **29 MCP tools** and passes **487 unit tests**.
@@ -42,6 +88,39 @@ issue; it does not redefine simulation semantics to match the observed counts.
 These results do not accredit complete loop/event editing, every decision
 topology, independent desktop visual equivalence or full Modeler automation.
 Raw archives, operator paths and proprietary research remain private.
+
+### Extracted semantic candidate and retained startup failure
+
+Clean source `4a65d25fac38b6f4ddd5026165ba311f6ca04129` passed
+[public CI](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34142139370).
+The private ZIP is **6,606,220 bytes**, SHA-256:
+`ee9eea2b9829ec4fd41b55b51209d3a59759349062753433d5e36577a8c8e084`.
+All **321 manifest entries / 322 files** matched before and after these circuits:
+
+| Circuit | Run | Terminal operations | Worker observations / samples |
+| --- | --- | --- | --- |
+| Native property editing and honest simulation diagnostics | `20260907-161324-1a4dc2` | 20 completed / 4 expected failures | 40 / 319 |
+| Call black-box simulation, what-if and Word/PDF | `20260907-162146-2c8edb` | 10 completed | 16 / 863 |
+
+Transcript hashes, in table order:
+
+- `3635115ae0303eb2685ced464094532bcb24e1c921c721b07ac70dbef6b159dd`
+- `77a55dabe42ce6dafd18bbb0042768a74c13dfe95c9221800cd595a41654ef1a`
+
+The first call regression attempt, `20260907-161747-12c6f7`, did **not** pass:
+its worker never connected within the initial 30-second deadline, and the old
+journal incorrectly classified that internal deadline as operator cancellation.
+Empty worker logs do not establish why startup was delayed. A fresh run used
+the same immutable candidate with the operator connection setting increased to
+90 seconds; this changes only the initial handshake deadline, not native
+operation duration. The subsequent source correction and separate missing-
+dependency circuit above accredit failure classification, not a guessed startup
+root cause. The failed attempt remains retained and is not counted as a pass.
+
+The candidate predates loop editing and the connection-classification fix.
+It is not a new public release, a complete regression run or completion of the
+full Modeler automation objective. Periodic desktop samples are not independent
+GUI equivalence evidence.
 
 ## Native reusable-call lifecycle and black-box simulation — 2026-09-07
 

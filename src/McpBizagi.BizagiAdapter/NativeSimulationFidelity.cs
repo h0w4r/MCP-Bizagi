@@ -16,6 +16,15 @@ public sealed partial class NativeEngine
                 ActivityProperties = e.Properties,
                 Message = "Nondefault activity token quantities are preserved in the native model and checked against the actual simulation input. Their execution semantics are not accredited for this engine; inspect actual result metrics instead of inferring completion counts from these settings.",
                 DocumentationUrl = "https://help.bizagi.com/platform/en/simulation_in_bizagi.htm"
+            })).Concat(Graph(model).Where(e => e.DiagramId == diagramId && IsNativeActivity(e.Value) && Text(e.Value, "LoopType") != "None")
+            .Select(e => new NativeSimulationLimitation
+            {
+                Code = Text(e.Value, "LoopType") == "MultiInstance" ? "multi_instance_simulation_unsupported" : "standard_loop_simulation_unaccredited",
+                DiagramId = diagramId, ElementId = Text(e.Value, "Id"), BpmnId = Text(e.Value, "BpmnId"), ActivityLoop = DescribeLoop(e.Value),
+                Message = Text(e.Value, "LoopType") == "MultiInstance"
+                    ? "Bizagi documents multi-instance task/subprocess simulation as unsupported. Persisted loop metadata does not accredit iteration behavior."
+                    : "Standard-loop editing/persistence is separate from simulation behavior; this server does not evaluate loop expressions or accredit native iteration behavior.",
+                DocumentationUrl = "https://help.bizagi.com/platform/en/simulation_in_bizagi.htm"
             })).ToArray();
 
     private static NativeSimulationActivityInput[] ExpectedSimulationActivities(object model, string diagramId) => Graph(model)

@@ -100,6 +100,46 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--connection-failure"))
+    {
+        if (!native) throw new ArgumentException("Connection failure acceptance requires --native.");
+        // Damage only a newly copied, private worker dependency set. The installed vendor,
+        // source binaries and supplied release candidate remain byte-for-byte untouched.
+        string goodWorker = env["MCP_BIZAGI_WORKER"]!, damaged = Path.Combine(run, "missing-worker-dependency");
+        Directory.CreateDirectory(damaged);
+        foreach (string file in Directory.EnumerateFiles(Path.GetDirectoryName(goodWorker)!))
+            if (Path.GetFileName(file) != "StreamJsonRpc.dll") File.Copy(file, Path.Combine(damaged, Path.GetFileName(file)));
+        await activeClient.DisposeAsync();
+        env["MCP_BIZAGI_WORKER"] = Path.Combine(damaged, Path.GetFileName(goodWorker));
+        env["MCP_BIZAGI_CONNECTION_SECONDS"] = "3";
+        await using (var broken = await McpClient.CreateAsync(NewTransport()))
+        {
+            activeClient = broken;
+            string id = (await Call("native_probe")).GetProperty("OperationId").GetString()!;
+            var failure = await WaitOperation(id, "failed");
+            if (!failure.GetProperty("Error").GetString()!.Contains("before any engine request was dispatched"))
+                throw new InvalidDataException("The initial connection failure lost its pre-dispatch diagnosis.");
+            string root = Path.Combine(stateRoot, "runs", id);
+            var connection = JsonDocument.Parse(File.ReadAllText(Directory.GetFiles(root, "worker-connection-error.json", SearchOption.AllDirectories).Single())).RootElement;
+            if (connection.GetProperty("requestDispatched").GetBoolean() || connection.GetProperty("operationCancellationRequested").GetBoolean() ||
+                connection.GetProperty("exceptionType").GetString() != "TimeoutException") throw new InvalidDataException("An initial deadline was misreported as operator cancellation.");
+            foreach (string exit in Directory.GetFiles(root, "worker-exit.json", SearchOption.AllDirectories))
+                if (!JsonDocument.Parse(File.ReadAllText(exit)).RootElement.GetProperty("exited").GetBoolean()) throw new InvalidDataException("Faulted worker did not exit.");
+            string stderr = File.ReadAllText(Directory.GetFiles(root, "worker.stderr.log", SearchOption.AllDirectories).Single());
+            if (!stderr.Contains("StreamJsonRpc")) throw new InvalidDataException("Fault injection did not expose the actual missing worker dependency.");
+        }
+        env["MCP_BIZAGI_WORKER"] = goodWorker; env.Remove("MCP_BIZAGI_CONNECTION_SECONDS");
+        await using var recovered = await McpClient.CreateAsync(NewTransport()); activeClient = recovered;
+        string recoveredId = (await Call("native_probe")).GetProperty("OperationId").GetString()!;
+        await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
+        Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--loops-only"))
+    {
+        if (!native) throw new ArgumentException("Loop acceptance requires --native.");
+        await NativeLoopAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_LOOP_EDITING_AND_DIAGNOSTICS_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--semantics-only"))
     {
         if (!native) throw new ArgumentException("Semantic acceptance requires --native.");

@@ -60,6 +60,7 @@ public sealed partial class NativeEngine
                 case "update":
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
+                    if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
                     if (change.GatewayDirection != null)
                     {
                         var property = element.GetType().GetProperty("GatewayDirection") ?? throw new InvalidDataException("GatewayDirection requires a native gateway.");

@@ -74,6 +74,12 @@ Operation duration is not a cancellation criterion. The inactivity window is
 renewed by native phases, owned-job CPU/I/O changes, or additional diagnostic output. Connection
 and cleanup stages have separate bounded deadlines.
 
+An initial pipe deadline is a failed connection, not an operator cancellation.
+`worker-connection-error.json` records the connection stage, configured deadline,
+elapsed time, owned-job CPU/I/O counters and `requestDispatched: false`. The
+operation journal reports `cancelled` only when its own cancellation token was
+requested. No connection failure automatically replays a write.
+
 ## Explicitly not implemented
 
 No generic AI agent framework, hosted inference dependency, network API, UI
