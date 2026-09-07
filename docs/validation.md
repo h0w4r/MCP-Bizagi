@@ -1,5 +1,14 @@
 # Verification baselines
 
+## Consolidated native data package — 2026-09-07
+
+Five actual MCP circuits passed against the same clean, freshly extracted package
+at source `3c52d54`: **106 terminal native operations**, with all **331 manifest
+entries** unchanged after execution. This includes data/activity and event I/O,
+event payloads, special subprocesses and general native/recovery regression.
+See the [package identity, circuit counts, hashes and remaining scope](validation-native-data-package.md).
+This is not a new release or completion of full Modeler automation.
+
 ## Native event definition payloads — 2026-09-07
 
 Source circuit `20260907-193023-a3bfd1` passed **19 terminal operations**:
