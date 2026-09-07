@@ -132,7 +132,7 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "inspect", "validate", "simulate", "render_svg", "publish" }.Contains(request.Action))
+        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -176,12 +176,14 @@ public sealed partial class NativeEngine
             model = Call(persistence, "Load", model)!;
             if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
             if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
+            if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
-            if (request.Action is "edit_save" or "mutate_save")
+            if (request.Action is "edit_save" or "mutate_save" or "metadata_save")
             {
+                if (request.Action == "metadata_save") EditMetadata(model, request.MetadataPatch ?? throw new InvalidDataException("Missing metadata patch."), progress);
                 if (request.Action == "mutate_save") Mutate(model, request.Mutations, progress);
-                progress("native_edit_names");
+                if (request.Changes.Length > 0) progress("native_edit_names");
                 var indexed = Graph(model).ToLookup(e => Get(e.Value, "Id").ToString());
                 // Validate the entire batch before mutating any native object.
                 foreach (var change in request.Changes)
@@ -215,6 +217,8 @@ public sealed partial class NativeEngine
             .Select(d => Get(d, "DisplayName")?.ToString() ?? "").ToArray();
         reply.Elements = Graph(model).Select(Describe).ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
+        if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);
+        if (request.Action is "simulate" or "what_if") reply.SimulationReports = SimulationReports(reply.Artifacts, request);
         reply.Success = true;
         reply.Code = "native_operation_completed";
         reply.Message = "Native operation completed; verify artifacts in a fresh worker before accreditation.";

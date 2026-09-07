@@ -8,7 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.3.0--alpha.1-orange)](Directory.Build.props)
+[![Source version](https://img.shields.io/badge/source-0.4.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -30,6 +30,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > Native node creation/deletion, connection edits, geometry, colors, descriptions,
 > and Excel/Word/PDF publication now have real MCP acceptance, with separate
 > fidelity boundaries rather than a blanket compatibility claim.
+> Resource catalogs, activity RACI assignments, configured simulation levels 2–4,
+> calendars, costs, and four what-if replications now have quantitative real MCP
+> acceptance. [Native metadata and simulation](docs/native-simulation.md).
 
 ## Why this project
 
@@ -60,7 +63,9 @@ every operation into a BPMN XML export.
 | Native structural batches | Opt-in, copy-only | 22 task/event/gateway types tested; create/delete, connection endpoints, bounds, colors and descriptions; [limits](docs/native-editing.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
-| Native simulation | Experimental | Level-one default scenario verified; advanced scenarios remain open |
+| Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |
+| Native scenario configuration | Opt-in, copy-only | Complete per-diagram BPSim replacement; explicit result discard; [contract](docs/native-simulation.md) |
+| Native simulation and what-if | Experimental | Defaults and configured levels 2–4, costs, resource contention, shift calendars and replications verified on the documented corpus |
 | Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
@@ -145,6 +150,11 @@ Use `native_mutate` for explicit structural/geometry/documentation batches, and
 original files. PDF image downsampling is rejected unless explicitly accepted;
 accepted resampling is reported, not hidden. Subprocess surfaces can be rendered
 with `native_render_svg` and its optional `subProcessId`.
+
+Use `native_metadata_get` to read resources, activity assignments and BPSim XML,
+then `native_metadata_apply` to edit a revision-checked native copy. Run selected
+scenarios with `native_simulate` or `native_simulate_what_if`. Completed results
+include structured metrics as well as the actual engine-generated XML artifacts.
 
 <details>
 <summary>Real native render from the acceptance run</summary>

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0-alpha.1
+
+- Add revision-checked native resource creation, updates and guarded deletion.
+- Add complete activity RACI assignment replacement and native readback of every role.
+- Add native metadata inspection and explicit per-diagram BPSim configuration replacement, including scenarios, resources and calendars.
+- Reject unknown simulation fields, dangling element references, ambiguous comma-separated ACI names and silent saved-result loss.
+- Compare catalog copies inside every native diagram as well as the model-level resource catalog.
+- Execute configured levels 2–4 through real MCP, asserting completion counts, processing times, task costs, resource contention and calendar delays.
+- Add native what-if execution with synchronous capture of every replication before native result files are reused.
+- Return actual engine metrics as structured MCP reports while retaining raw result XML.
+- Add metadata/RACI fidelity regressions and full native metadata acceptance, including rejected writes, recovery and rich no-op save.
+- Full Modeler automation remains open: broad containers/layout, extended attributes/attachments, additional publication and visual/live-session capabilities are not implied by this release.
+
 ## 0.3.0-alpha.1
 
 - Add `native_mutate`: explicit create/update/delete/reconnect batches with native identities and revision checks.

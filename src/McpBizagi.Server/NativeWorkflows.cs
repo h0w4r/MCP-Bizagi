@@ -8,7 +8,7 @@ using McpBizagi.Core;
 namespace McpBizagi.Server;
 
 /// <summary>Native use cases, separated from MCP schemas and the version-specific engine adapter.</summary>
-public sealed class NativeWorkflows(WorkspaceFiles files, ServerOptions options, WorkerClient worker, Operations operations)
+public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions options, WorkerClient worker, Operations operations)
 {
     public OperationView Probe() => operations.Start("native_probe", async (id, progress, token) =>
         await Execute(new EngineRequest { OperationId = id }, RunDirectory(id, "probe"), progress, token));

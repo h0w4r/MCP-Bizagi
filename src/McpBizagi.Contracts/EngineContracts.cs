@@ -21,6 +21,8 @@ public sealed class EngineRequest
     public string[] SelectedDiagramIds { get; set; } = System.Array.Empty<string>();
     public int AtomicStepSeconds { get; set; } = 30;
     public int InactivitySeconds { get; set; } = 120;
+    public NativeMetadataPatch? MetadataPatch { get; set; }
+    public string[] ScenarioIds { get; set; } = System.Array.Empty<string>();
 }
 
 /// <summary>Explicit semantic mutations. Unused fields are rejected rather than treated as reflection paths.</summary>
@@ -56,6 +58,7 @@ public sealed class NativeElement
     public string Kind { get; set; } = "";
     public string ElementType { get; set; } = "";
     public string Name { get; set; } = "";
+    public string BpmnId { get; set; } = "";
     public string ParentId { get; set; } = "";
     public string DiagramId { get; set; } = "";
     public string Documentation { get; set; } = "";
@@ -95,6 +98,8 @@ public sealed class EngineReply
     public NativeScenario[] Scenarios { get; set; } = System.Array.Empty<NativeScenario>();
     public NativePublicationReadback? Publication { get; set; }
     public string[] IntegrationAdjustments { get; set; } = System.Array.Empty<string>();
+    public NativeMetadataSnapshot? Metadata { get; set; }
+    public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
 }
 
 /// <summary>Text and image counts read from a durable publication by an independent worker.</summary>

@@ -43,7 +43,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_structural_geometry_documentation_batches", status = "experimental_tested_palette_and_connection_batch_not_all_containers", backend = "bizagi_worker" },
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
-                new { name = "native_simulation", status = "experimental_level_one_locally_verified_other_scenarios_pending", backend = "bizagi_worker" },
+                new { name = "native_metadata_resources_activity_raci", status = "experimental_copy_only_verified_on_tested_inputs", backend = "bizagi_worker" },
+                new { name = "native_simulation_configuration", status = "experimental_full_diagram_bpsim_replacement_with_fidelity_gate", backend = "bizagi_worker" },
+                new { name = "native_simulation_and_what_if", status = "experimental_levels_one_to_four_and_replications_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_offscreen_svg_png", status = "experimental_basic_diagram_locally_verified_rich_visual_fidelity_pending", backend = "bizagi_worker" },
                 new { name = "native_documentation", status = "experimental_excel_word_pdf_verified_on_tested_inputs_not_all_publication_formats", backend = "bizagi_worker" }
             },
@@ -77,6 +79,15 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_inspect"), Description("Read an existing unencrypted .bpm through a private native copy, returning native IDs, containment, geometry, documentation, scenarios and source revision. Poll operation_get.")]
     public CallToolResult InspectNative(string path) => Guard(() => native.Inspect(path));
+
+    [McpServerTool(Name = "native_metadata_get"), Description("Read native resources, activity RACI assignments and complete diagram BPSim 1.0 configurations through the installed engine. Returns native IDs, BPMN references and source revision. Poll operation_get.")]
+    public CallToolResult GetNativeMetadata(string path) => Guard(() => native.ReadMetadata(path));
+
+    [McpServerTool(Name = "native_metadata_apply"), Description("Edit local resources, replace complete activity RACI sets and explicitly replace complete per-diagram BPSim configurations in a native copy. Requires revision, validates native readback and all non-targeted archive content. Never silently discards saved simulation results.")]
+    public CallToolResult ApplyNativeMetadata(string path, string expectedRevision, NativeMetadataPatch patch) => Guard(() => native.ApplyMetadata(path, expectedRevision, patch));
+
+    [McpServerTool(Name = "native_simulate_what_if"), Description("Run installed native what-if analysis for explicit scenario IDs at level 1-4. Preserve every real replication result and identity as separate artifacts. No changes to the source file. Poll operation_get.")]
+    public CallToolResult SimulateNativeWhatIf(string path, string diagramId, string[] scenarioIds, int simulationLevel = 1) => Guard(() => native.RunWhatIf(path, diagramId, scenarioIds, simulationLevel));
 
     [McpServerTool(Name = "native_mutate"), Description("Apply explicit create/update/delete/reconnect mutations to a native copy. Requires native IDs and revision, verifies fresh-worker readback and rejects unexplained container changes. Does not overwrite the input.")]
     public CallToolResult MutateNative(string path, string expectedRevision, NativeMutation[] mutations) => Guard(() => native.Mutate(path, expectedRevision, mutations));

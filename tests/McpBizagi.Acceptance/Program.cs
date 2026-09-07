@@ -92,6 +92,13 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--metadata-only"))
+    {
+        if (!native) throw new ArgumentException("Metadata acceptance requires --native.");
+        await NativeMetadataAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_METADATA_SCENARIOS_WHAT_IF_PASS evidence=" + run);
+        return 0;
+    }
     if (args.Contains("--expanded-render-only"))
     {
         if (!native) throw new ArgumentException("Expanded rendering acceptance requires --native.");

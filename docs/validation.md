@@ -1,4 +1,55 @@
-# Verification baseline — 0.3.0-alpha.1
+# Verification baseline — 0.4.0-alpha.1
+
+Real source acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
+The current server exposes **21 MCP tools**. The unit suite passes **254 tests**;
+unit results remain separate from actual native acceptance.
+
+## Native metadata and configured simulation
+
+The `--native --metadata-only` circuit used the actual official MCP stdio client,
+host, isolated worker, native APIs, durable `.bpm` output and independent reader
+workers. Source transcript SHA-256:
+
+`e1b3f6dd9a6b69dbcf07a394eacbb9f7f75bf463fed742e313b1c65b14022497`.
+
+| Capability | Verified result |
+| --- | --- |
+| Resource catalog | Role and Entity creation; name/description/type update; deletion; native BPMN identity readback |
+| Activity RACI | Responsible, Accountable, Consulted and Informed assignment, then explicit clearing |
+| BPSim configuration | Complete native per-diagram replacement, all settings verified after restart; other archive leaves compared |
+| Timing | 12 completed instances; 3-minute and 9-minute processing times; totals 36 and 108 minutes |
+| What-if | Two selected scenarios, two actual replications each; separately captured results and identities |
+| Resource analysis | Actual contention: average wait 2.5 minutes; task completion cost 84 |
+| Calendar analysis | 08:00 working shift produced average resource wait of 482 minutes; 12 instances completed |
+| Structured results | MCP metric dictionaries checked against native output XML |
+| Rejected writes | Referenced-resource deletion and unknown simulation-element reference failed as expected; subsequent valid operations succeeded |
+| Native preservation | No-op save of the resource/scenario/calendar model passed the whole-container gate |
+
+Selected operation identities:
+
+- What-if: `2fed7781c69a468bb384c87c2a53d70d`.
+- Resource analysis: `a9b607cefbae4741af36f54ba58dabe6`.
+- Calendar analysis: `9fc2e489697548c391ecd2f6ce3a7469`.
+- Configured-model no-op save: `cb90ad1d94c84c619ff9d3bce60b7670`.
+
+The run retained **25** owned-worker desktop observations with **156** samples;
+none observed a visible owned window or foreground takeover. This is sampled
+evidence, not continuous proof. Native process exits and separate settings
+namespaces were verified. Logs, archives and generated simulation files remain
+private because they can contain operator information.
+
+The real integration exposed native resource catalog replication into diagram
+packages, serialization of empty BPSim property arrays, and a UTF-8 BOM in saved
+result containers. These were handled explicitly; no entire diagram or unknown
+XML subtree was excluded from comparison to make acceptance pass.
+
+See [native simulation boundaries](native-simulation.md). Full Modeler automation
+is **not complete**: broad container/layout editing, extended attributes and
+attachments, additional publication formats, live unsaved sessions, and independent
+Modeler visual compatibility remain open. The sections below retain prior-version
+evidence and do not silently promote those old results to new-version acceptance.
+
+## Prior baseline — 0.3.0-alpha.1
 
 Real local acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
 The source contains 18 MCP tools; the checks below invoked the actual tools and

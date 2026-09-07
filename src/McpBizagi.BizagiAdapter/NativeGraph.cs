@@ -65,6 +65,7 @@ public sealed partial class NativeEngine
         return new NativeElement
         {
             Id = Text(element, "Id"),
+            BpmnId = Text(element, "BpmnId"),
             Kind = element.GetType().Name,
             ElementType = Text(element, "ElementType"),
             Name = Text(element, "DisplayName"),
