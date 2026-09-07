@@ -49,6 +49,30 @@ attachments, additional publication formats, live unsaved sessions, and independ
 Modeler visual compatibility remain open. The sections below retain prior-version
 evidence and do not silently promote those old results to new-version acceptance.
 
+## Extracted 0.4.0-alpha.1 package acceptance
+
+The final ZIP was built from clean source commit
+`ec07576b338c4cbb58b10b779ac9fe356f6a233c`. It contains **310** verified manifest
+entries and **60** collected runtime dependency notices. Size: **6,482,636 bytes**.
+
+ZIP SHA-256:
+`7e7e67b5ff3aaa0d47822022701b06518b4d8a8b641fe4e84bdc0e9ddf3db5f5`.
+
+Both circuits below ran the extracted host and worker, not development binaries:
+
+| Circuit | Workers / desktop samples | Transcript SHA-256 |
+| --- | --- | --- |
+| Resources, RACI, scenarios, levels 2–4, four replications, failures/recovery and rich no-op save | 25 / 131 | `9a05f5e4d4b20f8354136c644bcf59f91ca265cf6953e8be756f557943e202f8` |
+| XML/native regression, nested/multi-diagram names, native validation, 1,000-instance simulation, offscreen rendering, cancellation, host death and journal recovery | 21 / 135 | `f04cf2642e6e5d35563e0d7094c735778ac3aa05ff8b531457b3e01a752d86b6` |
+
+No visible owned window or foreground takeover was observed in these **266**
+samples. The extracted distribution's manifest remained unchanged after both
+circuits. The source [CI run](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34110147756)
+also passed build, 255 unit tests and the real non-native MCP XML circuit.
+
+These checks accredit the described paths on the installed engine. They do not
+close the full-automation or broad rich-content/visual gates listed above.
+
 ## Prior baseline — 0.3.0-alpha.1
 
 Real local acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
