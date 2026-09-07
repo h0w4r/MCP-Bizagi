@@ -127,6 +127,7 @@ public sealed partial class NativeEngine
             "Bizagi.ProcessModeler.BusinessLogic.General.IElementConfigurationManager"))!;
         var inactivity = Stopwatch.StartNew();
         string previous = "";
+        string previousState = "";
         string path = Path.Combine(localSettings, "DefaultElementConfig.xml");
         while (true)
         {
@@ -134,8 +135,13 @@ public sealed partial class NativeEngine
             // the dictionary is populated; the XML marker is written by the final native initialization step.
             Thread.MemoryBarrier();
             bool ready = Optional(manager, "DocumentationConfigValue") != null && Optional(manager, "ElementConfigValues") != null;
+            int count = Optional(manager, "ElementConfigValues") is object values ? Convert.ToInt32(Optional(values, "Count")) : 0;
+            string state = ready + ":" + count;
+            if (state != previousState) { previousState = state; inactivity.Restart(); progress("native_configuration_state:" + state); }
             string xml = "";
-            try { if (File.Exists(path)) xml = File.ReadAllText(path); }
+            // Do not touch the file during the native remove/deserialize/reset phase. The completed
+            // in-memory values precede the final XML marker; even then, observe with writer-compatible sharing.
+            try { if (ready && File.Exists(path)) xml = TransientFileSnapshot.ReadText(path); }
             catch (IOException) { /* A native write is still in progress; readiness is not inferred from existence. */ }
             if (xml != previous) { previous = xml; inactivity.Restart(); }
             if (ready && xml.Contains("<ID>TextAttributeVisualization</ID>"))
@@ -152,7 +158,12 @@ public sealed partial class NativeEngine
                 catch (XmlException) { /* Native serialization may not yet have closed the document. */ }
             }
             if (inactivity.Elapsed.TotalSeconds > inactivitySeconds)
+            {
+                // Retain the exact last observation for asynchronous initializer failures, without resetting defaults.
+                File.WriteAllText(Path.Combine(workRoot, "incomplete-native-configuration.xml"), xml);
+                File.WriteAllText(Path.Combine(workRoot, "native-configuration-state.txt"), "ready=" + ready + "; elements=" + count);
                 throw new TimeoutException("Native graphical configuration did not finish initialization in the configured inactivity window.");
+            }
             Thread.Sleep(50);
         }
     }

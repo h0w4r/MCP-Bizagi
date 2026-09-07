@@ -304,6 +304,10 @@ try
             var failed = await WaitOperation(operationId, "failed");
             if (!failed.GetProperty("Error").GetString()!.Contains(".native-worker.lock"))
                 throw new InvalidDataException("Native settings contention did not produce the expected sharing failure.");
+            // A swallowed native initializer exception must remain diagnosable, without tracing personal settings.
+            var diagnostics = Directory.EnumerateFiles(Path.Combine(stateRoot, "runs", operationId), "native-settings-io-*.txt", SearchOption.AllDirectories).ToArray();
+            if (diagnostics.Length == 0 || !diagnostics.Any(file => File.ReadAllText(file).Contains(".native-worker.lock")))
+                throw new InvalidDataException("The actual settings sharing failure has no scoped I/O diagnostic.");
             VerifyWorkerExit(operationId);
         }
         var retry = await Call("native_probe");
@@ -319,15 +323,26 @@ try
         string inputPath = Path.Combine(run, "render-input.bpm"); File.Copy(Path.GetFullPath(args[inputArgument + 1]), inputPath);
         var opened = await Call("native_inspect", new() { ["path"] = inputPath });
         string openId = opened.GetProperty("OperationId").GetString()!;
-        var graph = (await WaitOperation(openId)).GetProperty("Result").GetProperty("result").GetProperty("Elements").EnumerateArray();
-        string diagramId = graph.First(e => e.GetProperty("Kind").GetString() == "Collaboration").GetProperty("Id").GetString()!;
-        var render = await Call("native_render_svg", new() { ["path"] = inputPath, ["diagramId"] = diagramId });
-        string renderId = render.GetProperty("OperationId").GetString()!;
-        var output = await WaitOperation(renderId);
-        string artifact = output.GetProperty("Result").GetProperty("result").GetProperty("Artifacts")[0].GetString()!;
-        if (System.Xml.Linq.XDocument.Load(artifact).Root?.Name.LocalName != "svg") throw new InvalidDataException("Invalid native SVG.");
-        VerifyWorkerExit(openId); VerifyWorkerExit(renderId);
-        Console.WriteLine("NATIVE_RENDER_DIAGNOSTIC_PASS artifact=" + artifact + " evidence=" + run);
+        var diagrams = (await WaitOperation(openId)).GetProperty("Result").GetProperty("result").GetProperty("Elements").EnumerateArray()
+            .Where(e => e.GetProperty("Kind").GetString() == "Collaboration").Select(e => e.GetProperty("Id").GetString()!).ToArray();
+        VerifyWorkerExit(openId);
+        int diagramArgument = Array.IndexOf(args, "--diagram-id"), repeatArgument = Array.IndexOf(args, "--render-repetitions");
+        string diagramId = diagramArgument >= 0 ? args[diagramArgument + 1] : diagrams.First();
+        if (!diagrams.Contains(diagramId)) throw new ArgumentException("The requested diagram is not in the inspected native model.");
+        int repetitions = repeatArgument >= 0 ? int.Parse(args[repeatArgument + 1], System.Globalization.CultureInfo.InvariantCulture) : 1;
+        if (repetitions is < 1 or > 20) throw new ArgumentException("Render repetitions must be between 1 and 20.");
+        // Each MCP request starts a different real engine worker; repeats never mask or skip a failed attempt.
+        for (int attempt = 1; attempt <= repetitions; attempt++)
+        {
+            var render = await Call("native_render_svg", new() { ["path"] = inputPath, ["diagramId"] = diagramId });
+            string renderId = render.GetProperty("OperationId").GetString()!;
+            var output = await WaitOperation(renderId);
+            string artifact = output.GetProperty("Result").GetProperty("result").GetProperty("Artifacts")[0].GetString()!;
+            if (System.Xml.Linq.XDocument.Load(artifact).Root?.Name.LocalName != "svg") throw new InvalidDataException("Invalid native SVG.");
+            VerifyWorkerExit(renderId);
+            Console.WriteLine($"NATIVE_RENDER_ATTEMPT_PASS attempt={attempt}/{repetitions} diagram={diagramId} operation={renderId} artifact={artifact}");
+        }
+        Console.WriteLine("NATIVE_RENDER_DIAGNOSTIC_PASS evidence=" + run);
         return 0;
     }
     string xml = File.ReadAllText(Path.Combine(repo, "examples", "minimal.bpmn"));

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Observe asynchronous native graphical defaults without denying the initializer write/delete sharing; wait for in-memory readiness before sampling a bounded, parsed XML snapshot. Retain scoped settings I/O diagnostics and real repeated-render acceptance, including settings contention and recovery.
+
 - Add native diagram creation, renaming, cloning, deletion and persisted ordered/selected tab preferences through two revision-checked MCP tools.
 - Verify native clone identity bijections, known references, nested content and original preservation; retain explicit empty attribute containers omitted by the native cloner.
 - Restrict tab-preference projection to independently reported default/current-user entries and preserve all unrelated settings.

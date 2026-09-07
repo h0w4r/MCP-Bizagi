@@ -1,8 +1,38 @@
 # Verification baselines
 
+## Native configuration observer correction — 2026-09-07
+
+The clean `025df56` diagram candidate failed its rich packaged lifecycle at native
+graphical configuration initialization (run `20260907-124745-8ac31f`, operation
+`c0f7c82329ab4f64aac818f9a332a96f`). The candidate is **not accredited**: earlier
+completed editing operations do not make the failed full circuit pass.
+
+Inspection found that the observer used `File.ReadAllText` while the native
+initializer rewrote the same MCP-owned defaults. The observer now waits for
+in-memory readiness and uses bounded read-only snapshots with writer/delete
+sharing. It still requires a fully parsed document and the native completion
+marker; partial content, existence or a live worker does not imply readiness.
+No personal Modeler settings are reset, and revision-protected model reads retain
+their existing stricter sharing. The original fire-and-forget task exception was
+not captured, so this is a corrected concrete observer defect, not proof of the
+sole cause of every initialization failure. New bounded first-chance diagnostics
+retain I/O failures only within the verified MCP-owned settings namespace.
+
+The corrected source passed **365 unit tests** and three independent real MCP
+renderer startups against the exact previously failing cloned diagram in run
+`20260907-131122-29a3fb`. Every attempt must pass; the acceptance harness does not
+skip failed attempts. That run also exercised actual settings-lock contention,
+verified the original scoped I/O diagnostic, released the lock and successfully
+started a new native worker. Extracted-package validation of the correction is
+recorded separately when completed, never inferred from source tests.
+
+The focused acceptance supports `--render-only --input <native.bpm>` with optional
+`--diagram-id <native-guid>` and `--render-repetitions <1..20>`. The explicit ID is
+checked against a fresh native inspection, not inferred from ZIP enumeration.
+
 ## Unreleased native diagram lifecycle — 2026-09-07
 
-Current source exposes **26 MCP tools** and passes **360 unit tests**. The actual
+That checkpoint exposed **26 MCP tools** and passed **360 unit tests**. The actual
 stdio MCP lifecycle passed with Modeler **4.3.0.008**, native persistence and
 independent fresh-worker readback. This is source after 0.4.0-alpha.1, not a claim
 about that older release asset or full Modeler automation.

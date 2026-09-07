@@ -103,6 +103,19 @@ public sealed partial class NativeEngine
         // Different MCP state directories must not race through the vendor's shared application defaults.
         // A competing native worker fails explicitly; no write or simulation is silently replayed.
         File.WriteAllLines(Path.Combine(workRoot, "native-settings-paths.txt"), new[] { localSettings, roaming });
+        int ioDiagnostics = 0;
+        AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
+        {
+            // Vendor fire-and-forget initializers can fault without exposing their Task. Retain bounded,
+            // MCP-owned settings I/O evidence before native catch/log handlers obscure the original failure.
+            if (e.Exception is not IOException && e.Exception is not UnauthorizedAccessException ||
+                e.Exception.Message.IndexOf(localSettings, StringComparison.OrdinalIgnoreCase) < 0) return;
+            int sequence = System.Threading.Interlocked.Increment(ref ioDiagnostics);
+            if (sequence > 32) return;
+            try { File.WriteAllText(Path.Combine(workRoot, "native-settings-io-" + sequence + ".txt"), e.Exception.ToString()); }
+            catch (IOException) { /* Diagnostic failure cannot replace the original engine error. */ }
+            catch (UnauthorizedAccessException) { /* Keep the original failure authoritative. */ }
+        };
         settingsLease = new FileStream(Path.Combine(localSettings, ".native-worker.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     }
 
