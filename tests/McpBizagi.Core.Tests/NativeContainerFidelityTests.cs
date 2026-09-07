@@ -38,7 +38,8 @@ public sealed class NativeContainerFidelityTests
     private static NativeMutation Create(string id, string parent, string type, string name) => new()
     { Operation = "create", ElementId = id, ParentId = parent, ElementType = type, Name = name, ProcessId = type == "Participant" ? Process : "" };
     private static NativeElement Element(string id, string parent, string type, string name) => new()
-    { Id = id, ParentId = parent, Kind = type, ElementType = type, Name = name, DiagramId = Diagram };
+    { Id = id, ParentId = parent, Kind = type, ElementType = type, Name = name, DiagramId = Diagram,
+        SubProcess = type == "SubProcess" ? new() { Kind = "SubProcess" } : null };
     private static NativeMutation[] Creates() => [Create(Pool, Diagram, "Participant", "Pool"), Create(Lane, Process, "Lane", "Lane"),
         Create(Sub, Process, "SubProcess", "Sub"), Create(Child, Sub, "UserTask", "Child")];
     private static NativeElement[] Readback() => [Element(Pool, Diagram, "Participant", "Pool"), Element(Process, Pool, "Process", "Pool"),

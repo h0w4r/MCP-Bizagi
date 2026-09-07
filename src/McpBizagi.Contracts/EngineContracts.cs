@@ -51,6 +51,9 @@ public sealed class NativeMutation
     /// <summary>Intermediate creation mode; cannot convert an existing native event implicitly.</summary>
     public string? EventMode { get; set; }
     public NativeEventProperties? EventProperties { get; set; }
+    /// <summary>Creation-only native embedded subclass: SubProcess, Transaction or AdHoc.</summary>
+    public string? SubProcessKind { get; set; }
+    public NativeSubProcessProperties? SubProcessProperties { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
@@ -112,6 +115,7 @@ public sealed class NativeElement
     public NativeActivityLoop? ActivityLoop { get; set; }
     public NativeFlowCondition? FlowCondition { get; set; }
     public string? GatewayDirection { get; set; }
+    public NativeSubProcessInfo? SubProcess { get; set; }
     public NativeEventInfo? Event { get; set; }
     public NativeEventGatewayInfo? EventGateway { get; set; }
     /// <summary>Derived from actual outgoing native sequence-flow conditions, not a guessed catalog alias.</summary>
@@ -176,6 +180,7 @@ public sealed class NativeSimulationLimitation
     public NativeCallReference? CallReference { get; set; }
     public NativeActivityProperties? ActivityProperties { get; set; }
     public NativeActivityLoop? ActivityLoop { get; set; }
+    public NativeSubProcessInfo? SubProcess { get; set; }
 }
 
 /// <summary>Native activity quantities checked against the actual XML consumed by the installed simulator.</summary>

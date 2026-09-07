@@ -74,7 +74,7 @@ public sealed partial class NativeEngine
             BpmnId = Text(element, "BpmnId"),
             CallReference = DescribeCall(element),
             ActivityProperties = DescribeActivity(element), ActivityLoop = DescribeLoop(element), FlowCondition = DescribeCondition(element),
-            Event = DescribeEvent(element),
+            SubProcess = DescribeSubProcess(element), Event = DescribeEvent(element),
             EventGateway = element.GetType().Name == "EventBasedGateway" ? new NativeEventGatewayInfo
             { Instantiate = (bool)Get(element, "Instantiate"), Kind = Text(element, "EventGatewayType") } : null,
             GatewayDirection = Optional(element, "GatewayDirection")?.ToString(), DefaultSequenceFlowIds = DefaultFlowIds(element),

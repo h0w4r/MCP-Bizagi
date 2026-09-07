@@ -48,6 +48,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > creation, interruption, same-container activity references and guarded deletion,
 > with native clone remapping. Event payload editing and simulator behavior remain
 > separate from successful native persistence.
+> [Special subprocesses](docs/native-subprocesses.md) add explicit transaction,
+> ad hoc and event-triggered native types, context-specific events and durable
+> properties. Modeling support does not imply transactional or ad hoc simulation.
 
 ## Why this project
 
@@ -83,6 +86,7 @@ every operation into a BPMN XML export.
 | Local reusable subprocess calls | Experimental current source | Create/link/unlink, preserve references, protect targets and remap native clones; explicit simulation black-box semantics; [contract](docs/native-calls.md) |
 | Native activity/flow properties | Experimental current source | Activity quantities/compensation/state, gateway direction and conditions/default references; actual simulation input checked, nondefault token behavior unaccredited; [contract](docs/native-semantics.md) |
 | Native activity loops | Experimental current source | Standard/multi-instance configuration and removal through native persistence; iteration simulation is a separate boundary; [contract and evidence](docs/native-loops.md) |
+| Special subprocesses | Experimental current source | Transaction, ad hoc and event-triggered native lifecycle, nested surfaces and context guards; [contract and evidence](docs/native-subprocesses.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

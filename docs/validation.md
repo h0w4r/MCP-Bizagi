@@ -1,5 +1,66 @@
 # Verification baselines
 
+## Native special subprocesses — 2026-09-07
+
+First source circuit `20260907-181529-eaf638` passed **25 terminal operations**:
+16 completed and nine expected failures, using the independent SDK MCP stdio
+client and installed Modeler **4.3.0.008**. The run retained **36 worker
+observations / 3,676 periodic desktop samples**. Transcript SHA-256:
+`bb53b6cbd8363b67a82ad5a7c9636c53f554c9af73d9080b553612d182a4d3f2`.
+
+The native factory created ordinary, transaction, ad hoc and event-triggered
+subprocesses, nested special containers, context-specific start/cancel events
+and a transaction cancel boundary. Trigger flags, ad hoc ordering, Unicode
+condition text, explicit clearing, unrelated renames and native clone properties
+survived independent worker restarts and whole-archive fidelity comparison.
+Transaction cancel references remapped through the native clone identity map.
+
+Nine actual native operations rejected the intended incompatible context,
+wrong-kind property target, illegal mixed subprocess mode, invalid cancel
+context, referenced activity deletion or sequence-flow attachment. Successful
+operations afterward verified recovery without adopting failed artifacts.
+
+Five native offscreen surface requests and Word publication completed. The
+independent publication reader reported **22 pages and 102 images**; this image
+count includes document icons, not only diagram images. No-op native save and
+final inspection passed without modifying the source. Long native rendering,
+document generation and fingerprint-reading phases completed without a total
+operation timeout; no clicks or foreground control substituted for the engine.
+
+The expanded source policy suite passes **601 unit/component tests**, with no
+Release-build warnings or errors. This does not make those fixtures a native
+acceptance corpus. See the [special-subprocess contract](native-subprocesses.md)
+for read-only fields, context guards and unsupported simulation semantics.
+This remains source acceptance, not a new release-archive or GUI-equivalence claim.
+
+Expanded circuit `20260907-183230-aa4c14` passed **33 terminal operations**:
+23 completed and ten expected failures, with **50 worker observations / 1,235
+periodic samples**. Transcript SHA-256:
+`cd8c4a64cc15aa0884ee97fa95585484d072b96d106f41d71a056c0812ecaea8`.
+It additionally verifies selected/ordered special-subprocess tabs, a two-level
+expanded transaction → ad hoc → task surface, child-first container deletion,
+noninterrupting escalation starts and rejection/recovery when a trigger-flag
+update would leave an incident sequence flow. Native Word readback reports
+24 pages / 110 total images, including document icons.
+
+An actual connected diagnostic diagram traversed `native_simulate`. Its response
+retained two input-specific `special_subprocess_simulation_unsupported` warnings,
+one for the actual transaction and one for the actual ad hoc subprocess, with
+their own native IDs and properties. This verifies honest diagnostics and native
+output transport, **not** transactional rollback, ad hoc scheduling or condition
+execution. Native simulation behavior remains subject to its separate gates.
+
+Broad source regression `20260907-184224-fa6b6e` passed **17 terminal operations**:
+13 completed, two expected failures, one cancelled and one interrupted;
+**21 worker observations / 131 periodic samples**. Actual XML/native interchange,
+default simulation, offscreen rendering, corrupt input, settings contention,
+active cancellation, host death, owned-worker cleanup, journal restart and state
+ownership were exercised. Transcript SHA-256:
+`5dc910867f637bacb4205cfdbefdc09926da064f67561ad0ecbcc2119b39ae31`.
+All 601 unit/component tests passed again afterward. No new distribution archive
+or release is claimed by these source circuits; consolidated packaging and the
+remaining full-automation families still require their own acceptance.
+
 ## Native event palette and boundary lifecycle — 2026-09-07
 
 First native source circuit `20260907-173054-03d57d` passed **17 operations**:

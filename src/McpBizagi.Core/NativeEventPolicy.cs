@@ -9,7 +9,7 @@ public static class NativeEventPolicy
     public static readonly string[] AdditionalTypes = ["ConditionalStart", "SignalStart", "MultipleStart", "ParallelMultipleStart",
         "EscalationIntermediate", "ConditionalIntermediate", "LinkIntermediate", "ErrorIntermediate", "CompensationIntermediate",
         "SignalIntermediate", "MultipleIntermediate", "ParallelMultipleIntermediate", "EscalationEnd", "ErrorEnd", "CompensationEnd",
-        "SignalEnd", "MultipleEnd", "EventBasedGatewayExclusive", "EventBasedGatewayParallel"];
+        "SignalEnd", "MultipleEnd", "EventBasedGatewayExclusive", "EventBasedGatewayParallel", "ErrorStart", "EscalationStart", "CompensationStart", "CancelEnd", "CancelIntermediate"];
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";
 
     public static string Mode(NativeMutation c) => c.EventMode ?? (c.ElementType == "NoneIntermediate" ? "Throw" :
@@ -27,7 +27,7 @@ public static class NativeEventPolicy
             {
                 "Catch" => ["MessageIntermediate", "TimerIntermediate", "ConditionalIntermediate", "LinkIntermediate", "SignalIntermediate", "MultipleIntermediate", "ParallelMultipleIntermediate"],
                 "Throw" => ["NoneIntermediate", "MessageIntermediate", "EscalationIntermediate", "LinkIntermediate", "CompensationIntermediate", "SignalIntermediate", "MultipleIntermediate"],
-                "Boundary" => ["MessageIntermediate", "TimerIntermediate", "EscalationIntermediate", "ConditionalIntermediate", "ErrorIntermediate", "CompensationIntermediate", "SignalIntermediate", "MultipleIntermediate", "ParallelMultipleIntermediate"],
+                "Boundary" => ["CancelIntermediate", "MessageIntermediate", "TimerIntermediate", "EscalationIntermediate", "ConditionalIntermediate", "ErrorIntermediate", "CompensationIntermediate", "SignalIntermediate", "MultipleIntermediate", "ParallelMultipleIntermediate"],
                 _ => []
             };
             if (!allowed.Contains(c.ElementType)) throw new InvalidDataException("Unsupported event kind/mode combination; additional intermediate types require explicit EventMode.");
@@ -44,8 +44,8 @@ public static class NativeEventPolicy
             bool start = c.ElementType.EndsWith("Start", StringComparison.Ordinal), boundary = intermediate && Mode(c) == "Boundary";
             if (!start && !boundary || p.AttachedToActivityId != null && !boundary)
                 throw new InvalidDataException("Interrupting applies to start/boundary events; attachment applies only to boundaries.");
-            if (p.IsInterrupting == false && c.ElementType is "ErrorIntermediate" or "CompensationIntermediate")
-                throw new InvalidDataException("Error and compensation boundaries do not support a noninterrupting flag.");
+            if (p.IsInterrupting == false && c.ElementType is "ErrorIntermediate" or "CancelIntermediate" or "CompensationIntermediate" or "ErrorStart" or "CompensationStart")
+                throw new InvalidDataException("This native exception event does not support a noninterrupting flag.");
         }
     }
 

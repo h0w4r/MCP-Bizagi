@@ -17,7 +17,7 @@ event class or discard its definition payloads. The existing defaults remain
 | --- | --- |
 | Catch | Message, Timer, Conditional, Link, Signal, Multiple, ParallelMultiple |
 | Throw | None, Message, Escalation, Link, Compensation, Signal, Multiple |
-| Boundary | Message, Timer, Escalation, Conditional, Error, Compensation, Signal, Multiple, ParallelMultiple |
+| Boundary | Message, Timer, Escalation, Conditional, Error, Cancel, Compensation, Signal, Multiple, ParallelMultiple |
 
 Append `Intermediate` to the table names for `NativeMutation.ElementType`.
 Other creation additions are `ConditionalStart`, `SignalStart`, `MultipleStart`,
@@ -26,6 +26,9 @@ Other creation additions are `ConditionalStart`, `SignalStart`, `MultipleStart`,
 `EventBasedGatewayParallel`. Existing start/end/gateway types remain available.
 The native factory owns default event definitions; creating a Multiple marker
 does **not** configure custom message/error/timer/expression payloads.
+`ErrorStart`, `EscalationStart`, `CompensationStart`, `CancelEnd` and
+`CancelIntermediate` have explicit context requirements in the
+[special-subprocess contract](native-subprocesses.md).
 
 The desktop distinctions are documented by Bizagi in its [event palette](https://help.bizagi.com/platform/en/events.htm)
 and [gateway palette](https://help.bizagi.com/platform/en/gateways.htm).
@@ -46,7 +49,7 @@ Boundary creation requires a target. Reattachment changes the native activity
 object reference and its BPMN/catalog aliases together. A target is **not** a
 diagram, process, event, arbitrary string or external model reference. Empty
 does not detach: detaching would require a separate explicit event conversion
-contract. Error and compensation boundaries reject a noninterrupting flag.
+contract. Error, compensation and cancel boundaries reject a noninterrupting flag.
 Noninterrupting start events require an event-triggered subprocess; setting a
 flag on an ordinary process is not an equivalent operation.
 
@@ -97,5 +100,6 @@ The corpus covers the palette, explicit catch/throw modes, nested boundary
 references, interruption/reattachment, wrong-kind and cross-container failures,
 guarded deletion, native cloning, no-op save, offscreen rendering and Word
 publication. A completed palette circuit does not accredit event execution by
-the simulator, arbitrary event-definition payload editing, transaction/event
-subprocesses, GUI rendering equivalence or full Modeler automation.
+the simulator, arbitrary event-definition payload editing, GUI rendering
+equivalence or full Modeler automation. Special subprocesses have their own
+separate acceptance entry point and evidence.

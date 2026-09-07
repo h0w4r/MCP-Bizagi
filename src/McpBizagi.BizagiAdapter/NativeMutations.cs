@@ -25,6 +25,9 @@ public sealed partial class NativeEngine
                 if (change.ElementType.EndsWith("Intermediate", StringComparison.Ordinal))
                     Set(descriptor, "Options", Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementTypeOptions"),
                         "IntermediateEvent" + (change.EventMode ?? (change.ElementType == "NoneIntermediate" ? "Throw" : "Catch"))));
+                if (change.ElementType == "SubProcess" && change.SubProcessKind is "Transaction" or "AdHoc")
+                    Set(descriptor, "Options", Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementTypeOptions"),
+                        change.SubProcessKind == "Transaction" ? "TransactionSubProcess" : "AdHocSubProcess"));
                 element = Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IElementFactory"), "Create", descriptor)
                     ?? throw new NotSupportedException("Native factory does not create this element type.");
                 Set(element, "Id", Guid.Parse(change.ElementId));
@@ -58,6 +61,7 @@ public sealed partial class NativeEngine
             {
                 case "create":
                 case "update":
+                    if (change.SubProcessProperties != null) ApplySubProcessProperties(element, change.SubProcessProperties);
                     if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
@@ -109,6 +113,7 @@ public sealed partial class NativeEngine
             }
             progress("native_mutation:" + change.Operation + ":" + change.ElementId);
         }
+        ValidateSubProcessContexts(model, changes);
         ValidateLanePartitions(model);
     }
 
@@ -206,6 +211,9 @@ public sealed partial class NativeEngine
         if (kind is not "SequenceFlow" and not "MessageFlow") throw new NotSupportedException("Only native sequence/message flows can be connected.");
         if (kind == "SequenceFlow")
         {
+            // Event subprocesses exist outside their parent's normal sequence flow.
+            if (Optional(source, "TriggeredByEvent") is true || Optional(target, "TriggeredByEvent") is true)
+                throw new InvalidDataException("Event-triggered subprocesses cannot have incoming or outgoing sequence flows.");
             // Sequence flows cannot enter a boundary/start/instantiating gateway or leave an end event.
             if (target.GetType().Name is "BoundaryEvent" or "StartEvent" || source.GetType().Name == "EndEvent" ||
                 target.GetType().Name == "EventBasedGateway" && (bool)Get(target, "Instantiate"))
@@ -223,6 +231,9 @@ public sealed partial class NativeEngine
         foreach (var point in points) Call(vertices, "Add", new PointF((float)point.X, (float)point.Y));
         if (kind == "SequenceFlow")
         {
+            // Event subprocesses exist outside their parent's normal sequence flow.
+            if (Optional(source, "TriggeredByEvent") is true || Optional(target, "TriggeredByEvent") is true)
+                throw new InvalidDataException("Event-triggered subprocesses cannot have incoming or outgoing sequence flows.");
             // Sequence flows cannot enter a boundary/start/instantiating gateway or leave an end event.
             if (target.GetType().Name is "BoundaryEvent" or "StartEvent" || source.GetType().Name == "EndEvent" ||
                 target.GetType().Name == "EventBasedGateway" && (bool)Get(target, "Instantiate"))

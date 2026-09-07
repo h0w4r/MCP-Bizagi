@@ -1,0 +1,50 @@
+[
+  {
+    "Operation": "create",
+    "ElementId": "10000000-0000-4000-8000-000000000001",
+    "ParentId": "20000000-0000-4000-8000-000000000001",
+    "ElementType": "SubProcess",
+    "SubProcessKind": "Transaction",
+    "Name": "Payment transaction"
+  },
+  {
+    "Operation": "create",
+    "ElementId": "10000000-0000-4000-8000-000000000002",
+    "ParentId": "20000000-0000-4000-8000-000000000001",
+    "ElementType": "CancelIntermediate",
+    "EventMode": "Boundary",
+    "EventProperties": {
+      "AttachedToActivityId": "10000000-0000-4000-8000-000000000001",
+      "IsInterrupting": true
+    },
+    "Name": "Transaction cancelled"
+  },
+  {
+    "Operation": "create",
+    "ElementId": "10000000-0000-4000-8000-000000000003",
+    "ParentId": "20000000-0000-4000-8000-000000000001",
+    "ElementType": "SubProcess",
+    "SubProcessKind": "AdHoc",
+    "SubProcessProperties": {
+      "AdHocOrdering": "Sequential",
+      "AdHocCompletionCondition": "reviewComplete"
+    },
+    "Name": "Ad hoc review"
+  },
+  {
+    "Operation": "create",
+    "ElementId": "10000000-0000-4000-8000-000000000004",
+    "ParentId": "20000000-0000-4000-8000-000000000001",
+    "ElementType": "SubProcess",
+    "SubProcessProperties": { "TriggeredByEvent": true },
+    "Name": "Handle escalation"
+  },
+  {
+    "Operation": "create",
+    "ElementId": "10000000-0000-4000-8000-000000000005",
+    "ParentId": "10000000-0000-4000-8000-000000000004",
+    "ElementType": "EscalationStart",
+    "EventProperties": { "IsInterrupting": false },
+    "Name": "Escalation received"
+  }
+]

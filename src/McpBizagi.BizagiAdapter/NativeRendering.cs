@@ -22,7 +22,7 @@ public sealed partial class NativeEngine
         if (!Items(model, "Diagrams").Any(d => Text(d, "Id") == diagramId.ToString()))
             throw new InvalidDataException("Unknown native diagram ID.");
         var graph = Graph(model).Where(e => e.DiagramId == request.DiagramId).ToArray();
-        if (request.SubProcessId.Length > 0 && !graph.Any(e => Text(e.Value, "Id") == request.SubProcessId && e.Value.GetType().Name == "SubProcess"))
+        if (request.SubProcessId.Length > 0 && !graph.Any(e => Text(e.Value, "Id") == request.SubProcessId && IsNativeSubProcess(e.Value)))
             throw new InvalidDataException("Unknown native subprocess ID in the selected diagram.");
         WaitForNativeConfiguration(request.InactivitySeconds, progress);
         if (!offscreenInitialized)
@@ -75,7 +75,7 @@ public sealed partial class NativeEngine
                 string childId = Text(child, "Id");
                 object nativeChild = byId[childId].Value;
                 if (!(bool)Get(Get(nativeChild, "GraphicalProperties"), "Expanded")) continue;
-                if (nativeChild.GetType().Name != "SubProcess")
+                if (!IsNativeSubProcess(nativeChild))
                     throw new NotSupportedException("Expanded reusable call-activity rendering requires a separately verified reference contract.");
                 Set(child, "SvgImage", RenderSurface(childId));
             }
@@ -93,7 +93,7 @@ public sealed partial class NativeEngine
                 while (byId.TryGetValue(parent, out var owner))
                 {
                     if (parent == id) return true;
-                    if (owner.Value.GetType().Name == "SubProcess") return false;
+                    if (IsNativeSubProcess(owner.Value)) return false;
                     parent = owner.ParentId;
                 }
                 return false;

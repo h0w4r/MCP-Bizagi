@@ -25,6 +25,15 @@ public sealed partial class NativeEngine
                     ? "Bizagi documents multi-instance task/subprocess simulation as unsupported. Persisted loop metadata does not accredit iteration behavior."
                     : "Standard-loop editing/persistence is separate from simulation behavior; this server does not evaluate loop expressions or accredit native iteration behavior.",
                 DocumentationUrl = "https://help.bizagi.com/platform/en/simulation_in_bizagi.htm"
+            })).Concat(Graph(model).Where(e => e.DiagramId == diagramId && IsNativeSubProcess(e.Value))
+            .Select(e => new { Entry = e, Properties = DescribeSubProcess(e.Value)! })
+            .Where(e => e.Properties.Kind is "Transaction" or "AdHoc")
+            .Select(e => new NativeSimulationLimitation
+            {
+                Code = "special_subprocess_simulation_unsupported", DiagramId = diagramId, ElementId = Text(e.Entry.Value, "Id"), BpmnId = Text(e.Entry.Value, "BpmnId"),
+                SubProcess = e.Properties,
+                Message = "Bizagi documents transactional and ad hoc processes as unsupported simulation diagrams. Actual native outputs do not accredit transactional rollback, ad hoc scheduling or completion-expression execution.",
+                DocumentationUrl = "https://help.bizagi.com/platform/en/simulation_in_bizagi.htm"
             })).ToArray();
 
     private static NativeSimulationActivityInput[] ExpectedSimulationActivities(object model, string diagramId) => Graph(model)

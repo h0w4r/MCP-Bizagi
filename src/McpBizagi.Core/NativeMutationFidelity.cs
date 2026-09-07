@@ -67,6 +67,7 @@ public static class NativeMutationFidelity
                 var oldCompanion = Companion(a, x[0]); var newCompanion = Companion(b, y[0]);
                 if ((string?)oldCompanion?.Attribute("Id") != (string?)newCompanion?.Attribute("Id"))
                     throw new InvalidDataException("A property update cannot replace its native container companion.");
+                if (c.SubProcessProperties != null) NativeSubProcessPolicy.Project(x[0], y[0], oldCompanion, newCompanion, c.SubProcessProperties);
                 if (c.Documentation != null && x[0].Name == Xpdl + "Pool")
                 {
                     RestoreText(oldCompanion?.Element(Xpdl + "ProcessHeader")?.Element(Xpdl + "Description"),

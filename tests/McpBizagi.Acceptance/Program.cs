@@ -106,8 +106,10 @@ try
     {
         var types = advertised.GetProperty("nativeMutationTypes").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var modes = advertised.GetProperty("intermediateCreationModes").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        var subprocesses = advertised.GetProperty("nativeSubProcessKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         if (types.Length == 0 || types.Distinct(StringComparer.Ordinal).Count() != types.Length ||
-            !types.Contains("TimerIntermediate") || !types.Contains("EventBasedGatewayParallel") || !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }))
+            !types.Contains("TimerIntermediate") || !types.Contains("CancelEnd") || !types.Contains("EventBasedGatewayParallel") ||
+            !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }) || !subprocesses.SequenceEqual(new[] { "SubProcess", "Transaction", "AdHoc" }))
             throw new InvalidDataException("Native mutation schema inventory is absent, ambiguous or incomplete.");
     }
     if (args.Contains("--connection-failure"))
@@ -143,6 +145,12 @@ try
         string recoveredId = (await Call("native_probe")).GetProperty("OperationId").GetString()!;
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--subprocesses-only"))
+    {
+        if (!native) throw new ArgumentException("Subprocess acceptance requires --native.");
+        await NativeSubProcessAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_SUBPROCESS_LIFECYCLE_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--events-only"))
     {

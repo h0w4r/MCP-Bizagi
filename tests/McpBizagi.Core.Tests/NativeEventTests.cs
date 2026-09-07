@@ -24,8 +24,10 @@ public sealed class NativeEventTests
     [Fact] public void BoundaryRequiresAttachment() => Assert.Throws<InvalidDataException>(() => NativeEditPlan.Validate([Create("TimerIntermediate", "Boundary")]));
     [Theory] [InlineData("MessageIntermediate")] [InlineData("TimerIntermediate")] [InlineData("SignalIntermediate")] [InlineData("MultipleIntermediate")]
     public void NoninterruptingBoundaryIntent(string type) { var c = Create(type, "Boundary"); c.EventProperties = new() { AttachedToActivityId = Target, IsInterrupting = false }; NativeEditPlan.Validate([c]); }
-    [Theory] [InlineData("ErrorIntermediate")] [InlineData("CompensationIntermediate")]
+    [Theory] [InlineData("ErrorIntermediate")] [InlineData("CompensationIntermediate")] [InlineData("CancelIntermediate")]
     public void NoninterruptingExceptionKindsAreRejected(string type) { var c = Create(type, "Boundary"); c.EventProperties = new() { AttachedToActivityId = Target, IsInterrupting = false }; Assert.Throws<InvalidDataException>(() => NativeEditPlan.Validate([c])); }
+    [Theory] [InlineData("ErrorStart")] [InlineData("CompensationStart")]
+    public void NoninterruptingExceptionStartsAreRejected(string type) { var c = Create(type); c.EventProperties = new() { IsInterrupting = false }; Assert.Throws<InvalidDataException>(() => NativeEditPlan.Validate([c])); }
     [Theory] [InlineData("")] [InlineData("00000000-0000-0000-0000-000000000000")] [InlineData("not-an-id")]
     public void BoundaryTargetCannotBeEmptyOrMalformed(string id) { var c = Create("TimerIntermediate", "Boundary"); c.EventProperties = new() { AttachedToActivityId = id }; Assert.Throws<InvalidDataException>(() => NativeEditPlan.Validate([c])); }
     [Fact] public void PropertyOnlyUpdateIsMeaningful() => NativeEditPlan.Validate([new() { Operation = "update", ElementId = Id, EventProperties = new() { IsInterrupting = false } }]);

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add explicit native transaction/ad hoc creation and event-triggered subprocess
+  properties, typed fresh-worker readback and exact ActivitySet fidelity checks.
+- Add context-specific start/cancel events, guard incompatible parent changes and
+  sequence flows, and preserve native cancel-boundary references through cloning.
+- Include embedded native subclasses in offscreen rendering and documentation
+  surfaces. Keep transaction method/cancel-remaining observations read-only and
+  report the vendor's unsupported transactional/ad hoc simulation boundary.
+
 - Add explicit native catch/throw/boundary event creation and additional start,
   end and instantiating gateway variants through the installed element factory.
 - Persist and independently verify boundary activity references and interruption;

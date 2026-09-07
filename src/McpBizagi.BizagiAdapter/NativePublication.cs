@@ -42,7 +42,7 @@ public sealed partial class NativeEngine
             Call(Get(settings, "SelectedDiagramsInDocumentation"), "Add", diagramId);
             object selection = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.Documentation.DiagramDocumentationSettings"));
             Set(selection, "Element", diagram);
-            foreach (var container in graph.Where(e => e.DiagramId == diagramId && e.Value.GetType().Name is "Participant" or "SubProcess"))
+            foreach (var container in graph.Where(e => e.DiagramId == diagramId && (e.Value.GetType().Name == "Participant" || IsNativeSubProcess(e.Value))))
             {
                 object process = container.Value.GetType().Name == "Participant" ? Get(container.Value, "Process") : container.Value;
                 object selectedProcess = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.Documentation.ProcessDocSettings"));
@@ -54,7 +54,7 @@ public sealed partial class NativeEngine
             Call(Get(settings, "DiagramDocumentationSettings"), "Add", selection);
             if (request.PublicationFormat != "excel")
             {
-                var surfaces = new[] { "" }.Concat(graph.Where(e => e.DiagramId == diagramId && e.Value.GetType().Name == "SubProcess" && Items(e.Value, "FlowElements").Any()).Select(e => Text(e.Value, "Id")));
+                var surfaces = new[] { "" }.Concat(graph.Where(e => e.DiagramId == diagramId && IsNativeSubProcess(e.Value) && Items(e.Value, "FlowElements").Any()).Select(e => Text(e.Value, "Id")));
                 foreach (string subProcessId in surfaces)
                 {
                     string surfaceId = subProcessId.Length == 0 ? diagramId : subProcessId;

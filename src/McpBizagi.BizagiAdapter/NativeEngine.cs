@@ -176,7 +176,7 @@ public sealed partial class NativeEngine
                 // rendering or opening an existing .bpm never changes its saved dimensions.
                 foreach (var entry in Visit(diagram, "", "", new HashSet<string>(StringComparer.Ordinal)))
                 {
-                    if (entry.Value.GetType().Name is not "SubProcess" and not "CallActivity") continue;
+                    if (!IsNativeSubProcess(entry.Value) && entry.Value.GetType().Name != "CallActivity") continue;
                     object graphics = Get(entry.Value, "GraphicalProperties");
                     if (!(bool)Get(graphics, "Expanded")) continue;
                     float width = (float)Get(graphics, "Width"), height = (float)Get(graphics, "Height");

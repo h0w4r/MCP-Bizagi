@@ -155,6 +155,11 @@ and independent visual compatibility require further dedicated acceptance.
 
 ## Primary references
 
+Special subprocess results retain the input-specific
+`special_subprocess_simulation_unsupported` warning and actual native subclass
+properties. A completed simulation is not proof of transactional rollback or
+ad hoc scheduling. See the [special-subprocess contract](native-subprocesses.md#simulation-boundary).
+
 - [Bizagi scenarios](https://help.bizagi.com/platform/en/scenarios.htm)
 - [Simulation levels](https://help.bizagi.com/platform/en/simulation_levels.htm)
 - [Resource analysis](https://help.bizagi.com/platform/en/level_3_example.htm)

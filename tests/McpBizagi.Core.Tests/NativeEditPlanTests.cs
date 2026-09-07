@@ -100,7 +100,7 @@ public sealed class NativeEditPlanTests
             if (type.EndsWith("Intermediate", StringComparison.Ordinal))
             {
                 mutation.EventMode = type is "NoneIntermediate" or "EscalationIntermediate" or "CompensationIntermediate" ? "Throw" : "Catch";
-                if (type == "ErrorIntermediate")
+                if (type is "ErrorIntermediate" or "CancelIntermediate")
                 {
                     mutation.EventMode = "Boundary";
                     mutation.EventProperties = new() { AttachedToActivityId = TargetId };
