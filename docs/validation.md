@@ -1,7 +1,47 @@
-# Verification baseline — 0.4.0-alpha.1
+# Verification baselines
+
+## Current source — extended attributes and attachments (unreleased)
+
+Real MCP acceptance on **2026-09-07 UTC**, using installed **Modeler 4.3.0.008**.
+The source now exposes **24 MCP tools** and passes **298 unit tests**. The native
+comparator identifies its expanded policy as
+`native-v5-content-with-explicit-engine-metadata-v2`.
+
+The actual `--native --attributes-only` circuit imported our own BPMN, created
+definitions and values for all 12 native attribute kinds, persisted a two-row
+Text/Number table, embedded an actual installed-renderer PNG and an opaque
+XML-named file, and reloaded every mutation in a separate worker. It also verified:
+
+- Definition rename and guarded deletion; values explicitly cleared first.
+- Native-loaded attachment export, checked against the source archive and independently reread output bytes.
+- Embedded byte replacement without changing its reference.
+- Explicit file removal while preserving the separate image attachment.
+- Rich no-op save and an unrelated task-name edit, preserving all other native archive content.
+- Three expected real failures: missing export file, unknown native definition field and deletion of a referenced definition; subsequent valid operations succeeded.
+
+Run identifier: `20260907-105816-6c24d6`.
+Transcript SHA-256: `76458d0f7b9dfbde8a2e2394d7c65d229f28b8f45cbcb24afb1d799684a42763`.
+The circuit observed **18 operations** (15 completed and 3 expected failures),
+**29 owned-worker observations** and **164 periodic samples**, without observing
+a visible or foreground owned worker window. Sampling is not continuous proof.
+
+The wider native regression also passed on current source: XML MCP, native
+roundtrip, nested/multi-diagram names, rich guards, native validation, default
+1,000-instance simulation, rendering, corrupt/native failures, active cancellation,
+settings contention, host death, Job Object cleanup and journal/state recovery.
+Run `20260907-110104-b6aaa8`, transcript SHA-256
+`933875f5498e705a5b47d1bac4fe6127480b12274406e83cb5422ab94021ec24`:
+**21 worker observations / 113 samples**. Deliberate cancellation, failure and
+interruption are expected recovery scenarios, not successful modeling operations.
+
+This verifies the documented **source circuit**, not inclusion in the old 0.4
+release archive, every desktop editor constraint, rich publication behavior or
+independent Modeler visual compatibility. [Contract and open corpus](native-attributes.md).
+
+## Released baseline — 0.4.0-alpha.1
 
 Real source acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
-The current server exposes **21 MCP tools**. The unit suite passes **255 tests**;
+That release exposes **21 MCP tools**. Its unit suite passed **255 tests**;
 unit results remain separate from actual native acceptance.
 
 ## Native metadata and configured simulation

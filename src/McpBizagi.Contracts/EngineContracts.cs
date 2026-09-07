@@ -22,6 +22,8 @@ public sealed class EngineRequest
     public int AtomicStepSeconds { get; set; } = 30;
     public int InactivitySeconds { get; set; } = 120;
     public NativeMetadataPatch? MetadataPatch { get; set; }
+    public NativeDocumentationPatch? DocumentationPatch { get; set; }
+    public NativeAttachmentInfo? Attachment { get; set; }
     public string[] ScenarioIds { get; set; } = System.Array.Empty<string>();
 }
 
@@ -99,6 +101,7 @@ public sealed class EngineReply
     public NativePublicationReadback? Publication { get; set; }
     public string[] IntegrationAdjustments { get; set; } = System.Array.Empty<string>();
     public NativeMetadataSnapshot? Metadata { get; set; }
+    public NativeDocumentationSnapshot? Documentation { get; set; }
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
 }
 

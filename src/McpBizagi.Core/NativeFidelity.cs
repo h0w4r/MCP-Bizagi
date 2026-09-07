@@ -7,13 +7,14 @@ public sealed record ExpectedNativeName(string ElementId, string Name);
 public sealed record NativeDifference(string Entry, string Location, string Classification, string? ElementId, string? Before, string? After);
 public sealed record NativeFidelityReport(bool Preserved, int OriginalEntries, int ResultingEntries, int CheckedAtoms, NativeDifference[] Differences)
 {
-    public string Policy => "native-v5-content-with-explicit-engine-metadata-v1";
+    public string Policy => "native-v5-content-with-explicit-engine-metadata-v2";
 }
 
 /// <summary>Checks the entire native container, including unknown XML, nested diagram archives, and binary attachments.</summary>
 public static class NativeFidelity
 {
-    private sealed record Atom(string Value, string? ElementId, string? Property, string? Metadata = null, bool Audit = false, bool ImplicitDefault = false);
+    private sealed record Atom(string Value, string? ElementId, string? Property, string? Metadata = null, bool Audit = false, bool ImplicitDefault = false, string? RuntimePath = null);
+    private sealed record RuntimePathMarker(string Value);
     private sealed class DefaultMarker;
     private const string Xpdl = "http://www.wfmc.org/2009/XPDL2.2";
 
@@ -37,14 +38,14 @@ public static class NativeFidelity
                     had ? BpmnDocument.Revision(original!) : null, has ? BpmnDocument.Revision(resulting!) : null));
                 continue;
             }
-            if (!entry.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            if (!entry.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) || entry.Contains(".diag!/Files/", StringComparison.OrdinalIgnoreCase))
             {
                 checkedAtoms++;
                 if (!original!.AsSpan().SequenceEqual(resulting))
                     differences.Add(new(entry, "/", "binary_changed", null, BpmnDocument.Revision(original!), BpmnDocument.Revision(resulting!)));
                 continue;
             }
-            var a = Atoms(original!, entry); var b = Atoms(resulting!, entry);
+            var a = Atoms(original!, entry, left); var b = Atoms(resulting!, entry, right);
             foreach (string location in a.Keys.Union(b.Keys).Order(StringComparer.Ordinal))
             {
                 checkedAtoms++;
@@ -53,6 +54,8 @@ public static class NativeFidelity
                 {
                     if (x?.ImplicitDefault == true && y?.ImplicitDefault == false)
                         differences.Add(new(entry, location, "transparent_text_background_materialized", y.ElementId, "implicit transparent", y.Value));
+                    if (x?.RuntimePath != y?.RuntimePath && x?.RuntimePath != null && y?.RuntimePath != null)
+                        differences.Add(new(entry, location, "attachment_runtime_path_relocated", y.ElementId, x.RuntimePath, y.RuntimePath));
                     continue;
                 }
                 string classification = "unexpected_xml_change";
@@ -64,11 +67,11 @@ public static class NativeFidelity
             }
         }
         // Unknown additions/removals are never silently excused by a simplified object model.
-        bool preserved = differences.All(d => d.Classification is "requested_name_change" or "modification_timestamp" or "engine_process_timestamp" or "modification_audit_appended" or "transparent_text_background_materialized");
+        bool preserved = differences.All(d => d.Classification is "requested_name_change" or "modification_timestamp" or "engine_process_timestamp" or "modification_audit_appended" or "transparent_text_background_materialized" or "attachment_runtime_path_relocated");
         return new(preserved, left.Count, right.Count, checkedAtoms, differences.ToArray());
     }
 
-    private static Dictionary<string, Atom> Atoms(byte[] bytes, string entry)
+    private static Dictionary<string, Atom> Atoms(byte[] bytes, string entry, IReadOnlyDictionary<string, byte[]> archive)
     {
         using var stream = new MemoryStream(bytes, writable: false);
         using var reader = XmlReader.Create(stream, new XmlReaderSettings
@@ -80,6 +83,16 @@ public static class NativeFidelity
         var doc = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
         var result = new Dictionary<string, Atom>(StringComparer.Ordinal);
         if (doc.Root == null) throw new InvalidDataException("Native XML has no document element.");
+        if (entry.EndsWith(".diag!/ExtendedAttributeValues.xml", StringComparison.OrdinalIgnoreCase) && doc.Root.Name == "DiagramAttributeValues")
+        {
+            // The native loader relocates only embedded files. Linked files and arbitrary paths remain exact.
+            string diagramId = entry[..entry.IndexOf(".diag!/", StringComparison.OrdinalIgnoreCase)];
+            var normalized = NativeMetadataPolicy.Read(NativeDocumentationPolicy.ValuesContent(doc.ToString(), diagramId, archive));
+            var sources = doc.Descendants().ToArray(); var targets = normalized.Descendants().ToArray();
+            for (int i = 0; i < sources.Length; i++)
+                if (sources[i].Name == "Content" && sources[i].Value != targets[i].Value)
+                { string original = sources[i].Value; sources[i].Value = targets[i].Value; sources[i].AddAnnotation(new RuntimePathMarker(original)); }
+        }
         bool nativeDiagram = entry.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase) && doc.Root.Name == XName.Get("Package", Xpdl);
         if (nativeDiagram)
         {
@@ -95,6 +108,10 @@ public static class NativeFidelity
             }
         }
         Walk(doc.Root, "", null, result, nativeDiagram, entry.Equals("ModelInfo.xml", StringComparison.OrdinalIgnoreCase));
+        if (entry.StartsWith("Documentation/", StringComparison.Ordinal) && doc.Root.Name == "ExtendedAttribute" &&
+            Guid.TryParse(Path.GetFileNameWithoutExtension(entry), out var definitionId) && (string?)doc.Root.Attribute("Id") == definitionId.ToString() &&
+            result.TryGetValue("/ExtendedAttribute/@ModificationDate", out var stamp))
+            result["/ExtendedAttribute/@ModificationDate"] = stamp with { Metadata = "modification_timestamp" };
         int outsideIndex = 0;
         foreach (var node in doc.Nodes().Where(n => n != doc.Root && n is not XText))
             result.Add("/#document[" + outsideIndex++ + "]", new(node.ToString(), null, null));
@@ -127,7 +144,7 @@ public static class NativeFidelity
         {
             // Retain child ordering and non-whitespace content. Attribute ordering is not a semantic change.
             if (children[i] is XElement child) Walk(child, location + "/[" + i + "]", id, atoms, nativeDiagram, modelInfo);
-            else atoms.Add(location + "/#node[" + i + "]", new(children[i] is XText text ? text.Value : children[i].ToString(), id, null, metadata, ImplicitDefault: defaulted));
+            else atoms.Add(location + "/#node[" + i + "]", new(children[i] is XText text ? text.Value : children[i].ToString(), id, null, metadata, ImplicitDefault: defaulted, RuntimePath: element.Annotation<RuntimePathMarker>()?.Value));
         }
     }
 }

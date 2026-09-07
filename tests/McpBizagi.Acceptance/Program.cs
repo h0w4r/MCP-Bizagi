@@ -92,6 +92,13 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--attributes-only"))
+    {
+        if (!native) throw new ArgumentException("Attribute acceptance requires --native.");
+        await NativeDocumentationAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_ATTRIBUTES_ATTACHMENTS_PASS evidence=" + run);
+        return 0;
+    }
     if (args.Contains("--metadata-only"))
     {
         if (!native) throw new ArgumentException("Metadata acceptance requires --native.");

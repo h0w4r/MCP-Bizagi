@@ -33,6 +33,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > Resource catalogs, activity RACI assignments, configured simulation levels 2–4,
 > calendars, costs, and four what-if replications now have quantitative real MCP
 > acceptance. [Native metadata and simulation](docs/native-simulation.md).
+> **Current source adds experimental extended attributes and embedded files.**
+> These unreleased tools have their own [native contract and limits](docs/native-attributes.md);
+> they are not included in the existing 0.4.0-alpha.1 release archive.
 
 ## Why this project
 
@@ -68,6 +71,7 @@ every operation into a BPMN XML export.
 | Native simulation and what-if | Experimental | Defaults and configured levels 2–4, costs, resource contention, shift calendars and replications verified on the documented corpus |
 | Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
+| Extended attributes and embedded files | Experimental current source | Explicit native XML, complete element values, tables and byte transactions; [contract](docs/native-attributes.md) |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
 
 The desktop GUI does not need to be controlled by this server. This does **not**

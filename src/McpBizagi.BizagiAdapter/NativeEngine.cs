@@ -132,7 +132,7 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
+        if (!new[] { "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -179,8 +179,9 @@ public sealed partial class NativeEngine
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
-            if (request.Action is "edit_save" or "mutate_save" or "metadata_save")
+            if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save")
             {
+                if (request.Action == "documentation_save") EditDocumentation(model, persistence, request.DocumentationPatch ?? throw new InvalidDataException("Missing documentation patch."), progress);
                 if (request.Action == "metadata_save") EditMetadata(model, request.MetadataPatch ?? throw new InvalidDataException("Missing metadata patch."), progress);
                 if (request.Action == "mutate_save") Mutate(model, request.Mutations, progress);
                 if (request.Changes.Length > 0) progress("native_edit_names");
@@ -218,6 +219,17 @@ public sealed partial class NativeEngine
         reply.Elements = Graph(model).Select(Describe).ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);
+        if (request.Action is "documentation_read" or "documentation_save") reply.Documentation = Documentation(model);
+        if (request.Action == "documentation_read" && request.Attachment != null)
+        {
+            var wanted = request.Attachment;
+            var found = reply.Documentation!.Attachments.SingleOrDefault(a => a.DiagramId == wanted.DiagramId && a.ElementId == wanted.ElementId && a.FileName == wanted.FileName)
+                ?? throw new FileNotFoundException("Requested native embedded attachment does not exist.");
+            RequireExportLabel(found.FileName);
+            progress("native_attachment_export");
+            File.Copy(Path.Combine(AttachmentFolder(model, found.DiagramId, found.ElementId), found.FileName), request.OutputPath, false);
+            reply.Artifacts = new[] { request.OutputPath };
+        }
         if (request.Action is "simulate" or "what_if") reply.SimulationReports = SimulationReports(reply.Artifacts, request);
         reply.Success = true;
         reply.Code = "native_operation_completed";

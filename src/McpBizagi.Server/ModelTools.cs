@@ -44,6 +44,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_metadata_resources_activity_raci", status = "experimental_copy_only_verified_on_tested_inputs", backend = "bizagi_worker" },
+                new { name = "native_extended_attributes_and_embedded_files", status = "experimental_native_xml_and_byte_transactions_with_fresh_readback_not_full_editor_or_visual_accreditation", backend = "bizagi_worker" },
                 new { name = "native_simulation_configuration", status = "experimental_full_diagram_bpsim_replacement_with_fidelity_gate", backend = "bizagi_worker" },
                 new { name = "native_simulation_and_what_if", status = "experimental_levels_one_to_four_and_replications_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_offscreen_svg_png", status = "experimental_basic_diagram_locally_verified_rich_visual_fidelity_pending", backend = "bizagi_worker" },
@@ -82,6 +83,15 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_metadata_get"), Description("Read native resources, activity RACI assignments and complete diagram BPSim 1.0 configurations through the installed engine. Returns native IDs, BPMN references and source revision. Poll operation_get.")]
     public CallToolResult GetNativeMetadata(string path) => Guard(() => native.ReadMetadata(path));
+
+    [McpServerTool(Name = "native_attributes_get"), Description("Read native extended attribute definitions, element values and embedded file hashes. Embedded references use attachment:file-name; linked files are never opened. Poll operation_get.")]
+    public CallToolResult GetNativeAttributes(string path) => Guard(() => native.ReadDocumentation(path));
+
+    [McpServerTool(Name = "native_attributes_apply"), Description("Explicit native extended-attribute definition XML, complete per-element value XML and embedded byte transactions. Uses a copy, expected revision, fresh-worker readback and whole-archive fidelity gate. Unknown fields and unrequested losses fail. Poll operation_get.")]
+    public CallToolResult ApplyNativeAttributes(string path, string expectedRevision, NativeDocumentationPatch patch) => Guard(() => native.ApplyDocumentation(path, expectedRevision, patch));
+
+    [McpServerTool(Name = "native_attachment_export"), Description("Export an embedded file or image from a native model to a private operation artifact. Verify native-loaded bytes against the original archive and durable output hash. Does not fetch linked files or open the exported file.")]
+    public CallToolResult ExportNativeAttachment(string path, string diagramId, string elementId, string fileName) => Guard(() => native.ExportAttachment(path, diagramId, elementId, fileName));
 
     [McpServerTool(Name = "native_metadata_apply"), Description("Edit local resources, replace complete activity RACI sets and explicitly replace complete per-diagram BPSim configurations in a native copy. Requires revision, validates native readback and all non-targeted archive content. Never silently discards saved simulation results.")]
     public CallToolResult ApplyNativeMetadata(string path, string expectedRevision, NativeMetadataPatch patch) => Guard(() => native.ApplyMetadata(path, expectedRevision, patch));

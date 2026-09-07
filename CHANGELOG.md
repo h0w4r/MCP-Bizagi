@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Add native extended-attribute definition and per-element value transactions with fresh-worker readback and whole-archive fidelity gates.
+- Add embedded file/image inventory, byte replacement, explicit deletion and native-loaded export with independent byte/hash verification.
+- Exercise all 12 native attribute kinds, a two-row table, rich no-op save, unrelated name editing and actual failure/recovery through MCP.
+- Treat embedded XML-named files as opaque bytes, not native metadata.
+- Classify proven native definition audit timestamps and archive-owned attachment path relocation without waiving unrelated content changes.
+- Keep complete editor constraints, rich publication, containers/layout, visual compatibility and live-session integration open under the full automation objective.
+
 ## 0.4.0-alpha.1
 
 - Add revision-checked native resource creation, updates and guarded deletion.

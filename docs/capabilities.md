@@ -21,7 +21,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Native scenario configuration | Locally verified, copy-only | Complete diagram BPSim replacement, fresh-worker readback, explicit result discard; [details](native-simulation.md) |
 | Native offscreen SVG/PNG | Basic and two-level expanded corpus locally verified | Native child completion, all-level graphical IDs, expanded bounds and transparent corners; rich visual corpus still pending |
 | Structural/geometry/style edits | Partial native acceptance | 22 task/event/gateway variants created/deleted; UserTask/SequenceFlow insertion, reconnection, bounds, colors, descriptions verified; containers, rich styles and layout remain open |
-| Extended attributes/attachments editing | Not implemented | Native mutation/persistence/readback with untouched-content evidence |
+| Extended attributes/attachments editing | Experimental source acceptance after 0.4 | 12 definition/value kinds, two-row table, embedded file/image, lifecycle, rich no-op and unrelated edit; [contract and remaining corpus](native-attributes.md) |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |
 
