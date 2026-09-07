@@ -38,9 +38,10 @@ public static class NativeEditPlan
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
             }
             else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
-            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null))
+            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.FlowCondition != null || c.GatewayDirection != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
-            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.FlowCondition == null && c.GatewayDirection == null) throw new InvalidDataException("An update must specify an actual property.");
+            NativeSemanticPolicy.Validate(c);
             if (c.CallTarget is { } call)
             {
                 if (call.ProcessId != "") Id(call.ProcessId);
@@ -78,6 +79,7 @@ public static class NativeEditPlan
             if (c.Operation == "delete") { if (matches.Length != 0) throw new InvalidDataException("Deleted native element survived readback."); continue; }
             if (matches.Length != 1) throw new InvalidDataException("Native identity did not survive readback exactly once.");
             var e = matches[0];
+            NativeSemanticPolicy.Verify(c, e, elements);
             if (c.Operation == "create" && (e.ParentId != c.ParentId || e.ElementType != c.ElementType)) throw new InvalidDataException("Created native type/containment differs from the request.");
             if (c.ProcessId != "" && elements.Count(p => p.Id == c.ProcessId && p.Kind == "Process" && p.ParentId == c.ElementId && p.DiagramId == e.DiagramId) != 1)
                 throw new InvalidDataException("Created participant process identity/ownership differs from the request.");

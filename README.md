@@ -77,6 +77,7 @@ every operation into a BPMN XML export.
 | Pools, lanes, milestones and embedded subprocesses | Experimental current source | Explicit process IDs, complete partitions, nested lifecycle and expanded/collapsed sizes; [contract](docs/native-containers.md) |
 | Diagram lifecycle and persisted tab preferences | Experimental current source | Create, rename, native clone, delete and ordered/selected diagram or subprocess tabs; [contract](docs/native-diagrams.md) |
 | Local reusable subprocess calls | Experimental current source | Create/link/unlink, preserve references, protect targets and remap native clones; explicit simulation black-box semantics; [contract](docs/native-calls.md) |
+| Native activity/flow properties | Experimental current source | Activity quantities/compensation/state, gateway direction and conditions/default references; actual simulation input checked, nondefault token behavior unaccredited; [contract](docs/native-semantics.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

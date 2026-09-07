@@ -234,13 +234,15 @@ public sealed class NativeMutationFidelityTests
         };
         var before = Archive(Transition(ParentId, OtherId, Point(10, 10) + Point(20, 20)));
         string points = Point(30, 40) + Point(80, 40) + Point(80, 100);
-        Assert.True(NativeMutationFidelity.Compare(before, Archive(Transition(OtherId, TargetId, points)), [mutation], [element]).Preserved);
+        // Quantity is derived from the actual reconnected source, so the fixture must include it.
+        NativeElement[] graph = [element, new() { Id = OtherId, Kind = "UserTask", ActivityProperties = new() { CompletionQuantity = 1 } }];
+        Assert.True(NativeMutationFidelity.Compare(before, Archive(Transition(OtherId, TargetId, points)), [mutation], graph).Preserved);
         Assert.Throws<InvalidDataException>(() => NativeMutationFidelity.Compare(before,
-            Archive(Transition(OtherId, ParentId, points)), [mutation], [element]));
+            Archive(Transition(OtherId, ParentId, points)), [mutation], graph));
         Assert.Throws<InvalidDataException>(() => NativeMutationFidelity.Compare(before,
-            Archive(Transition(OtherId, TargetId, Point(31, 40) + Point(80, 40) + Point(80, 100))), [mutation], [element]));
+            Archive(Transition(OtherId, TargetId, Point(31, 40) + Point(80, 40) + Point(80, 100))), [mutation], graph));
         Assert.Throws<InvalidDataException>(() => NativeMutationFidelity.Compare(before,
-            Archive(Transition(OtherId, TargetId, Point(30, 40, "Unknown='keep'") + Point(80, 40) + Point(80, 100))), [mutation], [element]));
+            Archive(Transition(OtherId, TargetId, Point(30, 40, "Unknown='keep'") + Point(80, 40) + Point(80, 100))), [mutation], graph));
     }
 
     [Fact]

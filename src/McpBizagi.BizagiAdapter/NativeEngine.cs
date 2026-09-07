@@ -202,10 +202,12 @@ public sealed partial class NativeEngine
             model = Call(persistence, "Load", model)!;
             // Capture input references before the native simulation pipeline clears its in-memory
             // calledElement QNames. Simulation deliberately does not expand reusable subprocesses.
+            var simulationActivities = request.Action is "simulate" or "what_if" ? ExpectedSimulationActivities(model, request.DiagramId) : Array.Empty<NativeSimulationActivityInput>();
             if (request.Action is "simulate" or "what_if") reply.SimulationLimitations = SimulationLimitations(model, request.DiagramId);
             if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
             if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
+            if (request.Action is "simulate" or "what_if") reply.SimulationInputs = VerifySimulationInputs(reply.Artifacts, simulationActivities);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
             if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save" or "diagrams_save")

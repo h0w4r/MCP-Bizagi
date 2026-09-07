@@ -52,12 +52,19 @@ public sealed partial class NativeEngine
                 graph.Add(change.ElementId, new GraphEntry(element, change.ParentId, graph[change.ParentId].DiagramId));
             }
             else element = Require(change.ElementId);
+            object? previousSource = element.GetType().Name == "SequenceFlow" ? Optional(element, "Source") : null;
 
             switch (change.Operation)
             {
                 case "create":
                 case "update":
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
+                    if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
+                    if (change.GatewayDirection != null)
+                    {
+                        var property = element.GetType().GetProperty("GatewayDirection") ?? throw new InvalidDataException("GatewayDirection requires a native gateway.");
+                        Set(element, "GatewayDirection", Enum.Parse(property.PropertyType, change.GatewayDirection));
+                    }
                     if (change.Name != null) Set(element, "DisplayName", change.Name);
                     if (change.Documentation != null)
                         // A cleared pool description must use the native absent value. Persisting "" leaves
@@ -70,6 +77,7 @@ public sealed partial class NativeEngine
                         Set(Get(element, "GraphicalProperties"), "ExpandedSize", new SizeF((float)size.Width, (float)size.Height));
                     }
                     if (!string.IsNullOrEmpty(change.SourceId)) Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
+                    if (change.FlowCondition != null) ApplyFlowCondition(element, change.FlowCondition);
                     break;
                 case "reconnect":
                     Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
@@ -90,6 +98,11 @@ public sealed partial class NativeEngine
                         throw new InvalidDataException("Native collection did not remove the requested element.");
                     break;
                 default: throw new NotSupportedException("Unknown native mutation: " + change.Operation);
+            }
+            if (element.GetType().Name == "SequenceFlow" && (change.FlowCondition != null || change.Operation is "create" or "reconnect" or "delete"))
+            {
+                SynchronizeDefaultFlow(previousSource);
+                if (change.Operation != "delete") SynchronizeDefaultFlow(Optional(element, "Source"));
             }
             progress("native_mutation:" + change.Operation + ":" + change.ElementId);
         }

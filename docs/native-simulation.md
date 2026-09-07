@@ -126,6 +126,12 @@ reported as execution of those linked tasks. See [local calls](native-calls.md)
 and [Bizagi's simulation considerations](https://help.bizagi.com/platform/en/simulation_in_bizagi.htm).
 An empty list is not an exhaustive semantic-support assessment.
 
+`EngineReply.SimulationInputs` additionally checks the selected activities'
+identities and start/completion quantities in the actual native simulation XML.
+Nondefault quantities currently carry a `nondefault_token_quantities_unaccredited`
+limitation: correct input did not produce the intended counts in the local
+corpus. Input fidelity is not execution fidelity. [Evidence and strict gate](native-semantics.md#simulation-input-is-not-simulation-behavior).
+
 ## Real acceptance and boundaries
 
 Run against an installed engine, or add `--package <extracted-directory>`:

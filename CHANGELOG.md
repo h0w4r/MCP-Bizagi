@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add explicit native activity token quantities, compensation/state, gateway
+  direction and sequence-flow conditions/default references with fresh-worker
+  verification and derived transition-quantity fidelity.
+- Reject unknown typed/nested MCP request members using the official SDK JSON
+  marshaller; retain real plain-text binding errors in acceptance evidence.
+- Check activity quantities in actual simulation inputs and expose the observed
+  nondefault-token execution gap rather than claiming persisted settings were
+  honored by the native simulator. Keep a separate strict semantic gate.
+
 - Add native local `CallActivity` creation, target inspection, reference-preserving
   edits, relinking/unlinking and catalog-aware incoming-call deletion guards.
 - Reuse the native recursive clone-reference updater and preserve invisible

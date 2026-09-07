@@ -1,8 +1,51 @@
 # Verification baselines
 
+## Native activity properties and flow semantics — 2026-09-07
+
+This source checkpoint exposes **29 MCP tools** and passes **487 unit tests**.
+A non-incremental Release build completed without warnings or errors, followed
+by the independent XML MCP circuit `20260907-160631-cef651`. Unit/XML success is
+not substituted for the following installed-engine acceptance.
+
+Native run `20260907-160107-ff15c0` passed the **editing and simulation diagnostics**
+gate through independent SDK stdio MCP and installed Modeler **4.3.0.008**:
+**24 terminal operations**, 20 completed and four expected failures, with
+**40 worker observations / 281 periodic samples**. Transcript SHA-256:
+`d7abf63f473fef69df2e601816e6d7b1245a28540c97b74d9d2d8229f95e42b6`.
+
+The real native corpus exercises eight task subclasses, an embedded subprocess
+and a reusable call, all four activity properties and all seven activity states,
+gateway directions, Unicode condition text, ordered default switching and
+default-source reconnection. Durable fresh-worker readback, no-op save, native
+offscreen rendering and Word publication completed. Wrong activity/gateway/flow
+kinds and duplicate default flows failed explicitly. Three additional actual SDK
+binding errors rejected misspelled/unknown typed members before tool execution;
+their original plain-text errors are retained, not counted as engine operations.
+
+**Nondefault token execution remains unaccredited.** The installed simulator's
+actual input retained the requested start/completion quantities, but the
+two-branch, twelve-instance corpus produced 24 end tokens for all three settings:
+1/1, 2/1 and 2/3. The intended counts were respectively 24, 12 and 36. The server
+reports exact input identities/quantities separately from actual simulation
+metrics and emits `nondefault_token_quantities_unaccredited` for each affected
+activity. No output or native engine was changed to conceal the discrepancy.
+See [the semantic contract and separate strict gate](native-semantics.md).
+
+Failures are retained independently: `20260907-154334-71a09a` rejected a newly
+created condition's serialization scaffold; the fix restores only verified
+native indentation in the comparison copy, not arbitrary whitespace/content.
+Runs `20260907-154605-baf12f` and `20260907-155537-dc30e3` failed intended token
+behavior assertions despite correct native inputs. They are not operational
+passes for token execution. Current diagnostics acceptance preserves that open
+issue; it does not redefine simulation semantics to match the observed counts.
+
+These results do not accredit complete loop/event editing, every decision
+topology, independent desktop visual equivalence or full Modeler automation.
+Raw archives, operator paths and proprietary research remain private.
+
 ## Native reusable-call lifecycle and black-box simulation — 2026-09-07
 
-Current source exposes **29 MCP tools** and passes **444 unit tests**. The native
+That source checkpoint exposed **29 MCP tools** and passed **444 unit tests**. The native
 call contract extends existing mutation/inspection/analysis tools rather than
 introducing arbitrary reflection. Tests use the real installed **4.3.0.008**
 engine, independent stdio MCP, private state outside the workspace, durable

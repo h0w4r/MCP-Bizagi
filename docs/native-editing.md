@@ -34,6 +34,12 @@ IDs are canonical lowercase GUIDs obtained from `native_inspect`, except new IDs
 which the client generates. A batch has 1–1,000 mutations and cannot address the
 same ID twice. Use the returned revision and opaque artifact for another batch.
 
+Current source also accepts typed `NativeMutation.ActivityProperties`,
+`GatewayDirection` and complete `FlowCondition` replacements on compatible
+native element kinds. See [semantic properties and their separate simulation
+boundary](native-semantics.md). Delete/reconnect cannot carry hidden property
+updates. Unknown members in typed requests are rejected by the SDK marshaller.
+
 `NativeGeometry` contains `x`, `y`, `width`, `height`, `expanded`,
 `backgroundArgb` and `borderArgb`. Bounds must be finite and dimensions positive.
 Colors are signed 32-bit ARGB values. Expanded subprocess geometry is currently

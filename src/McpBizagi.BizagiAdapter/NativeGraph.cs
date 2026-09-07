@@ -73,6 +73,8 @@ public sealed partial class NativeEngine
             Id = Text(element, "Id"),
             BpmnId = Text(element, "BpmnId"),
             CallReference = DescribeCall(element),
+            ActivityProperties = DescribeActivity(element), FlowCondition = DescribeCondition(element),
+            GatewayDirection = Optional(element, "GatewayDirection")?.ToString(), DefaultSequenceFlowIds = DefaultFlowIds(element),
             Kind = element.GetType().Name,
             IsMainParticipant = element.GetType().Name == "Participant" ? (bool?)Get(element, "IsMainParticipant") : null,
             ElementType = Text(element, "ElementType"),

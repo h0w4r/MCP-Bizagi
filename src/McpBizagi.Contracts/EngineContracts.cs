@@ -44,6 +44,9 @@ public sealed class NativeMutation
     public NativeSize? ExpandedSize { get; set; }
     /// <summary>Null preserves the call target; an empty ProcessId explicitly unlinks a call activity.</summary>
     public NativeCallTarget? CallTarget { get; set; }
+    public NativeActivityProperties? ActivityProperties { get; set; }
+    public NativeFlowCondition? FlowCondition { get; set; }
+    public string? GatewayDirection { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
@@ -101,6 +104,11 @@ public sealed class NativeElement
     public string BpmnId { get; set; } = "";
     /// <summary>Raw native call-reference representations; null for non-call elements. No external model is fetched.</summary>
     public NativeCallReference? CallReference { get; set; }
+    public NativeActivityProperties? ActivityProperties { get; set; }
+    public NativeFlowCondition? FlowCondition { get; set; }
+    public string? GatewayDirection { get; set; }
+    /// <summary>Derived from actual outgoing native sequence-flow conditions, not a guessed catalog alias.</summary>
+    public string[] DefaultSequenceFlowIds { get; set; } = System.Array.Empty<string>();
     public string ParentId { get; set; } = "";
     public string DiagramId { get; set; } = "";
     public string Documentation { get; set; } = "";
@@ -146,6 +154,7 @@ public sealed class EngineReply
     public NativeDiagramClone[] DiagramClones { get; set; } = System.Array.Empty<NativeDiagramClone>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
+    public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();
 }
 
 /// <summary>Input-specific native simulation semantics, not a claim that all limitations were enumerated.</summary>
@@ -158,6 +167,22 @@ public sealed class NativeSimulationLimitation
     public string Message { get; set; } = "";
     public string DocumentationUrl { get; set; } = "";
     public NativeCallReference? CallReference { get; set; }
+    public NativeActivityProperties? ActivityProperties { get; set; }
+}
+
+/// <summary>Native activity quantities checked against the actual XML consumed by the installed simulator.</summary>
+public sealed class NativeSimulationInputReadback
+{
+    public string Artifact { get; set; } = "";
+    public NativeSimulationActivityInput[] Activities { get; set; } = System.Array.Empty<NativeSimulationActivityInput>();
+}
+
+public sealed class NativeSimulationActivityInput
+{
+    public string ElementId { get; set; } = "";
+    public string BpmnId { get; set; } = "";
+    public int StartQuantity { get; set; }
+    public int CompletionQuantity { get; set; }
 }
 
 /// <summary>Text and image counts read from a durable publication by an independent worker.</summary>

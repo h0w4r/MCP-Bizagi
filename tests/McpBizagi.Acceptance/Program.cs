@@ -37,10 +37,18 @@ async Task<JsonElement> Call(string tool, Dictionary<string, object?>? input = n
 {
     var result = await activeClient.CallToolAsync(tool, input ?? new());
     string text = result.Content.OfType<TextContentBlock>().First().Text;
-    evidence.Add(new { tool, result.IsError, output = JsonSerializer.Deserialize<JsonElement>(text) });
+    JsonElement output;
+    try { output = JsonSerializer.Deserialize<JsonElement>(text); }
+    catch (JsonException) when (result.IsError == true)
+    {
+        // Official SDK binding errors occur before our tool method and can be plain text.
+        // Retain the actual error, rather than failing the evidence recorder's JSON parser.
+        output = JsonSerializer.SerializeToElement(new { sdkError = text });
+    }
+    evidence.Add(new { tool, result.IsError, output });
     File.WriteAllText(Path.Combine(run, "mcp-transcript.json"), JsonSerializer.Serialize(evidence, new JsonSerializerOptions { WriteIndented = true }));
     if (result.IsError == true != expectError) throw new InvalidOperationException(tool + ": " + text);
-    return JsonSerializer.Deserialize<JsonElement>(text);
+    return output;
 }
 
 // Observe the operator-facing journal rather than calling implementation methods.
@@ -92,6 +100,12 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--semantics-only"))
+    {
+        if (!native) throw new ArgumentException("Semantic acceptance requires --native.");
+        await NativeSemanticAcceptance.Run(run, (name, input, error) => Call(name, input, error), WaitOperation, VerifyWorkerExit, args.Contains("--require-token-semantics"));
+        Console.WriteLine("NATIVE_SEMANTIC_EDITING_AND_SIMULATION_DIAGNOSTICS_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--calls-behavior-only"))
     {
         if (!native) throw new ArgumentException("Call behavior acceptance requires --native.");

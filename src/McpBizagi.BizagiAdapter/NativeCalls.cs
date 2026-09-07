@@ -5,7 +5,7 @@ namespace McpBizagi.BizagiAdapter;
 
 public sealed partial class NativeEngine
 {
-    private static NativeSimulationLimitation[] SimulationLimitations(object model, string diagramId) => Graph(model)
+    private static NativeSimulationLimitation[] CallSimulationLimitations(object model, string diagramId) => Graph(model)
         .Where(e => e.DiagramId == diagramId && e.Value.GetType().Name == "CallActivity")
         .Select(e => new NativeSimulationLimitation
         {
