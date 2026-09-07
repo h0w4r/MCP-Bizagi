@@ -195,7 +195,7 @@ public static class NativeMetadataPolicy
                 }
                 // Requested membership changes leave formatting whitespace behind. Strip only that container's indentation.
                 foreach (var container in new[] { oldContainer, newContainer })
-                    if (container.Attribute(XNamespace.Xml + "space") == null)
+                    if (container.AncestorsAndSelf().Select(e => (string?)e.Attribute(XNamespace.Xml + "space")).FirstOrDefault(v => v != null) != "preserve")
                         container.Nodes().OfType<XText>().Where(t => string.IsNullOrWhiteSpace(t.Value)).Remove();
                 if (!topLevel && originalContainer == null && !newContainer.HasAttributes && !newContainer.Nodes().Any()) newContainer.Remove();
                 if (!topLevel && originalContainer != null && !oldContainer.HasAttributes && !oldContainer.Nodes().Any() && b.Root!.Element(Xpdl + "Participants") == null) oldContainer.Remove();

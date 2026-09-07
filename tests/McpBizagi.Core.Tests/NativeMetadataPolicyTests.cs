@@ -30,6 +30,16 @@ public sealed class NativeMetadataPolicyTests
     private static NativeResourceChange Upsert(string name = "Updated", string type = "Role", string description = "New documentation") =>
         new() { Id = ResourceId, Name = name, Type = type, Description = description };
     private static NativeResourceChange Delete() => new() { Id = ResourceId, Operation = "delete" };
+
+    [Fact]
+    public void ResourceProjectionRetainsInheritedSignificantWhitespace()
+    {
+        // An explicit resource name edit does not authorize losing whitespace in an inherited preserve scope.
+        var change = Upsert(); string original = Participant(), updated = Participant(name: change.Name, description: change.Description);
+        var before = Archive(resources: original, diagramResources: " " + original + " ", packageAttributes: "xml:space='preserve'");
+        var after = Archive(resources: updated, diagramResources: "  " + updated + "  ", packageAttributes: "xml:space='preserve'");
+        Assert.False(NativeMetadataPolicy.Compare(before, after, ResourcePatch(change), ResourceReadback(change)).Preserved);
+    }
     private static NativeMetadataPatch ResourcePatch(NativeResourceChange change) => new() { Resources = [change] };
     private static NativeMetadataSnapshot ResourceReadback(NativeResourceChange change) => new()
     {
@@ -47,7 +57,7 @@ public sealed class NativeMetadataPolicyTests
 
     private static byte[] Archive(string resources = "", string? simulation = null, string? results = "<ScenarioResults/>",
         byte[]? attachment = null, string otherDiagram = "<Untargeted keep='yes'/>", string extra = "<Unknown keep='yes'/>",
-        string? diagramResources = null, string? otherResources = null, string diagramBody = "<Diagram keep='yes'/>")
+        string? diagramResources = null, string? otherResources = null, string diagramBody = "<Diagram keep='yes'/>", string packageAttributes = "")
     {
         using var bytes = new MemoryStream();
         using (var archive = new ZipArchive(bytes, ZipArchiveMode.Create, leaveOpen: true))
@@ -66,7 +76,7 @@ public sealed class NativeMetadataPolicyTests
                     void Leaf(string name, string xml)
                     { using var writer = new StreamWriter(diagram.CreateEntry(name).Open(), new UTF8Encoding(false)); writer.Write(xml); }
                     // V5 repeats the resource catalog in the top-level leaf and each diagram package.
-                    Leaf("Diagram.xml", $"<Package xmlns='{XpdlNamespace}'><Participants>{catalog}</Participants>{model}</Package>");
+                    Leaf("Diagram.xml", $"<Package xmlns='{XpdlNamespace}' {packageAttributes}><Participants>{catalog}</Participants>{model}</Package>");
                     Leaf("BPSimData.xml", settings);
                     if (output != null) Leaf("BPSimDataResult.xml", output);
                 }

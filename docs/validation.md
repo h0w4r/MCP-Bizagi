@@ -1,7 +1,7 @@
 # Verification baseline — 0.4.0-alpha.1
 
 Real source acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
-The current server exposes **21 MCP tools**. The unit suite passes **254 tests**;
+The current server exposes **21 MCP tools**. The unit suite passes **255 tests**;
 unit results remain separate from actual native acceptance.
 
 ## Native metadata and configured simulation
