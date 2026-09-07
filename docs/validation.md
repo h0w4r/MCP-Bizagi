@@ -23,8 +23,28 @@ renderer startups against the exact previously failing cloned diagram in run
 `20260907-131122-29a3fb`. Every attempt must pass; the acceptance harness does not
 skip failed attempts. That run also exercised actual settings-lock contention,
 verified the original scoped I/O diagnostic, released the lock and successfully
-started a new native worker. Extracted-package validation of the correction is
-recorded separately when completed, never inferred from source tests.
+started a new native worker. Source transcript SHA-256:
+`4b470b09660fced6afacde143b953a3fecb43a88b6354e20856941a267c42955`.
+
+The clean corrected source candidate `e2df9b097f3c430f71454e24fa8837ee8b7ea083`
+was then packaged, extracted and accepted without editing its contents. ZIP:
+6,547,612 bytes; SHA-256
+`912990af6d1adba80d1c8087216d41bbcb9552ebb9bcccb82c9c06f05a0cd58e`.
+All 313 immutable manifest entries (314 files including the manifest) matched
+before and after the following actual packaged circuits:
+
+| Circuit | Run | Operations | Workers / samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Initially absent MCP graphical defaults; three exact-clone renders, settings contention and recovery | `20260907-131607-6be22d` | 5 completed, 1 expected failure | 6 / 1019 | `ac70275773625c448c1869787762c4491771fb434009f1e9ee44f3abcfaa356f` |
+| Rich native diagram lifecycle | `20260907-132109-e65c5e` | 10 completed, 3 expected failures | 20 / 151 | `45167c927374f926f38887f32c1f00d75493e6e9814260f79bbd716dbbb289f2` |
+| Expanded native, simulation, rendering and host/worker recovery | `20260907-132343-a4f310` | 13 completed, 2 expected failures, 1 cancelled, 1 interrupted | 21 / 150 | `6dbe5ebbef7a7b1056d55a647ea1b151cadb6e3b1829eeb5a8fb265b71749e93` |
+
+The cold-default test temporarily backed up only the exact MCP worker defaults
+and restored their original bytes afterward; generated defaults were retained
+separately. No personal Modeler profile was copied or changed. No visible or
+foreground owned window was seen in periodic samples, which are not continuous
+proof or independent Modeler visual accreditation. This is a private verified
+source candidate, not a replacement for the existing published 0.4 release asset.
 
 The focused acceptance supports `--render-only --input <native.bpm>` with optional
 `--diagram-id <native-guid>` and `--render-repetitions <1..20>`. The explicit ID is

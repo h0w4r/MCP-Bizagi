@@ -48,6 +48,11 @@ settings contention and recovery. Repeat focused renderer startup checks with
 package. A single successful image is not sufficient to dismiss a reproducible
 asynchronous initialization failure.
 
+Add `--diagram-id <native-guid> --render-repetitions 3` to the focused renderer
+client to check the same exact diagram in three separate workers. Each attempt
+must succeed; a failed attempt stops acceptance rather than being hidden by a
+retry. The selected ID must exist in a fresh native inspection.
+
 Configure an MCP client with command `dotnet` and argument
 `C:/Packages/MCP-Bizagi/McpBizagi.Server.dll`, adjusting the path. The worker is
 discovered in the sibling `worker/` directory unless explicitly overridden.
