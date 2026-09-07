@@ -6,8 +6,8 @@ launches the desktop editor, sends input, changes focus or uses screenshot click
 The result contains the native SVG and a transparent PNG rasterized by that same
 installed Chromium runtime.
 
-The adapter checks JavaScript success, verifies expected top-level graphical
-identities in SVG, validates the XML, and checks transparent PNG corners. The
+The adapter checks JavaScript success, waits for expected top-level graphical
+identities and stable SVG with loaded fonts, validates the XML, and checks transparent PNG corners. The
 host supervises the entire owned Windows Job Object, including renderer children,
 and retains sampled desktop observations and verified child-process exits.
 Cache and logs use the worker's private directory. Installed files are not modified
@@ -20,6 +20,9 @@ actually loaded managed-module fingerprints.
   script failure. An SVG root alone is insufficient acceptance.
 - The adapter instead checks the native script response and expected graphical
   identities before publishing the result.
+- Native rendering can continue after the script call returns. Progress is
+  measured from SVG/element changes, with the configured inactivity window;
+  elapsed total operation time is not used to cancel an advancing render.
 - The installed GDI SVG rasterization route was not accepted as equivalent to
   browser rendering. PNG uses the actual native SVG in the installed offscreen
   Chromium canvas, without manually redrawing a replacement process model.

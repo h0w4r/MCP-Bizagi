@@ -15,6 +15,7 @@ public sealed class EngineRequest
     public string ScenarioId { get; set; } = "";
     public int SimulationLevel { get; set; } = 1;
     public int AtomicStepSeconds { get; set; } = 30;
+    public int InactivitySeconds { get; set; } = 120;
 }
 
 public sealed class NativeNameChange

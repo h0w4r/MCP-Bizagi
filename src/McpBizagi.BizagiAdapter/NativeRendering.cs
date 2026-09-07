@@ -46,20 +46,12 @@ public sealed partial class NativeEngine
         string serialized = (string)serialize.MakeGenericMethod(collection.GetType()).Invoke(serializer, new[] { collection })!;
         // The vendor helper discards the render script's success flag. Check it before accepting any partial SVG.
         EvaluateInNativeBrowser("renderDiagram(" + serialized + ")");
-        string svg = EvaluateInNativeBrowser("exportSubprocessToSVG(false,false)");
-        // Reject an empty renderer response instead of producing a plausible substitute diagram.
-        var xml = new XmlDocument { XmlResolver = null };
-        using (var input = new StringReader(svg))
-        using (var reader = XmlReader.Create(input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null })) xml.Load(reader);
-        if (xml.DocumentElement?.LocalName != "svg" || !xml.DocumentElement.HasChildNodes)
-            throw new InvalidDataException("The native renderer did not return an SVG diagram.");
         var graph = Graph(model).Where(e => e.DiagramId == request.DiagramId).ToArray();
         var expected = graph.Where(e => Optional(e.Value, "GraphicalProperties") != null &&
             !new[] { "Collaboration", "Process", "LaneSet", "Resource" }.Contains(e.Value.GetType().Name) &&
-            !graph.Any(parent => Text(parent.Value, "Id") == e.ParentId && parent.Value.GetType().Name == "SubProcess"));
-        foreach (var element in expected)
-            if (xml.SelectNodes("//*[@data-element-id]")!.Cast<XmlElement>().All(e => e.GetAttribute("data-element-id") != Text(element.Value, "Id")))
-                throw new InvalidDataException("Native renderer omitted a top-level graphical element: " + Text(element.Value, "Id"));
+            !graph.Any(parent => Text(parent.Value, "Id") == e.ParentId && parent.Value.GetType().Name == "SubProcess"))
+            .Select(e => Text(e.Value, "Id")).ToArray();
+        string svg = WaitForCompleteSvg(expected, request.InactivitySeconds, progress);
         Directory.CreateDirectory(request.OutputPath);
         string output = Path.Combine(request.OutputPath, diagramId + ".svg");
         File.WriteAllText(output, svg, new UTF8Encoding(false));
@@ -72,6 +64,35 @@ public sealed partial class NativeEngine
         string png = Path.ChangeExtension(output, ".png"); bitmap.Save(png, ImageFormat.Png);
         progress("native_svg_persisted");
         return new[] { output, png };
+    }
+
+    private string WaitForCompleteSvg(string[] expected, int inactivitySeconds, Action<string> progress)
+    {
+        var inactivity = Stopwatch.StartNew();
+        string previous = "";
+        int stableSamples = 0, lastCount = -1;
+        while (true)
+        {
+            string svg = EvaluateInNativeBrowser("exportSubprocessToSVG(false,false)");
+            var xml = new XmlDocument { XmlResolver = null };
+            using (var input = new StringReader(svg))
+            using (var reader = XmlReader.Create(input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 })) xml.Load(reader);
+            if (xml.DocumentElement?.LocalName != "svg") throw new InvalidDataException("Native renderer returned a non-SVG document.");
+            var present = new HashSet<string>(xml.SelectNodes("//*[@data-element-id]")!.Cast<XmlElement>().Select(e => e.GetAttribute("data-element-id")));
+            string[] missing = expected.Where(id => !present.Contains(id)).ToArray();
+            int count = expected.Length - missing.Length;
+            if (svg != previous) { inactivity.Restart(); stableSamples = 0; previous = svg; }
+            else stableSamples++;
+            if (count != lastCount) { progress("native_render_elements:" + count + "/" + expected.Length); lastCount = count; }
+            // Vendor rendering emits work through its event system. Method return is not completion.
+            if (missing.Length == 0 && stableSamples >= 2 && EvaluateInNativeBrowser("document.fonts.status") == "loaded") return svg;
+            if (inactivity.Elapsed.TotalSeconds > inactivitySeconds)
+            {
+                File.WriteAllText(Path.Combine(workRoot, "incomplete-render.svg"), svg, new UTF8Encoding(false));
+                throw new TimeoutException("Native renderer stopped advancing with missing graphical IDs: " + string.Join(", ", missing));
+            }
+            Thread.Sleep(100);
+        }
     }
 
     private byte[] RasterizeInNativeBrowser(string svg, int atomicSeconds)

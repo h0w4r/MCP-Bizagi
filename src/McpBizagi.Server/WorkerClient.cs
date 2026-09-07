@@ -78,6 +78,7 @@ public sealed class WorkerClient(ServerOptions options)
             using var rpc = new JsonRpc(pipe, pipe);
             rpc.AddLocalRpcTarget(notifications); rpc.StartListening();
             request.AtomicStepSeconds = options.AtomicStepSeconds;
+            request.InactivitySeconds = options.InactivitySeconds;
             var invocation = rpc.InvokeAsync<EngineReply>("Execute", request);
             var previousActivity = job.Activity();
             int previousLogLength = 0;
