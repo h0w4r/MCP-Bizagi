@@ -12,11 +12,13 @@ namespace McpBizagi.Core;
 public static class NativeMutationFidelity
 {
     private static readonly XNamespace Xpdl = "http://www.wfmc.org/2009/XPDL2.2";
-    public static NativeFidelityReport Compare(byte[] before, byte[] after, NativeMutation[] changes, NativeElement[] reopened)
+    public static NativeFidelityReport Compare(byte[] before, byte[] after, NativeMutation[] changes, NativeElement[] reopened,
+        NativeImageImportReceipt[]? imageImports = null, NativeImageFile[]? imageFiles = null)
     {
         NativeEditPlan.Validate(changes); NativeEditPlan.Verify(changes, reopened);
         var left = NativeArchive.ReadEntries(before).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(after).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        NativeImagePolicy.Project(left, right, changes, reopened, imageImports ?? [], imageFiles ?? []);
         var coverage = changes.ToDictionary(c => c.ElementId, _ => 0, StringComparer.Ordinal);
         var collections = new List<NativeDifference>();
         foreach (string entry in left.Keys.Intersect(right.Keys, StringComparer.OrdinalIgnoreCase).Where(p => p.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)).ToArray())

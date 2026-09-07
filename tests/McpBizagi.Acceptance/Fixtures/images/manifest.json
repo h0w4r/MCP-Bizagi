@@ -1,0 +1,94 @@
+[
+  {
+    "fileName": "alpha.png",
+    "sha256": "09a3515b72c7848be8733b1a7b6489e175fbf05fe2e939b6b0d2ae8b9baa8e82",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "fd00269883046a2a7882528643fc0d1cfcabd4da4771bc279847faa088fc3989",
+        "hasTransparency": true
+      }
+    ]
+  },
+  {
+    "fileName": "animated.gif",
+    "sha256": "2c6242c18aaefc362cba4404f44d0ac2ac764f6667f115c404c08020fedd8562",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "72907fad42663ca3cf0deb36a48b1cfe5de6e43b61cf6a4f1a69661d9d2f8414",
+        "hasTransparency": false
+      },
+      {
+        "index": 1,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "1f49209979651c06a5f67380d9034d8535202922f3c4ceed8d41321a7c9a17ac",
+        "hasTransparency": false
+      }
+    ]
+  },
+  {
+    "fileName": "multipage.tiff",
+    "sha256": "2632e63202a0f1b7df59316d219327f08878dea3646e474fcea3353c899b54d5",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "fd00269883046a2a7882528643fc0d1cfcabd4da4771bc279847faa088fc3989",
+        "hasTransparency": true
+      },
+      {
+        "index": 1,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "1f49209979651c06a5f67380d9034d8535202922f3c4ceed8d41321a7c9a17ac",
+        "hasTransparency": false
+      }
+    ]
+  },
+  {
+    "fileName": "opaque.bmp",
+    "sha256": "3d627881461712e2c11306a8fe171619caed165b38782197882716b7916b4bc1",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "72907fad42663ca3cf0deb36a48b1cfe5de6e43b61cf6a4f1a69661d9d2f8414",
+        "hasTransparency": false
+      }
+    ]
+  },
+  {
+    "fileName": "opaque.jpg",
+    "sha256": "c1522e20cfb230d5fdf06784b23a3c1087999c229a2abf88c4a5dd3421ae1c7b",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "bfd4728f977a506c7f86fb2d8a1571dc59a0d4456f41b4d6ba5f4cac0d12618c",
+        "hasTransparency": false
+      }
+    ]
+  },
+  {
+    "fileName": "palette.gif",
+    "sha256": "b180bd11993b79c50302bbf33072c0ca98cd32880a1a9d811e46164406db80b4",
+    "frames": [
+      {
+        "index": 0,
+        "width": 64,
+        "height": 48,
+        "pixelSha256": "1f49209979651c06a5f67380d9034d8535202922f3c4ceed8d41321a7c9a17ac",
+        "hasTransparency": false
+      }
+    ]
+  }
+]

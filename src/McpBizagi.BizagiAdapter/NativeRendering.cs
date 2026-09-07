@@ -108,6 +108,7 @@ public sealed partial class NativeEngine
             File.WriteAllLines(Path.Combine(workRoot, "render-invisible-main-participants-" + id + ".txt"), graph
                 .Where(e => e.Value.GetType().Name == "Participant" && (bool)Get(e.Value, "IsMainParticipant") && InSurface(e)).Select(e => Text(e.Value, "Id")));
             string result = WaitForCompleteSvg(expected, request.InactivitySeconds, progress);
+            VerifyRenderedImages(result, id, graph.Where(e => expected.Contains(Text(e.Value, "Id"))).ToArray(), progress);
             rendering.Remove(id); completed.Add(id, result);
             return result;
         }

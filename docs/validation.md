@@ -1,5 +1,43 @@
 # Verification baselines
 
+## Native image artifacts — 2026-09-07
+
+The source image lifecycle and reinforced native-SVG payload circuit
+`20260907-225232-e04385` passed **18 terminal native operations** (14 completed,
+four expected worker failures), plus a stale-source-image revision rejection at
+MCP preflight. The corpus covered transparent PNG, BMP, JPEG, palette GIF,
+animated GIF and multi-page TIFF. It exercised frame selection, replacement,
+exact export/reuse, native clone, root/nested rendering, Word publication,
+deletion, no-op persistence and unchanged original model/image revisions.
+
+The SVG gate verified actual embedded raster bytes and decoded pixels for **four
+root images and two nested images**, not only graphical IDs. Word readback found
+**six pages and 11 images**, including document icons; its dimension/content
+checks do not establish image-pixel or document-layout equivalence.
+
+| Source circuit | Terminal states | Workers / periodic samples | Transcript SHA-256 |
+| --- | --- | --- | --- |
+| `20260907-225232-e04385`, reinforced SVG payload verification | 14 completed, 4 expected failures | 29 / 1,848 | `4cc907a0d6941c74278e464fc62716a1e0f89ba4b4363d3ececb73f4861eaaea` |
+| `20260907-224718-8ce30f`, earlier complete image lifecycle | 14 completed, 4 expected failures | 29 / 417 | `7ca11530c5459b057c08d6784f16a1cdcfadfc91032a955cab59cf700cf68af9` |
+| `20260907-230222-c318f9`, basic native/XML/cancellation regression | 6 completed, 1 expected failure, 1 cancelled | 11 / 125 | `f0f869aaef39fdabd9154d7046fcf8cc9ced4ad91c12678c69665b150b130c44` |
+| `20260907-230605-08dfaf`, extended/simulation/render/host-recovery regression | 12 completed, 1 expected failure, 1 cancelled, 1 interrupted | 19 / 322 | `b74be33a10880144864abb1a9c473a4c417d3007f10bb087faacdb61ec51118f` |
+
+No listed circuit observed an owned visible window or foreground takeover.
+Long native publication was allowed to advance through real activity rather
+than being cancelled by total duration. The image family is source-level
+experimental functionality, not independent Modeler GUI accreditation or the
+closure of full automation. The prior immutable package does not include it.
+
+Release compilation completed without warnings/errors and **787 unit/component
+tests** passed. The independent SDK listed **30 MCP tools**. Detailed input,
+pixel, stream-lifetime and encoder contracts are in [native images](native-images.md).
+
+The extended regression used `--native --extended --simulation --render --recovery`.
+Actual markers covered multi-diagram/nested edits, native simulation, offscreen
+SVG, no-op preservation, worker failures, cancellation, host-death job cleanup,
+journal restart and the exclusive state-directory lease. These are independent
+regressions, not substitutes for the image-specific circuit.
+
 ## Native content artifacts — 2026-09-07
 
 The final source circuit `20260907-220740-15048c` passed **18 terminal operations**

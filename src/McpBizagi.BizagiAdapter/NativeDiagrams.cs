@@ -163,6 +163,7 @@ public sealed partial class NativeEngine
         if (actions.Contains(Guid.Parse(sourceId))) actions.Add(Guid.Parse(targetId),
             Call(NativeCloner("PresentationActions.IDiagramActionsCloner"), "Clone", Guid.Parse(sourceId), actions[Guid.Parse(sourceId)], parameters));
         Call(Get(model, "Diagrams"), "Add", clone);
+        CloneImageFiles(model, sourceId, targetId, map);
         // The low-level collaboration cloner does not remap called-process links. Invoke the
         // installed recursive updater with its real identity map, not a string replacement pass.
         Call(NativeCloner("CallActivity.IRerefenceUpdater"), "Update", model, clone, parameters);

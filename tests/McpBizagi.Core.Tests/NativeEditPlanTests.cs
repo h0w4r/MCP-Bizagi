@@ -99,6 +99,7 @@ public sealed class NativeEditPlanTests
             // Content/header artifacts do not durably store DisplayName; their text/context contract is separate.
             if (type is "TextAnnotation" or "FormattedTextArtifact" or "HeaderArtifact") mutation.Name = null;
             if (type == "Group") { mutation.Documentation = null; mutation.Geometry!.Expanded = true; }
+            if (type == "ImageArtifact") mutation.ArtifactProperties = new() { Image = new() { SourcePath = "image.png", ExpectedRevision = new string('a', 64), AllowPngReencoding = true } };
             if (type == "Participant") mutation.ProcessId = TargetId;
             if (type == "DataStore") mutation.Geometry = null;
             if (type == "DataStoreReference") mutation.DataProperties = new() { StoreId = TargetId };

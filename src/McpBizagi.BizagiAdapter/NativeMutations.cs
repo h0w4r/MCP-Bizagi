@@ -70,7 +70,7 @@ public sealed partial class NativeEngine
                     if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
                     if (change.EventPayloads != null) ApplyEventPayloads(element, change.EventPayloads, graph);
                     if (change.DataProperties != null) ApplyDataProperties(element, change.DataProperties, graph);
-                    if (change.ArtifactProperties != null) ApplyArtifactProperties(element, change.ArtifactProperties);
+                    if (change.ArtifactProperties != null) ApplyArtifactProperties(model, graph[change.ElementId], change.ArtifactProperties);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
                     if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
@@ -114,6 +114,7 @@ public sealed partial class NativeEngine
                     if (element.GetType().Name == "SequenceFlow") UnlinkSequence(element);
                     if (!(bool)Call(MutationCollection(owner, element), "Remove", element)!)
                         throw new InvalidDataException("Native collection did not remove the requested element.");
+                    DeleteImageFile(model, graph[change.ElementId]);
                     break;
                 default: throw new NotSupportedException("Unknown native mutation: " + change.Operation);
             }

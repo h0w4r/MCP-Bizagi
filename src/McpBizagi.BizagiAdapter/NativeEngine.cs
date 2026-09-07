@@ -121,6 +121,8 @@ public sealed partial class NativeEngine
 
     public EngineReply Execute(EngineRequest request, Action<string> progress)
     {
+        imageImports.Clear();
+        renderedImages.Clear();
         if (request.ProtocolVersion != 1) throw new NotSupportedException("Unsupported worker protocol version.");
         RequireExportLabel(request.ModelName);
         Initialize(progress);
@@ -145,7 +147,7 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish" }.Contains(request.Action))
+        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -200,8 +202,9 @@ public sealed partial class NativeEngine
             Set(model, "Path", request.InputPath);
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
+            reply.IntegrationAdjustments = DetachLoadedImages(model, progress);
             ResolveCompensationReferences(model);
-            reply.IntegrationAdjustments = RestoreNestedDataFlows(model, progress);
+            reply.IntegrationAdjustments = reply.IntegrationAdjustments.Concat(RestoreNestedDataFlows(model, progress)).ToArray();
             // Capture input references before the native simulation pipeline clears its in-memory
             // calledElement QNames. Simulation deliberately does not expand reusable subprocesses.
             var simulationActivities = request.Action is "simulate" or "what_if" ? ExpectedSimulationActivities(model, request.DiagramId) : Array.Empty<NativeSimulationActivityInput>();
@@ -212,6 +215,7 @@ public sealed partial class NativeEngine
             if (request.Action is "simulate" or "what_if") reply.SimulationInputs = VerifySimulationInputs(reply.Artifacts, simulationActivities);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
+            if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
             if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save" or "diagrams_save")
             {
                 if (request.Action == "diagrams_save") reply.DiagramClones = EditDiagrams(model, persistence, request.DiagramPatch ?? throw new InvalidDataException("Missing diagram patch."), progress);
@@ -251,6 +255,9 @@ public sealed partial class NativeEngine
         reply.Diagrams = ((IEnumerable)Get(model, "Diagrams")).Cast<object>()
             .Select(d => Get(d, "DisplayName")?.ToString() ?? "").ToArray();
         reply.Elements = Graph(model).Select(Describe).ToArray();
+        reply.ImageFiles = DescribeImageFiles(model);
+        reply.ImageImports = imageImports.ToArray();
+        reply.RenderedImages = renderedImages.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);

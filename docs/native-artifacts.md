@@ -98,7 +98,8 @@ Source regression and public build evidence are described in
 This source milestone is not included in the earlier immutable
 [consolidated data/event package](validation-native-data-package.md).
 
-Image/custom artifact lifecycle, full rich-text editor behavior, header template
+Image artifacts now have a separate [typed image contract](native-images.md).
+Custom artifact lifecycle, full rich-text editor behavior, header template
 configuration and independent visual compatibility inside Modeler remain
 separate capabilities. Offscreen native SVG or Word generation does not prove
 that every rich-text layout matches the interactive application.

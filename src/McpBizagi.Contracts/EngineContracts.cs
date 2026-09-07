@@ -14,6 +14,7 @@ public sealed class EngineRequest
     public NativeMutation[] Mutations { get; set; } = System.Array.Empty<NativeMutation>();
     public string DiagramId { get; set; } = "";
     public string SubProcessId { get; set; } = "";
+    public string ImageElementId { get; set; } = "";
     public string ScenarioId { get; set; } = "";
     public int SimulationLevel { get; set; } = 1;
     public string PublicationFormat { get; set; } = "";
@@ -169,6 +170,9 @@ public sealed class EngineReply
     public NativeDocumentationSnapshot? Documentation { get; set; }
     public NativeDiagramSnapshot? DiagramState { get; set; }
     public NativeDiagramClone[] DiagramClones { get; set; } = System.Array.Empty<NativeDiagramClone>();
+    public NativeImageFile[] ImageFiles { get; set; } = System.Array.Empty<NativeImageFile>();
+    public NativeImageImportReceipt[] ImageImports { get; set; } = System.Array.Empty<NativeImageImportReceipt>();
+    public NativeRenderedImage[] RenderedImages { get; set; } = System.Array.Empty<NativeRenderedImage>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
     public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();

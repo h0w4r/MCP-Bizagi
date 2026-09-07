@@ -11,14 +11,21 @@ public sealed partial class NativeEngine
         return new NativeArtifactInfo
         {
             Type = Text(element, "ArtifactType"),
+            Image = kind == "ImageArtifact" && Optional(element, "Picture") is System.Drawing.Bitmap picture ? DescribePicture(picture) : null,
             Text = kind == "TextAnnotation" ? Text(Get(element, "Text"), "Content") : kind == "FormattedTextArtifact" ? Text(element, "Text") : null,
             TextFormat = kind == "TextAnnotation" ? Text(element, "TextFormat") : null,
             HeaderDiagramId = kind == "HeaderArtifact" ? Optional(element, "Diagram") is object diagram ? Text(diagram, "Id") : "" : null
         };
     }
 
-    private static void ApplyArtifactProperties(object element, NativeArtifactProperties patch)
+    private void ApplyArtifactProperties(object model, GraphEntry entry, NativeArtifactProperties patch)
     {
+        object element = entry.Value;
+        if (patch.Image != null)
+        {
+            if (patch.Text != null) throw new InvalidDataException("Artifact content requires exactly one text or image intent.");
+            ApplyImage(model, entry, patch.Image); return;
+        }
         // Use the actual native text carrier; DisplayName is not persisted for these artifact kinds.
         if (patch.Text == null) throw new InvalidDataException("ArtifactProperties requires an explicit Text value.");
         switch (element.GetType().Name)
@@ -48,7 +55,7 @@ public sealed partial class NativeEngine
         if (kind == "Group" && parent.GetType().Name != "Collaboration")
             throw new InvalidDataException("Native groups require a diagram parent, not a process or subprocess.");
         if (kind == "Group") Set(Get(element, "GraphicalProperties"), "Expanded", true);
-        if (kind is "TextAnnotation" or "FormattedTextArtifact" or "HeaderArtifact" && parent.GetType().Name == "Collaboration")
+        if (kind is "TextAnnotation" or "FormattedTextArtifact" or "HeaderArtifact" or "ImageArtifact" && parent.GetType().Name == "Collaboration")
             throw new InvalidDataException("Native content artifacts require a process or embedded subprocess parent.");
         if (kind == "HeaderArtifact")
         {

@@ -49,6 +49,7 @@ public static class NativeDiagramPolicy
     public static NativeFidelityReport Compare(byte[] before, byte[] after, NativeDiagramPatch patch, EngineReply edited, EngineReply reopened)
     {
         Validate(patch);
+        NativeImagePolicy.VerifyRestart(after, edited, reopened);
         var left = NativeArchive.ReadEntries(before).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(after).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var oldDiagrams = Diagrams(left); var newDiagrams = Diagrams(right);
@@ -157,6 +158,11 @@ public static class NativeDiagramPolicy
         var nodes = mainNodes.Concat(mainNodes.SelectMany(NativeDataFlowPolicy.OwnedNodes)).ToArray();
         NativeDataFlowPolicy.VerifyClonedData(Read(result[Prefix(clone.TargetId) + "Diagram.xml"]), mainNodes);
         if (nodes.Length != reverse.Count || nodes.Any(e => !reverse.ContainsKey(e.Id))) throw new InvalidDataException("Clone readback does not cover every mapped native identity.");
+        foreach (var image in nodes.Where(e => e.Kind == "ImageArtifact"))
+        {
+            var sourceImage = reopened.Single(e => e.Id == reverse[image.Id] && e.DiagramId == clone.SourceId);
+            if (!NativeImagePolicy.SamePixels(sourceImage.Artifact?.Image, image.Artifact?.Image)) throw new InvalidDataException("Native clone changed decoded image pixels.");
+        }
         var left = original.Where(p => p.Key.StartsWith(Prefix(clone.SourceId), StringComparison.OrdinalIgnoreCase)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         string sourceXml = Prefix(clone.SourceId) + "Diagram.xml";
         var durableIds = Read(left[sourceXml]).Descendants().Where(NativeFidelity.IsNativeNameOwner).Select(e => (string)e.Attribute("Id")!).ToHashSet();
@@ -169,6 +175,14 @@ public static class NativeDiagramPolicy
         foreach (var pair in result.Where(p => p.Key.StartsWith(Prefix(clone.TargetId), StringComparison.OrdinalIgnoreCase)))
         {
             string suffix = pair.Key[Prefix(clone.TargetId).Length..];
+            if (suffix.StartsWith("ImageArtifactImages/", StringComparison.Ordinal))
+            {
+                var parts = suffix.Split('/');
+                if (parts.Length != 2 || !reverse.TryGetValue(Path.GetFileNameWithoutExtension(parts[1]), out var imageId) ||
+                    nodes.Count(e => e.Id == Path.GetFileNameWithoutExtension(parts[1]) && e.Kind == "ImageArtifact") != 1)
+                    throw new InvalidDataException("Native cloned image payload has no exact mapped owner.");
+                right.Add(Prefix(clone.SourceId) + "ImageArtifactImages/" + imageId + Path.GetExtension(parts[1]), pair.Value); continue;
+            }
             if (suffix.StartsWith("Files/", StringComparison.Ordinal))
             {
                 var parts = suffix.Split('/'); if (parts.Length >= 3 && reverse.TryGetValue(parts[1], out var owner)) parts[1] = owner;

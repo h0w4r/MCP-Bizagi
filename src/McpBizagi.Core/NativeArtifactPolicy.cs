@@ -15,11 +15,20 @@ public static class NativeArtifactPolicy
     {
         if (change.ArtifactProperties is { } patch)
         {
-            if (patch.Text == null || patch.Text.Length > 1024 * 1024) throw new InvalidDataException("Supply an artifact Text value within the operation bound.");
-            XmlConvert.VerifyXmlChars(patch.Text);
-            if (change.Operation == "create" && change.ElementType is not "TextAnnotation" and not "FormattedTextArtifact")
+            if ((patch.Text == null) == (patch.Image == null)) throw new InvalidDataException("Supply exactly one artifact Text or Image value.");
+            if (patch.Image != null) NativeImagePolicy.Validate(patch.Image);
+            if (patch.Text != null)
+            {
+                if (patch.Text.Length > 1024 * 1024) throw new InvalidDataException("Artifact text exceeds the operation bound.");
+                XmlConvert.VerifyXmlChars(patch.Text);
+            }
+            if (patch.Image != null && change.Operation == "create" && change.ElementType != "ImageArtifact")
+                throw new InvalidDataException("Image input requires an image artifact.");
+            if (patch.Text != null && change.Operation == "create" && change.ElementType is not "TextAnnotation" and not "FormattedTextArtifact")
                 throw new InvalidDataException("Artifact text requires a text annotation or formatted-text artifact.");
         }
+        if (change.Operation == "create" && change.ElementType == "ImageArtifact" && change.ArtifactProperties?.Image == null)
+            throw new InvalidDataException("Image creation requires an explicit revision-checked raster source.");
         if (change.Operation == "create") ValidateKind(change, change.ElementType);
     }
     private static void ValidateKind(NativeMutation change, string kind)
@@ -32,8 +41,10 @@ public static class NativeArtifactPolicy
     public static void Verify(NativeMutation change, NativeElement element, NativeElement[] graph)
     {
         ValidateKind(change, element.Kind);
-        if (change.ArtifactProperties is { } patch && (element.Kind is not "TextAnnotation" and not "FormattedTextArtifact" ||
+        if (change.ArtifactProperties is { Text: not null } patch && (element.Kind is not "TextAnnotation" and not "FormattedTextArtifact" ||
             element.Artifact?.Text != patch.Text)) throw new InvalidDataException("Native artifact text did not survive independent readback.");
+        if (change.ArtifactProperties?.Image != null && (element.Kind != "ImageArtifact" || element.Artifact?.Image == null))
+            throw new InvalidDataException("Native image did not survive independent readback.");
         if (element.Kind == "Group" && graph.Count(e => e.Kind == "Collaboration" && e.Id == element.ParentId) != 1)
             throw new InvalidDataException("Native group ownership must remain at the diagram level.");
         if (element.Kind == "HeaderArtifact" && element.Artifact?.HeaderDiagramId != element.DiagramId)
@@ -43,7 +54,7 @@ public static class NativeArtifactPolicy
     {
         if (before.Name != Xpdl + "Artifact" || after.Name != before.Name || !NativeFidelity.IsNativeNameOwner(before) || !NativeFidelity.IsNativeNameOwner(after))
             throw new InvalidDataException("Artifact projection requires exact native artifact owners.");
-        if (change.ArtifactProperties is { } patch)
+        if (change.ArtifactProperties is { Text: not null } patch)
         {
             string? vendor = (string?)after.Attribute("BizAgiArtifactType");
             if (vendor != "FormattedText" && (vendor != null || (string?)after.Attribute("ArtifactType") != "Annotation"))

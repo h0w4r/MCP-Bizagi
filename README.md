@@ -73,6 +73,7 @@ every operation into a BPMN XML export.
 | Event definition payloads | Experimental current source | Existing-kind names, conditions, timers, codes and same-container compensation references; no implied collection editing or execution; [contract](docs/native-event-payloads.md) |
 | Native data and activity/event I/O | Experimental current source | Data objects, shared stores, references and association-derived bindings; explicit nested-loader adjustments and clone checks; [contract](docs/native-data.md) |
 | Native content artifacts | Experimental current source | Annotations, formatted text, diagram groups and native headers; exact text, geometry and clone fidelity; [contract](docs/native-artifacts.md) |
+| Native image artifacts | Experimental current source | Revision-checked raster inputs, explicit frame selection, decoded-pixel/native-file fidelity, clone, extraction and deletion; [contract](docs/native-images.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |
