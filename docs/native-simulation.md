@@ -115,6 +115,17 @@ artifacts, not automatically saved into `.bpm`. The native engine may filter
 parameters according to the selected level; running level 1 does not prove that
 resource or calendar settings were exercised.
 
+### Reusable subprocess limitations
+
+Both operations also return `EngineReply.SimulationLimitations`, identifying
+each reusable subprocess in the selected diagram (including embedded descendants).
+The `reusable_subprocess_black_box` entry retains the original call identities
+and reference: Modeler simulates the shape's overall processing time, not the
+linked process's internal elements. A completed black-box task must not be
+reported as execution of those linked tasks. See [local calls](native-calls.md)
+and [Bizagi's simulation considerations](https://help.bizagi.com/platform/en/simulation_in_bizagi.htm).
+An empty list is not an exhaustive semantic-support assessment.
+
 ## Real acceptance and boundaries
 
 Run against an installed engine, or add `--package <extracted-directory>`:

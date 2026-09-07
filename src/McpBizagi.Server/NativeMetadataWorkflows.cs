@@ -75,7 +75,7 @@ public sealed partial class NativeWorkflows
                 sourceRevision = input.Revision,
                 result,
                 nativeSourceUnmodified = true,
-                warning = "Actual installed-engine replication artifacts. Results are not saved into the source model; level-specific engine filtering applies."
+                warning = "Actual installed-engine replication artifacts. Results are not saved into the source model; level-specific engine filtering applies. Inspect result.SimulationLimitations for input-specific native semantics; an empty list is not a complete semantic-support assessment."
             };
         });
     }

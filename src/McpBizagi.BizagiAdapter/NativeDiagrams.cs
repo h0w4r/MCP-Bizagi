@@ -84,11 +84,7 @@ public sealed partial class NativeEngine
                 case "delete":
                     if (target == null || diagrams.Length <= 1) throw new InvalidDataException("Cannot remove a missing or final diagram.");
                     var deletedIds = new HashSet<string>(Graph(model).Where(e => e.DiagramId == change.DiagramId).Select(e => Text(e.Value, "Id")));
-                    foreach (var e in Graph(model).Where(e => e.DiagramId != change.DiagramId && e.Value.GetType().Name == "CallActivity"))
-                    {
-                        string? called = (Optional(e.Value, "CalledElement") as XmlQualifiedName)?.Name;
-                        if (called != null && deletedIds.Contains(called)) throw new InvalidDataException("Another diagram calls an element in this diagram; unlink it explicitly first.");
-                    }
+                    RequireNoIncomingCalls(Graph(model), deletedIds);
                     if (patch.OpenedItems == null && DiagramState(model).OpenedItems.Any(i => i.DiagramId == change.DiagramId))
                         throw new InvalidDataException("Supply complete OpenedItems to remove references to the deleted diagram.");
                     Call(persistence, "RemoveDiagram", model, target);
@@ -127,6 +123,16 @@ public sealed partial class NativeEngine
         string sourceId = Text(source, "Id"); var original = Graph(model).Where(e => e.DiagramId == sourceId).Select(Describe).ToArray();
         object sourceSimulation = Get(source, "BPSimData");
         object clone = Call(NativeCloner("ICollaborationCloner"), "Clone", source, parameters)!;
+        foreach (var invisible in original.Where(e => e.IsMainParticipant == true))
+        {
+            // The installed participant cloner resets an invisible pool's size to zero, which
+            // the next reader materializes as defaults. Preserve the actual source bounds in
+            // the cloned object before persistence, rather than ignoring that archive change.
+            string mapped = map[Guid.Parse(invisible.Id)]!.ToString()!;
+            object participant = Items(clone, "Participants").Single(p => Text(p, "Id") == mapped);
+            var bounds = invisible.Geometry ?? throw new InvalidDataException("Invisible participant is missing native bounds.");
+            Set(Get(participant, "GraphicalProperties"), "Size", new System.Drawing.SizeF((float)bounds.Width, (float)bounds.Height));
+        }
         // The installed cloner assigns a deep copy to its source. Restore the original source object;
         // retain the independent copy for the target instead of sharing mutable scenario state.
         object clonedSimulation = Get(source, "BPSimData"); Set(source, "BPSimData", sourceSimulation); Set(clone, "BPSimData", clonedSimulation);
@@ -154,6 +160,9 @@ public sealed partial class NativeEngine
         if (actions.Contains(Guid.Parse(sourceId))) actions.Add(Guid.Parse(targetId),
             Call(NativeCloner("PresentationActions.IDiagramActionsCloner"), "Clone", Guid.Parse(sourceId), actions[Guid.Parse(sourceId)], parameters));
         Call(Get(model, "Diagrams"), "Add", clone);
+        // The low-level collaboration cloner does not remap called-process links. Invoke the
+        // installed recursive updater with its real identity map, not a string replacement pass.
+        Call(NativeCloner("CallActivity.IRerefenceUpdater"), "Update", model, clone, parameters);
         var cloned = Graph(model).Where(e => e.DiagramId == targetId).Select(Describe).ToDictionary(e => e.Id);
         var identities = original.Select(e =>
         {

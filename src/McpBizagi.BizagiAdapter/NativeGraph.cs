@@ -72,6 +72,7 @@ public sealed partial class NativeEngine
         {
             Id = Text(element, "Id"),
             BpmnId = Text(element, "BpmnId"),
+            CallReference = DescribeCall(element),
             Kind = element.GetType().Name,
             IsMainParticipant = element.GetType().Name == "Participant" ? (bool?)Get(element, "IsMainParticipant") : null,
             ElementType = Text(element, "ElementType"),

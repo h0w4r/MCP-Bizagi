@@ -1,0 +1,21 @@
+{
+  "tool": "native_mutate",
+  "arguments": {
+    "path": "artifact:replace-with-completed-native-artifact",
+    "expectedRevision": "replace-with-outputRevision",
+    "mutations": [
+      {
+        "Operation": "create",
+        "ElementId": "11111111-1111-4111-8111-111111111111",
+        "ParentId": "22222222-2222-4222-8222-222222222222",
+        "ElementType": "CallActivity",
+        "Name": "Fulfil order",
+        "Documentation": "Reusable local order-fulfilment process.",
+        "Geometry": { "X": 160, "Y": 100, "Width": 110, "Height": 65 },
+        "CallTarget": {
+          "ProcessId": "33333333-3333-4333-8333-333333333333"
+        }
+      }
+    ]
+  }
+}

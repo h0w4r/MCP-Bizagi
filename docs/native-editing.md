@@ -25,8 +25,8 @@ accepted as an input through an opaque `artifact:` reference.
 
 | Operation | Required fields | Optional fields |
 | --- | --- | --- |
-| `create` | `elementId`, `parentId`, `elementType` | `name`, `documentation`, `geometry`; connectors require endpoints and points |
-| `update` | Existing `elementId`; at least one changed value | `name`, `documentation`, `geometry` |
+| `create` | `elementId`, `parentId`, `elementType` | `name`, `documentation`, `geometry`, `callTarget` for calls; connectors require endpoints and points |
+| `update` | Existing `elementId`; at least one changed value | `name`, `documentation`, `geometry`, `callTarget` for calls |
 | `delete` | Existing `elementId` | None; incident connections and nonempty children must be handled first |
 | `reconnect` | Existing connector `elementId`, `sourceId`, `targetId`, `points` | None |
 
@@ -73,6 +73,8 @@ The investigated allowlist is wider than the tested palette. Current source adds
 a separate [container lifecycle contract](native-containers.md) for participants,
 stable process-owned lanes, milestones and nested embedded subprocesses. These
 unreleased additions are not covered by the old palette run or old release ZIP.
+The [local reusable-call contract](native-calls.md) separately covers
+`CallActivity` creation, target updates, guarded deletion and clone references.
 Data/artifact categories, reparenting, boundary-event modes,
 conditional flow details, rich styles and automatic layout are not accredited by
 the palette test. Unknown native content is not excused merely because an edit

@@ -183,6 +183,7 @@ public static class NativeDiagramPolicy
                         bool identity = attr.Name == "Id" && owner;
                         bool reference = owner && (node.Name.LocalName, attr.Name.LocalName) is ("Pool", "Process") or ("Lane", "ParentPool") or ("Milestone", "ParentPool") or ("Transition", "From") or ("Transition", "To") or ("MessageFlow", "Source") or ("MessageFlow", "Target");
                         reference |= node.Name == Xpdl + "BlockActivity" && attr.Name == "ActivitySetId" && node.Parent?.Name == Xpdl + "Activity" && NativeFidelity.IsNativeNameOwner(node.Parent);
+                        reference |= NativeCallFidelity.IsCallReference(node) && attr.Name == "Id";
                         if ((identity || reference) && reverse.TryGetValue(attr.Value, out var id)) attr.Value = id;
                     }
                 if ((string?)doc.Root?.Attribute("Name") != name) throw new InvalidDataException("Clone name does not match its request.");

@@ -59,6 +59,7 @@ public static class NativeMutationFidelity
                 }
                 if (x.Length == 0 && y.Length == 0) continue;
                 if (x.Length != 1 || y.Length != 1) throw new InvalidDataException("Ambiguous native XML mutation identity.");
+                if (c.CallTarget != null) NativeCallFidelity.ProjectTarget(x[0], y[0], c.CallTarget);
                 var oldCompanion = Companion(a, x[0]); var newCompanion = Companion(b, y[0]);
                 if ((string?)oldCompanion?.Attribute("Id") != (string?)newCompanion?.Attribute("Id"))
                     throw new InvalidDataException("A property update cannot replace its native container companion.");

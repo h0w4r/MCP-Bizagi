@@ -147,7 +147,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
             }, RunDirectory(id, "publication-reader"), progress, token);
             var readback = reopened.Publication ?? throw new InvalidDataException("Missing publication readback.");
             var names = published.Elements.Where(e => (selected.Length == 0 || selected.Contains(e.DiagramId)) &&
-                ((e.Kind.EndsWith("Task", StringComparison.Ordinal) && (format == "excel" || !string.IsNullOrWhiteSpace(e.Documentation))) ||
+                (((e.Kind.EndsWith("Task", StringComparison.Ordinal) || format != "excel" && e.Kind == "CallActivity") && (format == "excel" || !string.IsNullOrWhiteSpace(e.Documentation))) ||
                     e.Kind == (format == "excel" ? "Participant" : "Collaboration")) && !string.IsNullOrWhiteSpace(e.Name)).Select(e => e.Name).Distinct().ToArray();
             // Logos alone must not satisfy the diagram-image gate. Match the actual rendered PNG dimensions as a multiset.
             var expectedImages = published.Artifacts.Where(p => Path.GetFileName(Path.GetDirectoryName(p)) == "images" && p.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
@@ -267,7 +267,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 sourceRevision = input.Revision,
                 result,
                 nativeSourceUnmodified = true,
-                warning = action == "simulate" ? "Scenario settings are used in memory only; an empty scenario ID uses native defaults. No result is saved into the source model."
+                warning = action == "simulate" ? "Scenario settings are used in memory only; an empty scenario ID uses native defaults. No result is saved into the source model. Inspect result.SimulationLimitations for input-specific native semantics; an empty list is not a complete semantic-support assessment."
                     : action == "render_svg" ? "Native offscreen rendering is not independent visual compatibility accreditation."
                     : "Validation findings are reported by the installed engine; a successful execution can contain validation errors."
             };

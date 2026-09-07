@@ -41,6 +41,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > including explicit expanded sizes. The full-automation objective remains open.
 > [Native diagram lifecycle](docs/native-diagrams.md) adds creation, renaming,
 > native cloning, deletion and durable tab preferences, with fresh-worker readback.
+> [Local reusable subprocess calls](docs/native-calls.md) add explicit process
+> links, guarded target deletion and clone remapping. Simulation reports expose
+> Modeler's native black-box behavior rather than claiming linked-task execution.
 
 ## Why this project
 
@@ -73,6 +76,7 @@ every operation into a BPMN XML export.
 | Native structural batches | Opt-in, copy-only | 22 task/event/gateway types tested; create/delete, connection endpoints, bounds, colors and descriptions; [limits](docs/native-editing.md) |
 | Pools, lanes, milestones and embedded subprocesses | Experimental current source | Explicit process IDs, complete partitions, nested lifecycle and expanded/collapsed sizes; [contract](docs/native-containers.md) |
 | Diagram lifecycle and persisted tab preferences | Experimental current source | Create, rename, native clone, delete and ordered/selected diagram or subprocess tabs; [contract](docs/native-diagrams.md) |
+| Local reusable subprocess calls | Experimental current source | Create/link/unlink, preserve references, protect targets and remap native clones; explicit simulation black-box semantics; [contract](docs/native-calls.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

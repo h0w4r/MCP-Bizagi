@@ -119,7 +119,8 @@ Unit tests exercise comparison logic only; they do not replace that circuit.
 
 ## Remaining boundaries
 
-Full reusable-call linking, every relationship/palette variant, all rich
+The [local reusable-call contract](native-calls.md) adds tested native reference
+remapping and protected deletion. External calls, every relationship/palette variant, all rich
 publication settings and saved simulation-result clone cases require their own
 acceptance corpus. Unknown content is not waived merely because it is outside
 the current graph model. Independent desktop visual compatibility and live

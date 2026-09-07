@@ -200,6 +200,9 @@ public sealed partial class NativeEngine
             Set(model, "Path", request.InputPath);
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
+            // Capture input references before the native simulation pipeline clears its in-memory
+            // calledElement QNames. Simulation deliberately does not expand reusable subprocesses.
+            if (request.Action is "simulate" or "what_if") reply.SimulationLimitations = SimulationLimitations(model, request.DiagramId);
             if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
             if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);

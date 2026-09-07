@@ -92,6 +92,18 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--calls-behavior-only"))
+    {
+        if (!native) throw new ArgumentException("Call behavior acceptance requires --native.");
+        await NativeCallBehaviorAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_CALL_BEHAVIOR_SIMULATION_PUBLICATION_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--calls-only"))
+    {
+        if (!native) throw new ArgumentException("Call-activity acceptance requires --native.");
+        await NativeCallAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_CALL_ACTIVITY_LIFECYCLE_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--commit-only"))
     {
         if (!native) throw new ArgumentException("Native commit acceptance requires --native.");

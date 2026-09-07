@@ -7,7 +7,7 @@ public static class NativeEditPlan
 {
     public static readonly string[] CreatableTypes = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask",
         "NoneStart", "MessageStart", "TimerStart", "NoneEnd", "MessageEnd", "TerminateEnd", "NoneIntermediate", "MessageIntermediate", "TimerIntermediate",
-        "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway", "SubProcess", "Participant", "Lane", "Milestone",
+        "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway", "SubProcess", "CallActivity", "Participant", "Lane", "Milestone",
         "SequenceFlow", "MessageFlow", "TextAnnotation", "Group", "DataObject", "DataStoreReference"];
 
     public static void Validate(NativeMutation[] changes)
@@ -38,9 +38,14 @@ public static class NativeEditPlan
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
             }
             else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
-            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null))
+            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
-            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.CallTarget is { } call)
+            {
+                if (call.ProcessId != "") Id(call.ProcessId);
+                if (c.Operation == "create" && c.ElementType != "CallActivity") throw new InvalidDataException("CallTarget applies only to call activities.");
+            }
             if (c.Name?.Length > 10000 || c.Documentation?.Length > 1024 * 1024) throw new InvalidDataException("Native text exceeds the operation bound.");
             if (c.Geometry is { } g)
             {
@@ -77,6 +82,15 @@ public static class NativeEditPlan
             if (c.ProcessId != "" && elements.Count(p => p.Id == c.ProcessId && p.Kind == "Process" && p.ParentId == c.ElementId && p.DiagramId == e.DiagramId) != 1)
                 throw new InvalidDataException("Created participant process identity/ownership differs from the request.");
             if (c.Name != null && e.Name != c.Name || c.Documentation != null && e.Documentation != c.Documentation) throw new InvalidDataException("Native text readback differs from the request.");
+            if (c.CallTarget is { } call)
+            {
+                var reference = e.CallReference;
+                if (e.Kind != "CallActivity" || reference == null || reference.CatalogProcessId != call.ProcessId || reference.External != null || reference.BpmnNamespace != "" ||
+                    reference.BpmnName != "" && (call.ProcessId == "" || reference.BpmnName != call.ProcessId && reference.BpmnName != "Id_" + call.ProcessId))
+                    throw new InvalidDataException("Native call target did not survive fresh-worker readback.");
+                if (call.ProcessId != "" && elements.Count(p => p.Kind == "Process" && p.Id == call.ProcessId) != 1)
+                    throw new InvalidDataException("Called native process is not present exactly once after readback.");
+            }
             if (c.SourceId != "" && (e.SourceId != c.SourceId || e.TargetId != c.TargetId || e.Points.Length != c.Points.Length ||
                 e.Points.Where((p, i) => !Same(p.X, c.Points[i].X) || !Same(p.Y, c.Points[i].Y)).Any())) throw new InvalidDataException("Native connector readback differs from the request.");
             if (c.Geometry is { } a)

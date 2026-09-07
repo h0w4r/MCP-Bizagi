@@ -57,6 +57,7 @@ public sealed partial class NativeEngine
             {
                 case "create":
                 case "update":
+                    if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.Name != null) Set(element, "DisplayName", change.Name);
                     if (change.Documentation != null)
                         // A cleared pool description must use the native absent value. Persisting "" leaves
@@ -75,6 +76,7 @@ public sealed partial class NativeEngine
                     break;
                 case "delete":
                     string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
+                    RequireNoIncomingCalls(graph.Values, new HashSet<string>(new[] { change.ElementId, processId }.Where(v => v != ""), StringComparer.Ordinal));
                     if (processId != "" && ((bool)Get(element, "IsMainParticipant") || graph.Values.Count(e => e.DiagramId == graph[change.ElementId].DiagramId && e.Value.GetType().Name == "Participant") <= 1))
                         throw new InvalidDataException("Deleting the main or last participant would invoke native implicit-model reconstruction.");
                     if (graph.Values.Any(e => e.ParentId == change.ElementId && Text(e.Value, "Id") != processId || processId != "" && e.ParentId == processId))

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Add native local `CallActivity` creation, target inspection, reference-preserving
+  edits, relinking/unlinking and catalog-aware incoming-call deletion guards.
+- Reuse the native recursive clone-reference updater and preserve invisible
+  main-pool bounds before persistence; compare exact native call-reference fields
+  without ignoring unknown content.
+- Report input-specific reusable-subprocess black-box simulation limitations,
+  including original target identities. Quantify actual call-shape timing and
+  what-if replications instead of claiming linked-process internals executed.
+- Verify documented call names in native Word/PDF publication readback and add
+  independent real MCP lifecycle, failure, simulation and publication circuits.
+
 - Add explicit native workspace adoption/save-as with source and destination
   revisions, byte-exact publication, installed-engine readers and recoverable
   intent/backup receipts. Reconciliation observes applied, unapplied, conflicting,

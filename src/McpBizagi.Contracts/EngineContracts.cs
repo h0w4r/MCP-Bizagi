@@ -42,9 +42,34 @@ public sealed class NativeMutation
     public NativeGeometry? Geometry { get; set; }
     /// <summary>Explicit latent/visible expanded size for an embedded subprocess; collapsed bounds remain separate.</summary>
     public NativeSize? ExpandedSize { get; set; }
+    /// <summary>Null preserves the call target; an empty ProcessId explicitly unlinks a call activity.</summary>
+    public NativeCallTarget? CallTarget { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
+}
+
+public sealed class NativeCallTarget
+{
+    /// <summary>A native participant Process.Id, not a diagram ID. Empty explicitly clears the link.</summary>
+    public string ProcessId { get; set; } = "";
+    /// <summary>Replacing an existing external-model reference requires this explicit acknowledgement.</summary>
+    public bool ReplaceExternalReference { get; set; }
+}
+
+public sealed class NativeCallReference
+{
+    public string CatalogProcessId { get; set; } = "";
+    public string BpmnName { get; set; } = "";
+    public string BpmnNamespace { get; set; } = "";
+    public NativeExternalCallReference? External { get; set; }
+}
+
+public sealed class NativeExternalCallReference
+{
+    public string WorkspaceId { get; set; } = "";
+    public string DiagramId { get; set; } = "";
+    public string ProcessId { get; set; } = "";
 }
 
 public sealed class NativePoint
@@ -74,6 +99,8 @@ public sealed class NativeElement
     public string ElementType { get; set; } = "";
     public string Name { get; set; } = "";
     public string BpmnId { get; set; } = "";
+    /// <summary>Raw native call-reference representations; null for non-call elements. No external model is fetched.</summary>
+    public NativeCallReference? CallReference { get; set; }
     public string ParentId { get; set; } = "";
     public string DiagramId { get; set; } = "";
     public string Documentation { get; set; } = "";
@@ -118,6 +145,19 @@ public sealed class EngineReply
     public NativeDiagramSnapshot? DiagramState { get; set; }
     public NativeDiagramClone[] DiagramClones { get; set; } = System.Array.Empty<NativeDiagramClone>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
+    public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
+}
+
+/// <summary>Input-specific native simulation semantics, not a claim that all limitations were enumerated.</summary>
+public sealed class NativeSimulationLimitation
+{
+    public string Code { get; set; } = "";
+    public string DiagramId { get; set; } = "";
+    public string ElementId { get; set; } = "";
+    public string BpmnId { get; set; } = "";
+    public string Message { get; set; } = "";
+    public string DocumentationUrl { get; set; } = "";
+    public NativeCallReference? CallReference { get; set; }
 }
 
 /// <summary>Text and image counts read from a durable publication by an independent worker.</summary>

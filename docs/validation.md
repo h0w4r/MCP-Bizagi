@@ -1,8 +1,62 @@
 # Verification baselines
 
+## Native reusable-call lifecycle and black-box simulation — 2026-09-07
+
+Current source exposes **29 MCP tools** and passes **444 unit tests**. The native
+call contract extends existing mutation/inspection/analysis tools rather than
+introducing arbitrary reflection. Tests use the real installed **4.3.0.008**
+engine, independent stdio MCP, private state outside the workspace, durable
+native artifacts and fresh worker processes.
+
+Run `20260907-151811-376a31` passed **22 operations**: 17 completed and five
+expected failures, with **37 worker observations / 211 periodic samples**.
+Transcript SHA-256:
+`598934fefea78efa91831633f478137e0ca6dd75ce2782ac3461df6c93664b9e`.
+
+The lifecycle circuit verified native `CallActivity` creation, local and embedded
+callers, unrelated name/documentation edits retaining references, invalid target
+and wrong-kind rejection, target-diagram and pool/process deletion protection,
+nested incoming-call protection, relinking/unlinking, call deletion, native clone
+remapping, offscreen rendering and no-op fidelity. Calls to a different diagram
+retain the original target; cloned internal targets use the actual native ID map.
+
+Run `20260907-151436-d10f9d` passed **10 completed operations**, with
+**16 worker observations / 260 periodic samples**. Transcript SHA-256:
+`45e74c76fcd21283c62379ad86fec42602bf631ed9b4f559b83a4ee1079c5ee6`.
+Its valid two-diagram model completed native validation without findings, then
+persisted explicit call-shape simulation settings. Native single-scenario and
+four what-if replication results verified 12 completions with 3/9-minute
+black-box durations. The caller end and generated black-box task were correlated
+to their actual IDs; the linked service task was absent from caller simulation.
+Structured limitations retained the original local target. Word/PDF publications
+passed separate native reader/image gates; retained reader text contains the
+call name, call documentation, target diagram and target service task. Subsequent
+native inspection confirmed the original durable call target and source hash.
+
+### Failures retained during integration
+
+- `20260907-145436-d2cb1e`: requested target redirection failed whole-container
+  fidelity because the exact native `SubFlow` reference field was not projected.
+  The fix projects only that verified requested field, not unknown XML content.
+- `20260907-145658-a641da`: the native low-level clone reset invisible main-pool
+  dimensions to zero, then the next reader materialized default dimensions.
+  The adapter now preserves source dimensions in the cloned native object before
+  persistence. No geometry-comparison exception was added to conceal the change.
+- `20260907-150347-ca0c47`: an initial behavior assertion incorrectly expected
+  linked-service execution and used the wrong end-event metric key. Actual native
+  output and [official simulation semantics](https://help.bizagi.com/platform/en/simulation_in_bizagi.htm)
+  establish a reusable-subprocess black box. The replacement test asserts actual
+  configured duration/count and explicitly rejects claims that internal linked
+  tasks executed. The failed run is not counted as acceptance.
+
+These circuits do not accredit external-model references, expanded reusable
+rendering, every simulation semantic, independent GUI equivalence or complete
+Modeler automation. See the [local call contract](native-calls.md). Raw evidence
+and proprietary integration research remain private.
+
 ## Native adoption and interrupted-write reconciliation — 2026-09-07
 
-Current source exposes **29 MCP tools** and passes **427 unit tests**. A full
+That source checkpoint exposed **29 MCP tools** and passed **427 unit tests**. A full
 non-incremental Release build completed with no warnings. The new
 `native_commit` and `native_commit_reconcile` tools have real MCP acceptance
 against installed Modeler **4.3.0.008**, using an existing rich attribute/file/image
