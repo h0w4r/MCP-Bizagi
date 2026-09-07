@@ -40,10 +40,17 @@ native element kinds. See [semantic properties and their separate simulation
 boundary](native-semantics.md). Delete/reconnect cannot carry hidden property
 updates. Unknown members in typed requests are rejected by the SDK marshaller.
 
+`ActivityLoop` explicitly replaces the native loop configuration; see
+[loop semantics and limits](native-loops.md). `EventMode` selects an intermediate
+event class at creation, and `EventProperties` patches interruption and boundary
+attachment; see [native events](native-events.md). Boundary references must be
+handled before deleting their target activity.
+
 `NativeGeometry` contains `x`, `y`, `width`, `height`, `expanded`,
 `backgroundArgb` and `borderArgb`. Bounds must be finite and dimensions positive.
-Colors are signed 32-bit ARGB values. Expanded subprocess geometry is currently
-rejected rather than silently altering a different rendering surface.
+Colors are signed 32-bit ARGB values. Expanding an embedded subprocess requires
+an explicit `NativeMutation.ExpandedSize`; collapsed bounds and expanded size
+are separate fields. Other element classes cannot silently borrow that contract.
 Readback exposes that separate surface as `NativeElement.ExpandedGeometry`.
 On newly imported expanded BPMN DI shapes, the adapter preserves the supplied
 expanded bounds rather than the native importer's threefold size default, and

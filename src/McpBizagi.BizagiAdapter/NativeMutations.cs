@@ -21,10 +21,10 @@ public sealed partial class NativeEngine
                 object kind = Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.ElementType, false);
                 object descriptor = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementDescriptor"), kind);
                 // The native factory requires an explicit intermediate-event mode. Current names use
-                // NoneIntermediate = throw, MessageIntermediate/TimerIntermediate = catch; boundary events are separate.
+                // NoneIntermediate = throw, MessageIntermediate/TimerIntermediate = catch.
                 if (change.ElementType.EndsWith("Intermediate", StringComparison.Ordinal))
                     Set(descriptor, "Options", Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementTypeOptions"),
-                        change.ElementType == "NoneIntermediate" ? "IntermediateEventThrow" : "IntermediateEventCatch"));
+                        "IntermediateEvent" + (change.EventMode ?? (change.ElementType == "NoneIntermediate" ? "Throw" : "Catch"))));
                 element = Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IElementFactory"), "Create", descriptor)
                     ?? throw new NotSupportedException("Native factory does not create this element type.");
                 Set(element, "Id", Guid.Parse(change.ElementId));
@@ -58,6 +58,7 @@ public sealed partial class NativeEngine
             {
                 case "create":
                 case "update":
+                    if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
                     if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
@@ -85,6 +86,7 @@ public sealed partial class NativeEngine
                     break;
                 case "delete":
                     string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
+                    RequireNoAttachedBoundaries(graph.Values, change.ElementId);
                     RequireNoIncomingCalls(graph.Values, new HashSet<string>(new[] { change.ElementId, processId }.Where(v => v != ""), StringComparer.Ordinal));
                     if (processId != "" && ((bool)Get(element, "IsMainParticipant") || graph.Values.Count(e => e.DiagramId == graph[change.ElementId].DiagramId && e.Value.GetType().Name == "Participant") <= 1))
                         throw new InvalidDataException("Deleting the main or last participant would invoke native implicit-model reconstruction.");
@@ -204,6 +206,10 @@ public sealed partial class NativeEngine
         if (kind is not "SequenceFlow" and not "MessageFlow") throw new NotSupportedException("Only native sequence/message flows can be connected.");
         if (kind == "SequenceFlow")
         {
+            // Sequence flows cannot enter a boundary/start/instantiating gateway or leave an end event.
+            if (target.GetType().Name is "BoundaryEvent" or "StartEvent" || source.GetType().Name == "EndEvent" ||
+                target.GetType().Name == "EventBasedGateway" && (bool)Get(target, "Instantiate"))
+                throw new InvalidDataException("Sequence flow direction violates the native event or instantiating gateway boundary.");
             if (!graph.TryGetValue(Text(source, "Id"), out var a) || !graph.TryGetValue(Text(target, "Id"), out var b) || a.ParentId != b.ParentId ||
                 graph[Text(connection, "Id")].ParentId != a.ParentId)
                 throw new InvalidDataException("Sequence flow endpoints must share the same native flow container.");
@@ -217,6 +223,10 @@ public sealed partial class NativeEngine
         foreach (var point in points) Call(vertices, "Add", new PointF((float)point.X, (float)point.Y));
         if (kind == "SequenceFlow")
         {
+            // Sequence flows cannot enter a boundary/start/instantiating gateway or leave an end event.
+            if (target.GetType().Name is "BoundaryEvent" or "StartEvent" || source.GetType().Name == "EndEvent" ||
+                target.GetType().Name == "EventBasedGateway" && (bool)Get(target, "Instantiate"))
+                throw new InvalidDataException("Sequence flow direction violates the native event or instantiating gateway boundary.");
             Call(Get(source, "Outgoing"), "Add", Text(connection, "BpmnId"));
             Call(Get(target, "Incoming"), "Add", Text(connection, "BpmnId"));
             Call(Get(source, "OutgoingSequenceFlows"), "Add", connection);

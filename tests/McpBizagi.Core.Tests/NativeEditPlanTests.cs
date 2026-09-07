@@ -97,6 +97,15 @@ public sealed class NativeEditPlanTests
         {
             var mutation = Create(type);
             if (type == "Participant") mutation.ProcessId = TargetId;
+            if (type.EndsWith("Intermediate", StringComparison.Ordinal))
+            {
+                mutation.EventMode = type is "NoneIntermediate" or "EscalationIntermediate" or "CompensationIntermediate" ? "Throw" : "Catch";
+                if (type == "ErrorIntermediate")
+                {
+                    mutation.EventMode = "Boundary";
+                    mutation.EventProperties = new() { AttachedToActivityId = TargetId };
+                }
+            }
             if (type is "SequenceFlow" or "MessageFlow")
             {
                 mutation.Geometry = null; mutation.SourceId = SourceId; mutation.TargetId = TargetId;

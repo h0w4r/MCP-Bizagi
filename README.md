@@ -44,6 +44,10 @@ foreground-window automation, or redistributing Bizagi binaries.
 > [Local reusable subprocess calls](docs/native-calls.md) add explicit process
 > links, guarded target deletion and clone remapping. Simulation reports expose
 > Modeler's native black-box behavior rather than claiming linked-task execution.
+> [Native events and boundaries](docs/native-events.md) add explicit catch/throw
+> creation, interruption, same-container activity references and guarded deletion,
+> with native clone remapping. Event payload editing and simulator behavior remain
+> separate from successful native persistence.
 
 ## Why this project
 

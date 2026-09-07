@@ -184,6 +184,10 @@ public static class NativeDiagramPolicy
                         bool reference = owner && (node.Name.LocalName, attr.Name.LocalName) is ("Pool", "Process") or ("Lane", "ParentPool") or ("Milestone", "ParentPool") or ("Transition", "From") or ("Transition", "To") or ("MessageFlow", "Source") or ("MessageFlow", "Target");
                         reference |= node.Name == Xpdl + "BlockActivity" && attr.Name == "ActivitySetId" && node.Parent?.Name == Xpdl + "Activity" && NativeFidelity.IsNativeNameOwner(node.Parent);
                         reference |= NativeCallFidelity.IsCallReference(node) && attr.Name == "Id";
+                        // Only the persisted boundary target is a cloned native activity reference.
+                        // Same-named Target attributes on unknown extensions remain compared verbatim.
+                        reference |= node.Name == Xpdl + "IntermediateEvent" && attr.Name == "Target" && (string?)node.Attribute("IsAttached") == "true" &&
+                            node.Parent?.Name == Xpdl + "Event" && node.Parent.Parent?.Name == Xpdl + "Activity" && NativeFidelity.IsNativeNameOwner(node.Parent.Parent);
                         if ((identity || reference) && reverse.TryGetValue(attr.Value, out var id)) attr.Value = id;
                     }
                 if ((string?)doc.Root?.Attribute("Name") != name) throw new InvalidDataException("Clone name does not match its request.");

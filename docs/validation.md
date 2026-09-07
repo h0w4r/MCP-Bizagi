@@ -1,5 +1,56 @@
 # Verification baselines
 
+## Native event palette and boundary lifecycle — 2026-09-07
+
+First native source circuit `20260907-173054-03d57d` passed **17 operations**:
+12 completed and five expected failures, through the independent SDK stdio MCP
+client and installed Modeler **4.3.0.008**. The run retained **28 worker
+observations / 2,063 periodic samples**. Transcript SHA-256:
+`fb6f8ce3ee26dd6aada84cef38984fcb4c806c682350ca271b71212d07b50869`.
+
+The corpus creates start/end variants, catch/throw intermediate events, boundary
+triggers and instantiating event gateways using the installed factory. Boundary
+references survive nested containment, reattachment, interruption changes, an
+unrelated rename and native diagram cloning. No-op save and independent native
+readback pass the whole-archive fidelity policy. Native offscreen rendering
+verifies all 44 expected identities on the main palette; Word publication also
+renders its nested surfaces and verifies the durable document through a separate
+reader. The earlier renderer's slow startup completed without a total timeout.
+
+Deletion of a referenced activity, cross-container reattachment, a noninterrupting
+error boundary, a non-event property target and a sequence flow entering a boundary
+all failed for the specific intended reason. Subsequent successful operations
+verify recovery. The expanded interruption corpus and broad regression follow.
+
+The expanded event circuit `20260907-174347-d8444c` passed **19 operations**:
+13 completed and six expected failures, **31 worker observations / 264 periodic
+samples**. It additionally switches all seven interruption-capable boundary
+trigger kinds, verifies a start-event property update and rejects a
+noninterrupting start outside an event-triggered subprocess. Transcript SHA-256:
+`bf6865e35c4e7ca85f603be25803e7bbbd542e0db00ac8d2a87fc49ef3b73974`.
+The source policy suite now passes **564 unit/component tests**. Policy fixtures
+for event XML and clone references were corrected to use actual native XML
+ancestry; production comparison rules were not relaxed to accommodate fixtures.
+
+The broad source regression `20260907-174726-d6a22c` also passed: **17 terminal
+operations**, 13 completed, two expected failures, one cancelled and one
+interrupted; **21 worker observations / 1,011 samples**. Actual XML/native
+interchange, simulation, offscreen rendering, corrupt input, settings contention,
+active cancellation, host death, owned-job cleanup, durable journal restart and
+competing state ownership were exercised. Transcript SHA-256:
+`381e552c4650c2bc7e2f8cc3f80b3e97611d0e4b44d5cee4f49e035ed21a4f44`.
+Periodic desktop samples are not continuous desktop certification.
+
+Final Release build completed with no warnings or errors, all 564 tests passed
+again, and independent XML MCP run `20260907-175541-d43855` verified the current
+host's explicit creation-type/mode inventory. That schema-discovery assertion is
+not counted as an additional native-engine circuit.
+
+This is **source acceptance**, not validation of a new release archive. The
+[event contract](native-events.md) does not claim full event-definition payload
+editing, simulator event execution, transaction/event subprocess automation or
+independent Modeler GUI equivalence. The full-automation goal remains open.
+
 ## Native loops and initial connection failure classification — 2026-09-07
 
 This source checkpoint exposes **29 MCP tools** and passes **524 independent

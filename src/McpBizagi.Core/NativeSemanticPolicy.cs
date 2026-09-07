@@ -45,7 +45,7 @@ public static class NativeSemanticPolicy
                 throw new InvalidDataException("ActivityProperties applies only to native activities.");
         }
         if (c.GatewayDirection != null && (!new[] { "Unspecified", "Converging", "Diverging", "Mixed" }.Contains(c.GatewayDirection) ||
-            c.Operation == "create" && !c.ElementType.EndsWith("Gateway", StringComparison.Ordinal))) throw new InvalidDataException("Supply a known native gateway direction on a gateway.");
+            c.Operation == "create" && !(c.ElementType.EndsWith("Gateway", StringComparison.Ordinal) || c.ElementType is "EventBasedGatewayExclusive" or "EventBasedGatewayParallel"))) throw new InvalidDataException("Supply a known native gateway direction on a gateway.");
         if (c.FlowCondition is { } f)
         {
             if (!new[] { "None", "Expression", "Default" }.Contains(f.Kind) || f.Text == null || f.Text.Length > 1024 * 1024 ||

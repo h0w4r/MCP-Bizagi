@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add explicit native catch/throw/boundary event creation and additional start,
+  end and instantiating gateway variants through the installed element factory.
+- Persist and independently verify boundary activity references and interruption;
+  reject cross-container targets, referenced activity deletion and invalid incoming
+  event flows. Verify native diagram clone attachment remapping.
+- Expose actual event modes, definition kinds and separate reference aliases;
+  publish the host creation allowlist without conflating schema discovery with
+  operational acceptance. Event payload editing and simulation behavior remain
+  separate capabilities.
+
 - Add typed native standard and multi-instance loop configuration, explicit loop
   removal, fresh-worker inspection and exact known-subtree fidelity checks.
   Keep native iteration behavior separate from editing and expose the vendor's

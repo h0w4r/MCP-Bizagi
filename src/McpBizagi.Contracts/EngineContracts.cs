@@ -48,6 +48,9 @@ public sealed class NativeMutation
     public NativeActivityLoop? ActivityLoop { get; set; }
     public NativeFlowCondition? FlowCondition { get; set; }
     public string? GatewayDirection { get; set; }
+    /// <summary>Intermediate creation mode; cannot convert an existing native event implicitly.</summary>
+    public string? EventMode { get; set; }
+    public NativeEventProperties? EventProperties { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
@@ -109,6 +112,8 @@ public sealed class NativeElement
     public NativeActivityLoop? ActivityLoop { get; set; }
     public NativeFlowCondition? FlowCondition { get; set; }
     public string? GatewayDirection { get; set; }
+    public NativeEventInfo? Event { get; set; }
+    public NativeEventGatewayInfo? EventGateway { get; set; }
     /// <summary>Derived from actual outgoing native sequence-flow conditions, not a guessed catalog alias.</summary>
     public string[] DefaultSequenceFlowIds { get; set; } = System.Array.Empty<string>();
     public string ParentId { get; set; } = "";

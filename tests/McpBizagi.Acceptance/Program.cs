@@ -99,7 +99,17 @@ try
 {
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
-    await Call("capabilities_get");
+    var advertised = await Call("capabilities_get");
+    // A real protocol response must expose concrete creation spellings, not an inferred
+    // internal enum. This verifies schema discovery only, never native execution.
+    if (package == null)
+    {
+        var types = advertised.GetProperty("nativeMutationTypes").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        var modes = advertised.GetProperty("intermediateCreationModes").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        if (types.Length == 0 || types.Distinct(StringComparer.Ordinal).Count() != types.Length ||
+            !types.Contains("TimerIntermediate") || !types.Contains("EventBasedGatewayParallel") || !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }))
+            throw new InvalidDataException("Native mutation schema inventory is absent, ambiguous or incomplete.");
+    }
     if (args.Contains("--connection-failure"))
     {
         if (!native) throw new ArgumentException("Connection failure acceptance requires --native.");
@@ -133,6 +143,12 @@ try
         string recoveredId = (await Call("native_probe")).GetProperty("OperationId").GetString()!;
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--events-only"))
+    {
+        if (!native) throw new ArgumentException("Event acceptance requires --native.");
+        await NativeEventAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_EVENT_LIFECYCLE_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--loops-only"))
     {

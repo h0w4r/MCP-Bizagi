@@ -36,6 +36,10 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeVersion = version,
             experimentalNativeEnabled = options.ExperimentalNative,
             nativePrerequisitesAvailable = version == "4.3.0.008" && options.ExperimentalNative && File.Exists(options.Worker),
+            // Publish the host's actual allowlist so a client need not guess enum spellings.
+            // Schema availability remains separate from installed-engine accreditation.
+            nativeMutationTypes = NativeEditPlan.CreatableTypes,
+            intermediateCreationModes = new[] { "Catch", "Throw", "Boundary" },
             capabilities = new[] {
                 new { name = "bpmn_xml_inspect_create_rename_validate", status = "implemented", backend = "standards_xml" },
                 new { name = "bpm_native_import_save_reopen_export", status = "experimental_diagnostic", backend = "bizagi_worker" },
@@ -44,6 +48,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_blank_model_creation", status = "experimental_native_constructor_fresh_readback_and_noop_stability_gate_not_live_desktop", backend = "bizagi_worker" },
                 new { name = "native_workspace_commit_and_reconciliation", status = "experimental_byte_exact_adoption_durable_intent_backup_and_fresh_native_readback_no_blind_replay", backend = "bizagi_worker" },
                 new { name = "native_structural_geometry_documentation_batches", status = "experimental_palette_connections_and_explicit_pool_lane_milestone_subprocess_lifecycle_not_full_editor", backend = "bizagi_worker" },
+                new { name = "native_event_boundary_lifecycle", status = "experimental_explicit_modes_interruption_activity_references_and_clone_remapping_not_payload_editor_or_simulation_accreditation", backend = "bizagi_worker" },
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_metadata_resources_activity_raci", status = "experimental_copy_only_verified_on_tested_inputs", backend = "bizagi_worker" },
@@ -118,7 +123,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     [McpServerTool(Name = "native_simulate_what_if"), Description("Run installed native what-if analysis for explicit scenario IDs at level 1-4. Preserve every real replication result and identity as separate artifacts. Reusable subprocesses are native black boxes; inspect SimulationLimitations, not assumed linked-task execution. No changes to the source file. Poll operation_get.")]
     public CallToolResult SimulateNativeWhatIf(string path, string diagramId, string[] scenarioIds, int simulationLevel = 1) => Guard(() => native.RunWhatIf(path, diagramId, scenarioIds, simulationLevel));
 
-    [McpServerTool(Name = "native_mutate"), Description("Apply explicit create/update/delete/reconnect mutations to a native copy. ActivityLoop explicitly replaces None/Standard/MultiInstance configuration. ActivityProperties edits token quantities, compensation and native model state; GatewayDirection and complete FlowCondition (None/Expression/Default) require compatible kinds. Participant creation requires a new ProcessId; lanes/milestones use that process as ParentId with complete partition geometry. Embedded expanded subprocesses require separate ExpandedSize. CallActivity accepts CallTarget.ProcessId (existing local process, not diagram ID); empty unlinks, omission preserves. Requires revision, fresh-worker readback and whole-archive fidelity. Handle children, incident flows and incoming calls explicitly before deletion; never overwrites the input.")]
+    [McpServerTool(Name = "native_mutate"), Description("Apply explicit create/update/delete/reconnect mutations to a native copy. EventMode explicitly selects Catch/Throw/Boundary on intermediate creation; EventProperties patches interruption and same-container AttachedToActivityId. Delete or reattach boundaries before deleting their activity. ActivityLoop explicitly replaces None/Standard/MultiInstance configuration. ActivityProperties edits token quantities, compensation and native model state; GatewayDirection and complete FlowCondition (None/Expression/Default) require compatible kinds. Participant creation requires a new ProcessId; lanes/milestones use that process as ParentId with complete partition geometry. Embedded expanded subprocesses require separate ExpandedSize. CallActivity accepts CallTarget.ProcessId (existing local process, not diagram ID); empty unlinks, omission preserves. Requires revision, fresh-worker readback and whole-archive fidelity. Handle children, incident flows and incoming calls explicitly before deletion; never overwrites the input.")]
     public CallToolResult MutateNative(string path, string expectedRevision, NativeMutation[] mutations) => Guard(() => native.Mutate(path, expectedRevision, mutations));
 
     [McpServerTool(Name = "native_apply_changes"), Description("Native name-change batch using native IDs and expected source revision. Writes ONLY a new artifact, verifies edits in a fresh worker, and rejects unexplained whole-container differences. Broad rich-model coverage remains experimental. Poll operation_get.")]

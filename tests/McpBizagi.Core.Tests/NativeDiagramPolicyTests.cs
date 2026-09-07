@@ -163,6 +163,21 @@ public sealed class NativeDiagramPolicyTests
         else state.DiagramClones[0].Identities = [..state.DiagramClones[0].Identities, new() { SourceId = Guid.NewGuid().ToString(), TargetId = Guid.NewGuid().ToString() }];
         Assert.Throws<InvalidDataException>(() => NativeDiagramPolicy.Compare(Archive(new() { [A] = source }), Archive(new() { [A] = source, [B] = Diagram(B, "Copy Ω", Flow(Q, U)) }), Patch("clone", A, "Copy Ω"), state, state));
     }
+    [Theory] [InlineData("native", true)] [InlineData("unknown-wrapper", false)] [InlineData("not-attached", false)] [InlineData("unknown-namespace", false)]
+    public void CloneRemapsOnlyAnActualBoundaryTargetAttribute(string shape, bool expected)
+    {
+        // This small XML fixture tests the reference projection boundary, not BPMN validity.
+        string Event(string target)
+        {
+            string node = $"<IntermediateEvent IsAttached='{(shape == "not-attached" ? "false" : "true")}' Target='{target}' {(shape == "unknown-namespace" ? "xmlns='urn:extension'" : "")}/>";
+            return shape == "unknown-wrapper" ? $"<Unknown><Event>{node}</Event></Unknown>" : $"<Event>{node}</Event>";
+        }
+        string BoundaryFlow(string process, string activity) => $"<WorkflowProcesses><WorkflowProcess Id='{process}'><Activities><Activity Id='{activity}' Name='Boundary'>{Event(activity)}</Activity></Activities></WorkflowProcess></WorkflowProcesses>";
+        string source = Diagram(A, "Original", BoundaryFlow(P, T));
+        string target = Diagram(B, "Copy Ω", BoundaryFlow(Q, U));
+        var state = CloneState();
+        Assert.Equal(expected, NativeDiagramPolicy.Compare(Archive(new() { [A] = source }), Archive(new() { [A] = source, [B] = target }), Patch("clone", A, "Copy Ω"), state, state).Preserved);
+    }
     [Theory] [InlineData("empty")] [InlineData("name")] [InlineData("delete-name")] [InlineData("unknown")] [InlineData("null")]
     public void ValidateRejectsAmbiguousOrIgnoredIntent(string fault)
     {
