@@ -3,7 +3,8 @@ using Microsoft.Win32;
 namespace McpBizagi.Server;
 
 /// <summary>Operator-owned configuration; clients cannot select executables or engine paths.</summary>
-public sealed record ServerOptions(string Workspace, string State, string? Installation, string Worker, bool ExperimentalNative, int InactivitySeconds)
+public sealed record ServerOptions(string Workspace, string State, string? Installation, string Worker, bool ExperimentalNative, int InactivitySeconds,
+    int ConnectionSeconds = 30, int CleanupSeconds = 3, int AtomicStepSeconds = 30)
 {
     public static ServerOptions FromEnvironment()
     {
@@ -13,8 +14,11 @@ public sealed record ServerOptions(string Workspace, string State, string? Insta
             Environment.GetEnvironmentVariable("BIZAGI_MODELER_PATH") ?? FindInstallation(),
             Environment.GetEnvironmentVariable("MCP_BIZAGI_WORKER") ?? Path.Combine(AppContext.BaseDirectory, "worker", "McpBizagi.Worker.exe"),
             Environment.GetEnvironmentVariable("MCP_BIZAGI_EXPERIMENTAL_NATIVE") == "1",
-            int.TryParse(Environment.GetEnvironmentVariable("MCP_BIZAGI_INACTIVITY_SECONDS"), out int seconds) && seconds >= 10 ? seconds : 120);
+            Seconds("MCP_BIZAGI_INACTIVITY_SECONDS", 120, 10), Seconds("MCP_BIZAGI_CONNECTION_SECONDS", 30, 1),
+            Seconds("MCP_BIZAGI_CLEANUP_SECONDS", 3, 1), Seconds("MCP_BIZAGI_ATOMIC_STEP_SECONDS", 30, 1));
     }
+    private static int Seconds(string name, int fallback, int minimum) =>
+        int.TryParse(Environment.GetEnvironmentVariable(name), out int seconds) && seconds >= minimum ? seconds : fallback;
 
     private static string? FindInstallation()
     {

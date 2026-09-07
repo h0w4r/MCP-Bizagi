@@ -35,7 +35,7 @@ try {
     Get-ChildItem 'src/McpBizagi.Worker/bin/Release/net48' -File |
         Where-Object { $_.Extension -in '.dll', '.exe', '.config', '.json' } |
         Copy-Item -Destination $worker
-    foreach ($name in 'README.md', 'LICENSE', 'ATTRIBUTION.md', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md', 'CONTRIBUTING.md') {
+    foreach ($name in 'README.md', 'CHANGELOG.md', 'LICENSE', 'ATTRIBUTION.md', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md', 'CONTRIBUTING.md') {
         Copy-Item -LiteralPath (Join-Path $repo $name) -Destination $output
     }
     Copy-Item -LiteralPath (Join-Path $repo 'docs') -Destination $output -Recurse

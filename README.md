@@ -8,7 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.1.0--alpha.1-orange)](Directory.Build.props)
+[![Source version](https://img.shields.io/badge/source-0.2.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -24,7 +24,8 @@ foreground-window automation, or redistributing Bizagi binaries.
 > resolving internal services is not evidence of complete `.bpm` support.
 > See the [capability ledger](docs/capabilities.md) before relying on a feature.
 > **Real local acceptance:** stdio MCP, native import/persistence/reload/export,
-> copy-only native name batches, cancellation, and recovery have run against
+> multi-diagram and nested name edits, whole-container fidelity checks, native
+> validation, a 1,000-instance simulation, offscreen rendering, and crash recovery have run against
 > Modeler 4.3.0.008. [Scope and evidence](docs/validation.md).
 
 ## Why this project
@@ -51,9 +52,13 @@ every operation into a BPMN XML export.
 | Structural validation | Available | Not complete OMG XSD or behavioral validation |
 | Native engine bootstrap | Opt-in diagnostic | Internal interfaces, not a supported vendor API |
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
-| Inspect existing `.bpm` | Opt-in, copy-only | Native identities and revision; original bytes retained |
-| Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback; rich-content preservation not accredited |
-| Documentation and simulation | Investigated, not implemented | Native types discovered; workflows not accredited |
+| Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
+| Native `.bpm` name batches | Opt-in, copy-only | Fresh-worker readback and whole-container fidelity gate; tested nested/multi-diagram inputs |
+| Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
+| Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
+| Native simulation | Experimental | Level-one default scenario verified; advanced scenarios remain open |
+| Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
+| Documentation publishing | Investigated, not implemented | No placeholder publisher or fabricated output |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
 
 The desktop GUI does not need to be controlled by this server. This does **not**
@@ -124,6 +129,24 @@ native element IDs, then pass a name-change batch to `native_apply_changes`.
 The result is a **new artifact**, not an overwrite of the input. BPMN IDs and
 native IDs are not interchangeable. See the [tool reference](docs/tools.md).
 
+Use `nativeArtifact` / `outputArtifact` references to feed generated models into
+the next native tool, even when private state is outside the model workspace.
+Try `native_save_copy` for no-op fidelity, `native_validate` for vendor findings,
+or `native_simulate` with a native diagram ID. `native_render_svg` produces SVG
+and transparent PNG using the installed offscreen renderer—never desktop clicks.
+See [rendering boundaries](docs/rendering.md) and [native fidelity](docs/native-fidelity.md).
+
+<details>
+<summary>Real native render from the acceptance run</summary>
+
+![Native Modeler rendering of the original request-handling example](docs/assets/native-request.png)
+
+Generated through MCP and the installed offscreen renderer, not an illustration.
+The PNG has a transparent background; black labels/connectors are best viewed
+against a light background. Provenance is recorded in [validation](docs/validation.md).
+
+</details>
+
 ### Build a Windows package
 
 ```powershell
@@ -159,6 +182,9 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- .
 
 # Also run the actual native-engine roundtrip; failure exits nonzero
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native
+
+# Expanded real-engine coverage, including process death and external private state
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native --extended --simulation --render --recovery --external-state
 ```
 
 Evidence is written under ignored `.local/acceptance/` directories. Native
@@ -174,7 +200,8 @@ Bizagi. Do not publish raw native files or transcripts without sanitization.
 | Visual Modeler verification | Separate gate; not inferred from file parsing |
 
 There are no placeholder screenshots, invented coverage percentages, or simulated
-native success badges. Demonstrations will be added only from verified runs.
+native success badges. [Change history](CHANGELOG.md) records bounded improvements,
+not a blanket claim that every Modeler feature works.
 
 ## Safety and limitations
 
@@ -185,8 +212,8 @@ native success badges. Demonstrations will be added only from verified runs.
   output copy requires reviewing its fidelity warnings first.
 - A Windows Job Object owns each worker. Read-only desktop observations record
   visible/foreground behavior without collecting unrelated window titles.
-- The supervisor monitors phase, CPU, and log activity. Native I/O-only progress
-  without those signals may need a larger configured inactivity window.
+- The supervisor monitors phases, owned-job CPU and I/O, and diagnostic activity,
+  including offscreen child processes. Liveness alone is not progress.
 - The source filename and current revision must be checked before replaying a failed write.
 - Cloud, Studio, Automation, authentication bypass, and foreground macros are outside this release.
 

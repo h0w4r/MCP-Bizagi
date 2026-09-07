@@ -33,8 +33,12 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             capabilities = new[] {
                 new { name = "bpmn_xml_inspect_create_rename_validate", status = "implemented", backend = "standards_xml" },
                 new { name = "bpm_native_import_save_reopen_export", status = "experimental_diagnostic", backend = "bizagi_worker" },
-                new { name = "bpm_native_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
-                new { name = "native_documentation_simulation", status = "investigated_not_implemented", backend = "bizagi_worker" }
+                new { name = "bpm_native_graph_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
+                new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
+                new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
+                new { name = "native_simulation", status = "experimental_level_one_locally_verified_other_scenarios_pending", backend = "bizagi_worker" },
+                new { name = "native_offscreen_svg_png", status = "experimental_basic_diagram_locally_verified_rich_visual_fidelity_pending", backend = "bizagi_worker" },
+                new { name = "native_documentation", status = "investigated_not_implemented", backend = "bizagi_worker" }
             }, operationalEvidence = "Run acceptance in this environment; a declaration never overrides an actual failure.", foregroundAutomation = false });
     }
 
@@ -59,13 +63,30 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     public CallToolResult Probe() => Guard(() => native.Probe());
 
     [McpServerTool(Name = "native_roundtrip"), Description("Experimental BPMN -> .bpm -> fresh-worker reload -> BPMN diagnostic. Originals are untouched; outputs are operation artifacts. Poll operation_get.")]
-    public CallToolResult Roundtrip(string path, string modelName = "Model") => Guard(() => native.Roundtrip(path, modelName));
+    public CallToolResult Roundtrip(string path, string modelName = "Model", string[]? additionalPaths = null) => Guard(() => native.Roundtrip(path, modelName, additionalPaths));
 
-    [McpServerTool(Name = "native_inspect"), Description("Read an existing unencrypted .bpm through a private native copy, returning native IDs, source revision and projected BPMN artifacts. Poll operation_get.")]
+    [McpServerTool(Name = "native_inspect"), Description("Read an existing unencrypted .bpm through a private native copy, returning native IDs, containment, geometry, documentation, scenarios and source revision. Poll operation_get.")]
     public CallToolResult InspectNative(string path) => Guard(() => native.Inspect(path));
 
-    [McpServerTool(Name = "native_apply_changes"), Description("Experimental native name-change batch using native IDs and expected source revision. Writes ONLY a new operation artifact, verifies every edit in a fresh worker, and never overwrites the source. Rich-content preservation remains unaccredited. Poll operation_get.")]
+    [McpServerTool(Name = "native_apply_changes"), Description("Native name-change batch using native IDs and expected source revision. Writes ONLY a new artifact, verifies edits in a fresh worker, and rejects unexplained whole-container differences. Broad rich-model coverage remains experimental. Poll operation_get.")]
     public CallToolResult ApplyNative(string path, string expectedRevision, NativeNameChange[] changes) => Guard(() => native.ApplyNames(path, expectedRevision, changes));
+
+    [McpServerTool(Name = "native_save_copy"), Description("Load and save a native model without requested changes, reopen in a fresh worker and compare the entire archive. Reject unexplained differences. The source is never overwritten.")]
+    public CallToolResult SaveNativeCopy(string path, string expectedRevision) => Guard(() => native.ApplyNames(path, expectedRevision, [], saveCopy: true));
+
+    [McpServerTool(Name = "native_validate"), Description("Run the installed native BPMN validator on a private model copy. Poll operation_get for vendor severities and native element IDs. Does not fix or overwrite the source.")]
+    public CallToolResult ValidateNative(string path) => Guard(() => native.Analyze(path, "validate"));
+
+    [McpServerTool(Name = "native_simulate"), Description("Experimental installed-engine simulation of one native diagram. Supply native diagram/scenario IDs from native_inspect. An empty scenario ID explicitly uses native defaults. Level 1-4; no source edits. Poll operation_get for real results or errors.")]
+    public CallToolResult SimulateNative(string path, string diagramId, string scenarioId = "", int simulationLevel = 1) =>
+        Guard(() => native.Analyze(path, "simulate", diagramId, scenarioId, simulationLevel));
+
+    [McpServerTool(Name = "native_render_svg"), Description("Experimental native offscreen SVG rendering of one diagram, using the installed renderer without clicks or foreground control. Produces a private operation artifact; failures remain explicit.")]
+    public CallToolResult RenderNative(string path, string diagramId) => Guard(() => native.Analyze(path, "render_svg", diagramId));
+
+    [McpServerTool(Name = "native_compare", ReadOnly = true, Destructive = false, OpenWorld = false), Description("Compare entire unencrypted native containers without converting them to BPMN. Includes nested diagram XML and binary attachments; reports unknown changes instead of silently discarding them.")]
+    public CallToolResult CompareNative(string path, string otherPath, NativeNameChange[]? expectedNames = null) => Guard(() =>
+        native.Compare(path, otherPath, expectedNames));
 
     [McpServerTool(Name = "operation_get"), Description("Read durable operation status, phases, artifacts and real failures.")]
     public CallToolResult GetOperation(string operationId) => Guard(() => operations.Get(operationId));

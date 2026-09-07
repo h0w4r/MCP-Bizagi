@@ -23,6 +23,48 @@ internal sealed partial class WorkerJob : IDisposable
     }
     public void Dispose() => handle.Dispose();
 
+    public int[] ProcessIds()
+    {
+        int capacity = 32;
+        while (true)
+        {
+            int bytes = checked(8 + capacity * IntPtr.Size);
+            nint buffer = Marshal.AllocHGlobal(bytes);
+            try
+            {
+                if (!QueryInformationJobObject(handle, 3, buffer, (uint)bytes, out _))
+                {
+                    int error = Marshal.GetLastPInvokeError();
+                    if (error == 234) { capacity = checked(capacity * 2); continue; } // ERROR_MORE_DATA: job grew during sampling.
+                    throw new Win32Exception(error);
+                }
+                int count = Marshal.ReadInt32(buffer, 4);
+                return Enumerable.Range(0, count).Select(i => checked((int)Marshal.ReadIntPtr(buffer, 8 + i * IntPtr.Size))).ToArray();
+            }
+            finally { Marshal.FreeHGlobal(buffer); }
+        }
+    }
+    public (long CpuTicks, ulong IoBytes) Activity()
+    {
+        int bytes = Marshal.SizeOf<JobAccounting>();
+        nint buffer = Marshal.AllocHGlobal(bytes);
+        try
+        {
+            if (!QueryInformationJobObject(handle, 8, buffer, (uint)bytes, out _)) throw new Win32Exception(Marshal.GetLastPInvokeError());
+            var value = Marshal.PtrToStructure<JobAccounting>(buffer);
+            return (value.UserTime + value.KernelTime, value.Io.ReadTransferCount + value.Io.WriteTransferCount + value.Io.OtherTransferCount);
+        }
+        finally { Marshal.FreeHGlobal(buffer); }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct JobAccounting
+    {
+        public long UserTime, KernelTime, PeriodUserTime, PeriodKernelTime;
+        public uint PageFaults, TotalProcesses, ActiveProcesses, TerminatedProcesses;
+        public IoCounters Io;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct BasicLimits
     {
@@ -54,4 +96,7 @@ internal sealed partial class WorkerJob : IDisposable
     [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool AssignProcessToJobObject(SafeFileHandle job, SafeProcessHandle process);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool QueryInformationJobObject(SafeFileHandle job, int informationClass, nint information, uint length, out uint returnedLength);
 }

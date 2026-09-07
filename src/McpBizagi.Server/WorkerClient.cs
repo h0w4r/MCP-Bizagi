@@ -42,6 +42,22 @@ public sealed class WorkerClient(ServerOptions options)
         var errors = new StringBuilder();
         var stdout = new StringBuilder();
         var desktopSamples = new List<WorkerDesktopObservation.Sample>();
+        var ownedProcesses = new Dictionary<int, DateTime>();
+        void ObserveOwnedTree()
+        {
+            foreach (int pid in job.ProcessIds())
+            {
+                try
+                {
+                    using var member = Process.GetProcessById(pid);
+                    ownedProcesses[pid] = member.StartTime.ToUniversalTime();
+                    var sample = WorkerDesktopObservation.Read(pid); desktopSamples.Add(sample);
+                    if (sample.VisibleWindow || sample.OwnsForeground)
+                        throw new InvalidOperationException("An owned native process exposed a visible window or acquired foreground; diagnostic stopped.");
+                }
+                catch (ArgumentException) { /* Job member exited between enumeration and observation. */ }
+            }
+        }
         process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (errors) errors.AppendLine(e.Data); };
         process.OutputDataReceived += (_, e) => { if (e.Data != null) lock (stdout) stdout.AppendLine(e.Data); };
         process.BeginErrorReadLine(); process.BeginOutputReadLine();
@@ -50,19 +66,20 @@ public sealed class WorkerClient(ServerOptions options)
         {
             // Assign before sending native work; the worker is only waiting for its pipe at this point.
             job.Assign(process);
-            desktopSamples.Add(WorkerDesktopObservation.Read(process.Id));
+            ObserveOwnedTree();
             File.WriteAllText(Path.Combine(directory, "worker-process.json"), System.Text.Json.JsonSerializer.Serialize(new
             { pid = process.Id, startedAt = process.StartTime.ToUniversalTime(), createNoWindow = true, jobObject = true }));
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             using var handshake = CancellationTokenSource.CreateLinkedTokenSource(token);
-            handshake.CancelAfter(TimeSpan.FromSeconds(30)); // Connection only, never the operation duration.
+            handshake.CancelAfter(TimeSpan.FromSeconds(options.ConnectionSeconds)); // Connection only, never the operation duration.
             await pipe.ConnectAsync(handshake.Token);
             long lastActivity = Stopwatch.GetTimestamp();
             var notifications = new Notifications(phase => { Interlocked.Exchange(ref lastActivity, Stopwatch.GetTimestamp()); report(phase); });
             using var rpc = new JsonRpc(pipe, pipe);
             rpc.AddLocalRpcTarget(notifications); rpc.StartListening();
+            request.AtomicStepSeconds = options.AtomicStepSeconds;
             var invocation = rpc.InvokeAsync<EngineReply>("Execute", request);
-            TimeSpan previousCpu = process.TotalProcessorTime;
+            var previousActivity = job.Activity();
             int previousLogLength = 0;
             while (!invocation.IsCompleted)
             {
@@ -71,17 +88,14 @@ public sealed class WorkerClient(ServerOptions options)
                 if (invocation.IsCompleted) break;
                 process.Refresh();
                 if (process.HasExited) throw new IOException("Worker exited before returning a result.");
-                var desktop = WorkerDesktopObservation.Read(process.Id);
-                desktopSamples.Add(desktop);
-                if (desktop.VisibleWindow || desktop.OwnsForeground)
-                    throw new InvalidOperationException("Native worker unexpectedly exposed a visible window or acquired foreground; diagnostic stopped.");
-                TimeSpan cpu = process.TotalProcessorTime;
+                ObserveOwnedTree();
+                var activity = job.Activity();
                 int length; lock (errors) length = errors.Length;
-                if (cpu > previousCpu || length != previousLogLength)
+                if (activity.CpuTicks > previousActivity.CpuTicks || activity.IoBytes > previousActivity.IoBytes || length != previousLogLength)
                     Interlocked.Exchange(ref lastActivity, Stopwatch.GetTimestamp());
-                previousCpu = cpu; previousLogLength = length;
+                previousActivity = activity; previousLogLength = length;
                 if (Stopwatch.GetElapsedTime(Interlocked.Read(ref lastActivity)).TotalSeconds > options.InactivitySeconds)
-                    throw new TimeoutException("Native worker inactivity window exceeded with no CPU, phase or diagnostic-log activity.");
+                    throw new TimeoutException("Native worker inactivity window exceeded with no owned-job CPU, I/O, phase or diagnostic-log activity.");
             }
             return await invocation;
         }
@@ -91,15 +105,30 @@ public sealed class WorkerClient(ServerOptions options)
             if (!process.HasExited)
             {
                 var exited = process.WaitForExitAsync();
-                if (await Task.WhenAny(exited, Task.Delay(3000)) != exited)
+                if (await Task.WhenAny(exited, Task.Delay(TimeSpan.FromSeconds(options.CleanupSeconds))) != exited)
                 { process.Kill(entireProcessTree: true); await process.WaitForExitAsync(); }
             }
             process.WaitForExit();
+            // Close the job before publishing exit evidence, including any offscreen renderer subprocesses.
+            job.Dispose();
+            foreach (var member in ownedProcesses)
+            {
+                try
+                {
+                    using var child = Process.GetProcessById(member.Key);
+                    if (child.StartTime.ToUniversalTime() == member.Value && !child.HasExited)
+                        await child.WaitForExitAsync();
+                }
+                catch (ArgumentException) { /* The owned process no longer exists. */ }
+            }
+            File.WriteAllText(Path.Combine(directory, "owned-processes.json"), System.Text.Json.JsonSerializer.Serialize(
+                ownedProcesses.Select(p => new { pid = p.Key, startedAt = p.Value, exited = true })));
             File.WriteAllText(Path.Combine(directory, "worker-exit.json"), System.Text.Json.JsonSerializer.Serialize(new
             { pid = process.Id, exited = process.HasExited, exitCode = process.ExitCode }));
             File.WriteAllText(Path.Combine(directory, "desktop-observation.json"), System.Text.Json.JsonSerializer.Serialize(new
             { samples = desktopSamples.Count, visibleWindowObserved = desktopSamples.Any(s => s.VisibleWindow),
-                workerForegroundObserved = desktopSamples.Any(s => s.OwnsForeground), method = "read_only_periodic_owned_pid_observation_not_continuous_proof" }));
+                workerForegroundObserved = desktopSamples.Any(s => s.OwnsForeground), observedProcesses = ownedProcesses.Count,
+                method = "read_only_periodic_owned_job_pid_observation_not_continuous_proof" }));
             lock (errors) File.WriteAllText(Path.Combine(directory, "worker.stderr.log"), errors.ToString());
             lock (stdout) File.WriteAllText(Path.Combine(directory, "worker.stdout.log"), stdout.ToString());
         }

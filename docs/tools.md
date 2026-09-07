@@ -25,9 +25,14 @@ submission returns an `OperationView`, **not** the completed engine result.
 | Tool | Required input | Behavior |
 | --- | --- | --- |
 | `native_probe` | None | Resolve actual native services in an isolated worker |
-| `native_roundtrip` | `path`; optional `modelName` | Import BPMN, persist `.bpm`, reopen in another worker, export BPMN, report fidelity findings |
-| `native_inspect` | `path` | Read a private copy of existing `.bpm`; return native element IDs and projected BPMN |
+| `native_roundtrip` | `path`; optional `modelName`, `additionalPaths` | Import one BPMN file per native diagram, persist `.bpm`, reopen/export, report per-input bounded fidelity findings |
+| `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
 | `native_apply_changes` | `path`, `expectedRevision`, `changes` | Native name batch to a new copy, then fresh-reader verification |
+| `native_save_copy` | `path`, `expectedRevision` | No-op native load/save/reopen with whole-container fidelity gate |
+| `native_compare` | `path`, `otherPath`; optional `expectedNames` | Immediate whole-container comparison; returns `NativeFidelityReport`, not an operation ID |
+| `native_validate` | `path` | Actual vendor validation messages with severity and native identities |
+| `native_simulate` | `path`, `diagramId`; optional `scenarioId`, `simulationLevel` | Actual simulation, real progress, input/results XML; level-one default scenario locally verified |
+| `native_render_svg` | `path`, `diagramId` | Installed offscreen renderer to native SVG and transparent PNG; basic-diagram scope |
 | `operation_get` | `operationId` | Durable state, latest phase, results or actual error |
 | `operation_cancel` | `operationId` | Cancel owned work and clean up its worker |
 
@@ -35,6 +40,23 @@ submission returns an `OperationView`, **not** the completed engine result.
 `native_inspect` operation result's `result.Elements` collection. Obtain the
 expected byte revision from `sourceRevision`. Do not reuse IDs from the original
 BPMN XML: the importer may regenerate them.
+
+Native `path` arguments also accept completed `artifact:<operation-id>:model.bpm`
+and `artifact:<operation-id>:edited.bpm` references. These are returned as
+`nativeArtifact` and `outputArtifact` by writers. They work when state is outside
+the workspace, without exposing arbitrary private-state files.
+
+For simulation, select a `Collaboration` ID from `EngineReply.Elements` and
+optionally a scenario ID from `EngineReply.Scenarios`. An empty `scenarioId`
+explicitly requests the active/default native scenario. The installed manager
+may initialize missing duration and trigger settings in memory; it does not save
+them back to the source. Levels 1–4 are accepted by the native contract, but only
+the documented level-one default case has been accredited locally.
+
+`native_validate` completion means the validator executed; inspect
+`EngineReply.Validation` before deciding whether the model is valid. Likewise,
+simulation completion requires the native completion event and nonempty,
+readable `Input.xml` and `Results.xml`, not merely a successful method invocation.
 
 ## Native edit sequence
 
@@ -46,7 +68,8 @@ BPMN XML: the importer may regenerate them.
 5. Call `native_apply_changes` with that path, revision, and requested name batch.
 6. Poll again. `Result.requestedChangesVerified` must match the requested batch.
 7. Review the new file in `Result.edited.Artifacts`, its `outputRevision`, the
-   fresh-reader result, and the explicit fidelity warning. The input is unchanged.
+   fresh-reader result, and `Result.fidelity`. Unexplained differences fail the
+   operation and quarantine the output. The input is unchanged.
 
 This is a copy-only experimental workflow. It does not silently publish a model
 over the operator's source, assert preservation of every native field, or claim

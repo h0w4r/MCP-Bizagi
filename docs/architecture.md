@@ -34,6 +34,8 @@ Native name changes use IDs returned by the real model, not presumed source XML
 IDs. `NativeWorkflows.ApplyNames` snapshots the original, checks its revision,
 edits a new `.bpm`, and starts another reader to verify **every** requested ID/name
 pair. No acceptance-test strings are hardcoded into runtime behavior.
+The full native container must also pass `NativeFidelity.Compare`; unknown
+content is not reconstructed or silently excluded from that check.
 
 ## Persistence
 
@@ -60,11 +62,12 @@ ownership; no unrelated window names are recorded. These samples are evidence
 of the observed runs, not a continuous proof about every possible engine path.
 
 Operation duration is not a cancellation criterion. The inactivity window is
-renewed by native phases, CPU changes, or additional diagnostic output. Connection
+renewed by native phases, owned-job CPU/I/O changes, or additional diagnostic output. Connection
 and cleanup stages have separate bounded deadlines.
 
 ## Explicitly not implemented
 
 No generic AI agent framework, hosted inference dependency, network API, UI
-automation fallback, live unsaved-document synchronization, documentation publisher,
-or simulation command is silently included in this foundation.
+automation fallback, live unsaved-document synchronization or documentation
+publisher is silently included. Simulation and offscreen rendering use explicit
+experimental tools with separate acceptance boundaries.

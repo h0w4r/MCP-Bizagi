@@ -9,7 +9,7 @@ namespace McpBizagi.BizagiAdapter;
 /// Experimental 4.3 adapter. All proprietary code stays in the user's installation.
 /// Registration does not initialize the desktop application or any CefSharp window.
 /// </summary>
-public sealed class NativeEngine
+public sealed partial class NativeEngine
 {
     private readonly string installation;
     private readonly string workRoot;
@@ -104,7 +104,7 @@ public sealed class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (request.Action != "import_save" && request.Action != "read_export" && request.Action != "edit_save")
+        if (!new[] { "import_save", "read_export", "edit_save", "inspect", "validate", "simulate", "render_svg" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -129,14 +129,17 @@ public sealed class NativeEngine
             Set(model, "Path", request.InputPath);
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
+            if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
+            if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
+            if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "edit_save")
             {
                 progress("native_edit_names");
-                var indexed = Elements(model).ToLookup(e => Get(e, "Id").ToString());
+                var indexed = Graph(model).ToLookup(e => Get(e.Value, "Id").ToString());
                 // Validate the entire batch before mutating any native object.
                 foreach (var change in request.Changes)
                     if (indexed[change.ElementId].Count() != 1) throw new InvalidDataException("Expected one native element: " + change.ElementId);
-                foreach (var change in request.Changes) Set(indexed[change.ElementId].Single(), "DisplayName", change.Name);
+                foreach (var change in request.Changes) Set(indexed[change.ElementId].Single().Value, "DisplayName", change.Name);
                 foreach (object diagram in (IEnumerable)Get(model, "Diagrams")) Set(diagram, "HasChanged", true);
                 Set(model, "Path", request.OutputPath);
                 progress("native_persist_edited_bpm");
@@ -145,12 +148,15 @@ public sealed class NativeEngine
                     throw new IOException("Native editing returned without a persisted model.");
                 reply.Artifacts = new[] { request.OutputPath };
             }
-            else
+            else if (request.Action == "read_export")
             {
                 object interop = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnInteropManager");
                 // Fail explicitly on unsafe output labels rather than silently renaming or escaping the operation directory.
                 RequireExportLabel(Get(model, "Name").ToString()!);
-                foreach (object diagram in (IEnumerable)Get(model, "Diagrams")) RequireExportLabel(Get(diagram, "DisplayName").ToString()!);
+                var labels = ((IEnumerable)Get(model, "Diagrams")).Cast<object>().Select(d => Get(d, "DisplayName").ToString()!).ToArray();
+                foreach (string label in labels) RequireExportLabel(label);
+                if (labels.Distinct(StringComparer.OrdinalIgnoreCase).Count() != labels.Length)
+                    throw new InvalidDataException("BPMN export would collide on diagram file names; no file was published.");
                 Directory.CreateDirectory(request.OutputPath);
                 progress("native_export_bpmn");
                 Call(interop, "Export", model, request.OutputPath);
@@ -160,8 +166,8 @@ public sealed class NativeEngine
         }
         reply.Diagrams = ((IEnumerable)Get(model, "Diagrams")).Cast<object>()
             .Select(d => Get(d, "DisplayName")?.ToString() ?? "").ToArray();
-        reply.Elements = Elements(model).Select(e => new NativeElement { Id = Get(e, "Id").ToString()!,
-            Kind = e.GetType().Name, Name = Get(e, "DisplayName")?.ToString() ?? "" }).ToArray();
+        reply.Elements = Graph(model).Select(Describe).ToArray();
+        reply.Scenarios = Scenarios(model).ToArray();
         reply.Success = true;
         reply.Code = "native_operation_completed";
         reply.Message = "Native operation completed; verify artifacts in a fresh worker before accreditation.";
@@ -179,21 +185,4 @@ public sealed class NativeEngine
             throw new InvalidDataException("Reserved Windows export label.");
     }
 
-    private static IEnumerable<object> Elements(object model)
-    {
-        foreach (object diagram in (IEnumerable)Get(model, "Diagrams"))
-            foreach (object participant in (IEnumerable)Get(diagram, "Participants"))
-                foreach (object element in FlowElements(Get(participant, "Process"))) yield return element;
-    }
-
-    private static IEnumerable<object> FlowElements(object container)
-    {
-        foreach (object element in (IEnumerable)Get(container, "FlowElements"))
-        {
-            yield return element;
-            // BPMN sub-processes expose their own collection; walk it instead of flattening it away.
-            if (element.GetType().GetProperty("FlowElements") != null)
-                foreach (object child in FlowElements(element)) yield return child;
-        }
-    }
 }

@@ -73,6 +73,15 @@ public sealed class EngineService
                     { name = Path.GetFileName(a.Location), version = a.GetName().Version?.ToString(), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() }; }).ToArray();
                 File.WriteAllText(Path.Combine(root, "loaded-engine-modules.json"), JsonConvert.SerializeObject(new
                 { architecture = IntPtr.Size == 8 ? "x64" : "x86", clr = Environment.Version.ToString(), apartment = Thread.CurrentThread.GetApartmentState().ToString(), modules }, Formatting.Indented));
+                if (request.Action == "render_svg")
+                {
+                    // Inventory the installed renderer assets separately from actually loaded managed modules.
+                    var assets = Directory.GetFiles(Path.Combine(installation, "ModelerProcessEditor", "output"))
+                        .Select(path => { using var hash = SHA256.Create(); using var file = File.OpenRead(path); return new
+                        { name = Path.GetFileName(path), sha256 = BitConverter.ToString(hash.ComputeHash(file)).Replace("-", "").ToLowerInvariant() }; }).ToArray();
+                    File.WriteAllText(Path.Combine(root, "renderer-assets.json"), JsonConvert.SerializeObject(new
+                    { scope = "installed_renderer_inventory_not_network_response_capture", assets }, Formatting.Indented));
+                }
                 return result;
             }
             catch (Exception error)

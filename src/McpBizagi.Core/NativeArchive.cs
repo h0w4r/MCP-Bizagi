@@ -8,11 +8,19 @@ public static class NativeArchive
 {
     public static void Validate(byte[] bytes)
     {
+        ReadEntries(bytes);
+    }
+
+    public static IReadOnlyDictionary<string, byte[]> ReadEntries(byte[] bytes)
+    {
         using var memory = new MemoryStream(bytes, writable: false);
         long expanded = 0;
-        Inspect(memory, 0, ref expanded);
+        int entryCount = 0;
+        var entries = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        Inspect(memory, 0, ref expanded, ref entryCount, entries, "");
+        return entries;
     }
-    private static void Inspect(Stream stream, int depth, ref long expanded)
+    private static void Inspect(Stream stream, int depth, ref long expanded, ref int entryCount, Dictionary<string, byte[]> entries, string prefix)
     {
         if (depth > 1) throw new InvalidDataException("Unsupported native archive nesting.");
         using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
@@ -21,24 +29,39 @@ public static class NativeArchive
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in zip.Entries)
         {
+            if (++entryCount > 10000) throw new InvalidDataException("Native archive aggregate entry limit exceeded.");
             string name = entry.FullName.Replace('\\', '/');
-            if (name.StartsWith('/') || name.Contains(':') || name.Split('/').Any(p => p == "..") || !names.Add(name))
+            if (name.StartsWith('/') || name.Contains(':') || name.Split('/').Any(p => p is ".." or ".") || !names.Add(name))
                 throw new InvalidDataException("Unsafe or duplicate native archive entry.");
             expanded += entry.Length;
             if (expanded > 256 * 1024 * 1024 || entry.Length > 64 * 1024 * 1024)
                 throw new InvalidDataException("Native archive expanded-size limit exceeded.");
             if (name.EndsWith('/')) continue;
             using var input = entry.Open();
+            using var payload = new MemoryStream();
+            byte[] buffer = new byte[65536];
+            int count;
+            // Count actual decompressed bytes too; never trust only an archive's advertised entry size.
+            while ((count = input.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                if (payload.Length + count > entry.Length) throw new InvalidDataException("Native archive entry exceeds its declared size.");
+                payload.Write(buffer, 0, count);
+            }
+            if (payload.Length != entry.Length) throw new InvalidDataException("Native archive entry length mismatch.");
+            payload.Position = 0;
             if (name.EndsWith(".diag", StringComparison.OrdinalIgnoreCase))
             {
-                using var nested = new MemoryStream(); input.CopyTo(nested); nested.Position = 0;
-                Inspect(nested, depth + 1, ref expanded);
+                Inspect(payload, depth + 1, ref expanded, ref entryCount, entries, prefix + name + "!/");
             }
-            else if (Path.GetExtension(name).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+            else
             {
-                using var reader = XmlReader.Create(input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit,
-                    XmlResolver = null, MaxCharactersInDocument = BpmnDocument.MaxXmlCharacters });
-                while (reader.Read()) { } // Validate without extracting entries to disk.
+                if (Path.GetExtension(name).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                {
+                    using var reader = XmlReader.Create(payload, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit,
+                        XmlResolver = null, MaxCharactersInDocument = BpmnDocument.MaxXmlCharacters });
+                    while (reader.Read()) { } // Validate without extracting entries to disk.
+                }
+                if (!entries.TryAdd(prefix + name, payload.ToArray())) throw new InvalidDataException("Ambiguous flattened native entry name.");
             }
         }
     }

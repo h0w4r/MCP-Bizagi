@@ -8,10 +8,18 @@
 | `BIZAGI_MODELER_PATH` | Modeler installation directory | Windows installed-app registry discovery |
 | `MCP_BIZAGI_EXPERIMENTAL_NATIVE` | `1` explicitly enables native diagnostics | Disabled |
 | `MCP_BIZAGI_INACTIVITY_SECONDS` | No-activity window, minimum 10 seconds | 120 |
+| `MCP_BIZAGI_CONNECTION_SECONDS` | Initial pipe connection limit only | 30 |
+| `MCP_BIZAGI_CLEANUP_SECONDS` | Grace period before owned-process cleanup | 3 |
+| `MCP_BIZAGI_ATOMIC_STEP_SECONDS` | Atomic renderer image-decode handshake limit | 30 |
 
 Relative model paths are resolved within `MCP_BIZAGI_ROOT`. Traversal, alternate
 data streams, and existing reparse points are rejected. Configuration is read
 when the server starts; tools cannot change it.
+
+Only one live host may own a state directory. A second host is rejected before
+it can rewrite active operation journals. Separate clients can use distinct
+state directories. Completed native artifact references can cross from private
+state into later native operations without widening ordinary workspace access.
 
 Standard output is MCP protocol traffic only. Standard error contains host
 diagnostics. Native worker logs and operation journals are stored privately under

@@ -34,6 +34,7 @@ independent client at that extracted package:
 ```powershell
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --extended --simulation --render --recovery --external-state
 ```
 
 The first command proves actual packaged stdio/XML behavior. The second also

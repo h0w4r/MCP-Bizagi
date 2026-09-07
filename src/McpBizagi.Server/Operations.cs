@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Microsoft.Extensions.Hosting;
 
 namespace McpBizagi.Server;
 
@@ -7,16 +8,19 @@ public sealed record OperationView(string OperationId, string Kind, string State
     DateTimeOffset StartedAt, DateTimeOffset UpdatedAt, object? Result, string? Error);
 
 /// <summary>Durable operation status; restarting the server never silently replays a write.</summary>
-public sealed class Operations
+public sealed class Operations : IHostedService
 {
     private sealed class Entry
     {
         public required OperationView View;
         public readonly CancellationTokenSource Cancellation = new();
         public readonly object Sync = new();
+        public Task Completion = Task.CompletedTask;
     }
     private readonly ConcurrentDictionary<string, Entry> entries = new();
     private readonly string root;
+    private readonly object lifecycle = new();
+    private bool stopping;
     public Operations(ServerOptions options)
     {
         root = Path.Combine(Path.GetFullPath(options.State), "operations");
@@ -39,35 +43,61 @@ public sealed class Operations
     private void Persist(Entry entry)
     {
         string file = Path.Combine(root, entry.View.OperationId + ".json");
-        File.WriteAllText(file + ".tmp", JsonSerializer.Serialize(entry.View, new JsonSerializerOptions { WriteIndented = true }));
+        using (var stream = new FileStream(file + ".tmp", FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            JsonSerializer.Serialize(stream, entry.View, new JsonSerializerOptions { WriteIndented = true });
+            stream.Flush(flushToDisk: true);
+        }
         File.Move(file + ".tmp", file, true);
     }
     public OperationView Start(string kind, Func<string, Action<string>, CancellationToken, Task<object>> action)
     {
-        string id = Guid.NewGuid().ToString("N");
-        var now = DateTimeOffset.UtcNow;
-        var entry = new Entry { View = new(id, kind, "running", "queued", now, now, null, null) };
-        entries[id] = entry;
-        Persist(entry);
-        _ = Task.Run(async () =>
+        lock (lifecycle)
         {
-            void Progress(string phase)
+            if (stopping) throw new InvalidOperationException("The MCP host is shutting down; new operations are not accepted.");
+            string id = Guid.NewGuid().ToString("N");
+            var now = DateTimeOffset.UtcNow;
+            var entry = new Entry { View = new(id, kind, "running", "queued", now, now, null, null) };
+            entries[id] = entry;
+            Persist(entry);
+            entry.Completion = Task.Run(async () =>
             {
-                lock (entry.Sync) { entry.View = entry.View with { Phase = phase, UpdatedAt = DateTimeOffset.UtcNow }; Persist(entry); }
-            }
-            try
-            {
-                object result = await action(id, Progress, entry.Cancellation.Token);
-                entry.Cancellation.Token.ThrowIfCancellationRequested();
-                lock (entry.Sync) entry.View = entry.View with { State = "completed", Phase = "finished", Result = result, UpdatedAt = DateTimeOffset.UtcNow };
-            }
-            catch (OperationCanceledException)
-            { lock (entry.Sync) entry.View = entry.View with { State = "cancelled", Phase = "stopped", UpdatedAt = DateTimeOffset.UtcNow }; }
-            catch (Exception error)
-            { lock (entry.Sync) entry.View = entry.View with { State = "failed", Error = error.Message, UpdatedAt = DateTimeOffset.UtcNow }; }
-            finally { lock (entry.Sync) Persist(entry); }
-        });
-        return entry.View;
+                void Progress(string phase)
+                {
+                    lock (entry.Sync)
+                    {
+                        if (entry.View.State is not "running" and not "cancelling") return;
+                        entry.View = entry.View with { Phase = phase, UpdatedAt = DateTimeOffset.UtcNow }; Persist(entry);
+                    }
+                }
+                try
+                {
+                    object result = await action(id, Progress, entry.Cancellation.Token);
+                    entry.Cancellation.Token.ThrowIfCancellationRequested();
+                    lock (entry.Sync) entry.View = entry.View with { State = "completed", Phase = "finished", Result = result, UpdatedAt = DateTimeOffset.UtcNow };
+                }
+                catch (OperationCanceledException)
+                { lock (entry.Sync) entry.View = entry.View with { State = "cancelled", Phase = "stopped", UpdatedAt = DateTimeOffset.UtcNow }; }
+                catch (Exception error)
+                { lock (entry.Sync) entry.View = entry.View with { State = "failed", Error = error.Message, UpdatedAt = DateTimeOffset.UtcNow }; }
+                finally { lock (entry.Sync) Persist(entry); }
+            });
+            return entry.View;
+        }
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        Task[] tasks;
+        lock (lifecycle)
+        {
+            stopping = true;
+            foreach (var entry in entries.Values) entry.Cancellation.Cancel();
+            tasks = entries.Values.Select(e => e.Completion).ToArray();
+        }
+        // Owned-worker cleanup, not a total runtime deadline. No writes are replayed after shutdown.
+        await Task.WhenAll(tasks);
     }
     public OperationView Get(string id)
     {
