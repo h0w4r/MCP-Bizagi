@@ -62,6 +62,23 @@ active cancellation, host termination, owned Job Object cleanup and journal/stat
 lease recovery. The new-blank-model final comparison checked 20 native archive
 entries and 435 atoms and reported preservation of the original blank semantics.
 
+### Extracted native-model candidate
+
+A clean candidate from `9d1d5536ef00dfedb113c53c592488c702d17738` passed both
+actual packaged circuits below, with private state outside the workspace:
+
+| Circuit | Run | Operations | Workers / samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Native blank-model creation, edit, render, simulation and clearing | `20260907-140606-0f5fbb` | 8 completed, 1 expected failure | 15 / 117 | `bd29c7153d8719dd914ece930210c51e701cfa50fe0a32dd02308ce68530a612` |
+| Expanded native and recovery regression | `20260907-140753-485377` | 13 completed, 2 expected failures, 1 cancelled, 1 interrupted | 21 / 120 | `8dbcf4c926519564f2305d6297c2ec7b7b17048c3b8e2282586477a28af3f5c2` |
+
+ZIP size: 6,559,148 bytes. SHA-256:
+`5a1776bd75896cd2a5397e22c36ff333828a40ec1a5e4eb55ecd9fc449fef8a4`.
+All 315 immutable manifest entries (316 total extracted files) matched before
+and after acceptance. The extracted package was not patched. Code CI for that
+commit also passed. This is an independently verified source candidate, not a new
+published release or a claim that the older 0.4 asset contains these tools.
+
 ## Native configuration observer correction — 2026-09-07
 
 The clean `025df56` diagram candidate failed its rich packaged lifecycle at native
