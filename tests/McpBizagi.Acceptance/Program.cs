@@ -607,7 +607,14 @@ try
             if (state.GetProperty("State").GetString() != "running")
                 throw new InvalidOperationException("Probe finished before active cancellation could be tested.");
             string phase = state.GetProperty("Phase").GetString()!;
-            if (phase is not "queued" and not "worker_started") break;
+            // Require an actual native registration event. Host startup/connection phases
+            // do not prove the engine initialized its isolated settings namespace.
+            if (phase == "native_registration" || phase.StartsWith("register:", StringComparison.Ordinal))
+            {
+                File.WriteAllText(Path.Combine(run, "native-cancellation-intent.json"), JsonSerializer.Serialize(new
+                { operationId = cancelId, observedPhase = phase, observedState = "running", observedAtUtc = DateTime.UtcNow }));
+                break;
+            }
             await Task.Delay(100);
         }
         await Call("operation_cancel", new() { ["operationId"] = cancelId });

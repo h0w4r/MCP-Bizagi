@@ -46,6 +46,64 @@ restarted host used the intact worker and completed real native initialization.
 No write was replayed. This is a startup/recovery circuit, not a full modeling
 acceptance by itself.
 
+### Extracted native-loop candidate
+
+Clean runtime source `6202fc034527186ef62de79d8dafe575d9ab4fd6` passed
+[public CI](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34144344027).
+Its private framework-dependent Windows archive is **6,619,736 bytes**, SHA-256:
+`4a00b7f42f5a156230657826021cd414e68e0ba08578d06a5d1b3fdf4b686e59`.
+All **323 manifest entries / 324 files** matched before execution and after each
+successful circuit against the unmodified extracted host and worker:
+
+| Circuit | Run | Terminal operations | Worker observations / samples |
+| --- | --- | --- | --- |
+| Initial connection failure and actual native recovery | `20260907-164151-47f293` | 1 completed / 1 expected failure | 2 / 3 |
+| Loop creation/edit/removal, two native clones and Word publication | `20260907-164218-c09d37` | 18 completed / 1 expected failure | 34 / 283 |
+| Native scalar/flow semantics and honest input/result diagnostics | `20260907-164604-d29d53` | 20 completed / 4 expected failures | 40 / 290 |
+| Resources, RACI, configured simulation levels 2–4 and what-if | `20260907-165009-d8bd36` | 14 completed / 2 expected failures | 25 / 131 |
+| Reusable-call black-box behavior, what-if and Word/PDF | `20260907-165236-0b2a04` | 10 completed | 16 / 1,947 |
+| Expanded native/XML, settings contention, active cancellation and host recovery | `20260907-170342-b92377` | 13 completed / 2 expected failures / 1 cancelled / 1 interrupted | 21 / 1,137 |
+
+Transcript hashes, in table order:
+
+- `b7aff628cf36aacd94fe8a3ccabdf4bdf8786da8cf74502ff1d921700a12a085`
+- `14be37d46db075559925a1587c243ae79e694d8fb01dbd91da81a8c2b879fad1`
+- `5d85ef90693cd1f51996928113d40f94b01c61d29d5cf3d5fc6fbe2b8a723be1`
+- `0378852b64b1b4652d9e565fbadb39ddd2d867585ec49e212e793c4eeadc65e3`
+- `ab4013f2d76e228514368ee3bd0858d648b1b3b9d0777f1d0c47030920114355`
+- `3080cf43b4d44f20456e05e8c21932c06bc190e032eed48669bd4743634a461d`
+
+Initial connections used the explicit 90-second operator setting; the copied
+missing-dependency case deliberately used three seconds. No total native
+operation deadline was imposed. Slow offscreen initialization retained actual
+activity and eventually completed; periodic samples are not continuous desktop
+certification or independent GUI equivalence.
+
+The first full attempt, `20260907-165905-dc6293`, is retained as **failed**. Its
+acceptance client cancelled at the new host `worker_connecting` phase and then
+incorrectly demanded native-settings evidence before native initialization.
+The corrected independent client waits for an actual `native_registration` or
+`register:*` event and saves its cancellation intent. The successful repeat
+records `native_registration` for operation `9d904e1ae3084cc2854d4c691d613f27`,
+then verifies cancellation, cleanup and subsequent recovery. Only the acceptance
+client changed; no extracted runtime binary or verification invariant was edited
+to make this pass. The earlier failed run is not counted as a successful circuit.
+
+This source candidate is not a replacement public release or a declaration of
+full Modeler automation. Nondefault token and loop execution, additional native
+element semantics, rich formats, live unsaved documents and independent desktop
+compatibility remain separately tracked.
+
+The separate strict token-quantity gate, `20260907-171032-34b98b`, **failed** as
+an unsatisfied behavioral requirement, not an infrastructure error. Its actual
+native end counts were 24/24/24 for verified input quantities 1/1, 2/1 and 2/3;
+the intended counts were 24/12/36. The native results were neither rewritten nor
+replaced by a custom evaluator. Transcript SHA-256:
+`aadfdb0a5a96153d1bbad14c45aaab14372699743bb6b4ea3ec35cad85b3e7d5`.
+All 323 manifest entries / 324 files still matched after this strict run, and
+no MCP worker remained. A diagnostics gate passing does not close this strict
+gate or establish behavior on other simulation levels or engine versions.
+
 ## Native activity properties and flow semantics — 2026-09-07
 
 This source checkpoint exposes **29 MCP tools** and passes **487 unit tests**.
