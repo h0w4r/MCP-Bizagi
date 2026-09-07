@@ -112,8 +112,8 @@ try {
         }
     }
     $inventory | Sort-Object { $_.package } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $output 'dependencies.json') -Encoding utf8
-    # Defense in depth: no vendor file name is allowed even if a build folder was contaminated.
-    $vendor = Get-ChildItem -LiteralPath $output -File -Recurse | Where-Object { $_.Name -match '^Bizagi' -or $_.Extension -eq '.bpm' }
+    # Defense in depth against accidentally copying locally loaded engine/renderer components from a build folder.
+    $vendor = Get-ChildItem -LiteralPath $output -File -Recurse | Where-Object { $_.Name -match '^(Bizagi|CefSharp\.|libcef\.|Lanner\.)' -or $_.Extension -eq '.bpm' }
     if ($vendor) { throw 'Unexpected vendor component or native operator model in package.' }
     $head = & git rev-parse HEAD
     $dirty = [bool](& git status --porcelain)

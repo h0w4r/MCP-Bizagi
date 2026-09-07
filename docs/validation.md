@@ -49,6 +49,36 @@ The real PNG was visually inspected; a comparison against the interactive
 Modeler editor remains a separate gate. Raw archives, renderer research and
 logs remain private because native files can contain Windows identity metadata.
 
+## Renderer startup and configuration regression
+
+Repeated extracted-package runs exposed incomplete diagrams. They were rejected,
+not published as successful images. Investigation identified asynchronous native
+configuration initialization before DTO creation. The adapter now waits for the
+actual native configuration and reports asynchronous browser errors.
+
+Five independent source MCP renderer startups then passed. The private regression
+index (run IDs, operation IDs and transcript hashes) has SHA-256
+`ef72dd939a4c889e333f89a47269a8a2eb4b1dd9caed5d922797888bb7c32d16`.
+
+The full expanded source suite was rerun with initially absent **MCP-owned**
+graphical defaults, real settings-file contention and recovery, and actual
+worker settings-path assertions. It passed, including simulation, rendering,
+multi-diagram fidelity and host-death recovery. The original MCP defaults were
+backed up privately; the operator's Modeler profile was not copied or reset.
+Cold-start transcript SHA-256:
+`779dde3e7167d8b253bc37004acb7b50002215aefb4e2a6b43be053cd1e0a1ed`.
+
+| Regression circuit | Correlation ID |
+| --- | --- |
+| Expected settings contention failure | `3f65f3fc23ed46638eef6dc792030c94` |
+| Cold-default native SVG/PNG | `b25c0c62f6d548b4a27119b7962dcbbd` |
+| Native simulation | `c53bb89119444ab1a78c3ce95e8e259b` |
+| Nested multi-diagram edit | `2e62219cb5d94e29940d22977f160c61` |
+
+This regression evidence is additional to the earlier source baseline, not a
+claim that every possible diagram, offline environment or native library build
+has been validated.
+
 ## Current open gates
 
 - Native creation/deletion, reconnection, geometry, styles and layout editing.

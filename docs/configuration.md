@@ -21,6 +21,17 @@ it can rewrite active operation journals. Separate clients can use distinct
 state directories. Completed native artifact references can cross from private
 state into later native operations without widening ordinary workspace access.
 
+The installed settings provider derives its application namespace from the
+worker executable metadata. Actual paths are checked before service resolution:
+`LocalAppData/h0w4r/McpBizagi.Worker` and `AppData/h0w4r/McpBizagi.Worker`.
+They are MCP-owned application defaults, **not** the operator's Modeler settings.
+Nothing is copied from the Modeler profile. These defaults are shared across
+worker runs; a process-lifetime exclusive file lease prevents different state
+directories from entering native operations concurrently. A competing native
+worker fails explicitly rather than racing or silently retrying a write.
+Temporary models, renderer caches and logs remain operation-specific. Actual
+settings paths are recorded in private worker evidence, never in public logs.
+
 Standard output is MCP protocol traffic only. Standard error contains host
 diagnostics. Native worker logs and operation journals are stored privately under
 the state directory, with operation IDs for correlation.

@@ -70,6 +70,12 @@ void VerifyWorkerExit(string operationId)
         if (!File.Exists(exitFile) || !JsonDocument.Parse(File.ReadAllText(exitFile)).RootElement.GetProperty("exited").GetBoolean())
             throw new InvalidDataException("Worker exit evidence is missing.");
         var desktop = JsonDocument.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(file)!, "desktop-observation.json"))).RootElement;
+        // Check the actual native provider paths recorded inside the separate worker, not host assumptions.
+        string[] settings = File.ReadAllLines(Path.Combine(Path.GetDirectoryName(file)!, "native-settings-paths.txt"));
+        string[] expectedSettings = [Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "h0w4r", "McpBizagi.Worker"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "h0w4r", "McpBizagi.Worker")];
+        if (!settings.SequenceEqual(expectedSettings, StringComparer.OrdinalIgnoreCase))
+            throw new InvalidDataException("Native settings application namespace was not isolated from Modeler.");
         if (desktop.GetProperty("visibleWindowObserved").GetBoolean() || desktop.GetProperty("workerForegroundObserved").GetBoolean())
             throw new InvalidDataException("Worker desktop independence observation failed.");
         try
@@ -86,6 +92,26 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--settings-contention"))
+    {
+        if (!native) throw new ArgumentException("--settings-contention requires --native.");
+        // Exercise an actual Windows file-sharing conflict, then a fresh real native worker after release.
+        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "h0w4r", "McpBizagi.Worker");
+        Directory.CreateDirectory(directory);
+        using (var lease = new FileStream(Path.Combine(directory, ".native-worker.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+        {
+            var request = await Call("native_probe");
+            string operationId = request.GetProperty("OperationId").GetString()!;
+            var failed = await WaitOperation(operationId, "failed");
+            if (!failed.GetProperty("Error").GetString()!.Contains(".native-worker.lock"))
+                throw new InvalidDataException("Native settings contention did not produce the expected sharing failure.");
+            VerifyWorkerExit(operationId);
+        }
+        var retry = await Call("native_probe");
+        string retryId = retry.GetProperty("OperationId").GetString()!;
+        await WaitOperation(retryId); VerifyWorkerExit(retryId);
+        Console.WriteLine("NATIVE_SETTINGS_CONTENTION_AND_RECOVERY_PASS");
+    }
     if (args.Contains("--render-only"))
     {
         // Focused real-protocol diagnostics shorten renderer investigation without substituting an engine double.

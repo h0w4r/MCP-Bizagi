@@ -14,6 +14,8 @@ public sealed partial class NativeEngine
     private readonly string installation;
     private readonly string workRoot;
     private object? injector;
+    private FileStream? settingsLease;
+    private string localSettings = "";
     private readonly Dictionary<string, Assembly> assemblies = new(StringComparer.OrdinalIgnoreCase);
     public string Version { get; }
 
@@ -65,6 +67,7 @@ public sealed partial class NativeEngine
     {
         if (injector != null) return;
         Directory.CreateDirectory(workRoot);
+        GuardSettingsNamespace();
         progress("native_registration");
         // Use the manufacturer's module registration, but deliberately do not build or initialize its GUI application.
         object configuration = New(Type("BizAgi.DA.dll", "Bizagi.DA.CConfiguration"));
@@ -83,6 +86,24 @@ public sealed partial class NativeEngine
         Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.DiagramModel")
             .GetField("TEMP_PATH")!.SetValue(null, Path.Combine(workRoot, "models") + Path.DirectorySeparatorChar);
         progress("native_registered");
+    }
+
+    private void GuardSettingsNamespace()
+    {
+        // The native provider derives its paths from the entry executable's metadata, not BizagiModeler.exe.
+        // Check that invariant before resolving services which can persist their defaults asynchronously.
+        var application = Type("Bizagi.ProcessModeler.Persistence.dll",
+            "Bizagi.ProcessModeler.Persistence.Preferences.Providers.UserSettingsProvider");
+        localSettings = (string)application.GetProperty("LocalSettingsPath")!.GetValue(null)!;
+        string roaming = (string)application.GetProperty("RoamingSettingsPath")!.GetValue(null)!;
+        string Expected(Environment.SpecialFolder folder) => Path.Combine(Environment.GetFolderPath(folder), "h0w4r", "McpBizagi.Worker");
+        if (!string.Equals(localSettings, Expected(Environment.SpecialFolder.LocalApplicationData), StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(roaming, Expected(Environment.SpecialFolder.ApplicationData), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Native settings escaped the dedicated MCP worker application namespace.");
+        // Different MCP state directories must not race through the vendor's shared application defaults.
+        // A competing native worker fails explicitly; no write or simulation is silently replayed.
+        File.WriteAllLines(Path.Combine(workRoot, "native-settings-paths.txt"), new[] { localSettings, roaming });
+        settingsLease = new FileStream(Path.Combine(localSettings, ".native-worker.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     }
 
     public EngineReply Execute(EngineRequest request, Action<string> progress)

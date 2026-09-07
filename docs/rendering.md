@@ -20,6 +20,11 @@ actually loaded managed-module fingerprints.
   script failure. An SVG root alone is insufficient acceptance.
 - The adapter instead checks the native script response and expected graphical
   identities before publishing the result.
+- The native configuration-manager constructor returns before its background
+  initialization finishes. A missing DTO configuration can make asynchronous
+  rendering fail after drawing only the pool. The adapter waits for populated
+  native defaults and the completed configuration document before creating the
+  DTO; asynchronous browser errors are also surfaced as operation failures.
 - Native rendering can continue after the script call returns. Progress is
   measured from SVG/element changes, with the configured inactivity window;
   elapsed total operation time is not used to cancel an advancing render.

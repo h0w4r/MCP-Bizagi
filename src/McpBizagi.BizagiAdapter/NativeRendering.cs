@@ -20,6 +20,7 @@ public sealed partial class NativeEngine
         Guid diagramId = Guid.Parse(request.DiagramId);
         if (!Items(model, "Diagrams").Any(d => Text(d, "Id") == diagramId.ToString()))
             throw new InvalidDataException("Unknown native diagram ID.");
+        WaitForNativeConfiguration(request.InactivitySeconds, progress);
         progress("native_offscreen_initialize");
         // DLL search is changed only inside this disposable worker, never in the host or operator process.
         if (SetDllDirectory(installation) == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -44,6 +45,11 @@ public sealed partial class NativeEngine
             "Bizagi.ProcessModeler.UI.Controls.ModelExplorer.Services.IHandlerResponseSerializer"))!;
         var serialize = serializer.GetType().GetMethods().Single(m => m.Name == "SerializeResponse" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1);
         string serialized = (string)serialize.MakeGenericMethod(collection.GetType()).Invoke(serializer, new[] { collection })!;
+        if (Optional(collection, "DefaultConfiguration") == null)
+            throw new InvalidOperationException("Native renderer DTO has no element configuration.");
+        // Native renderDiagram dispatches asynchronous JavaScript work; its return value cannot report later errors.
+        EvaluateInNativeBrowser("window.__mcpRenderErrors=[]; window.addEventListener('error', e => window.__mcpRenderErrors.push(String(e.message).slice(0,4096))); " +
+            "window.addEventListener('unhandledrejection', e => window.__mcpRenderErrors.push(String(e.reason).slice(0,4096)));");
         // The vendor helper discards the render script's success flag. Check it before accepting any partial SVG.
         EvaluateInNativeBrowser("renderDiagram(" + serialized + ")");
         var graph = Graph(model).Where(e => e.DiagramId == request.DiagramId).ToArray();
@@ -66,6 +72,43 @@ public sealed partial class NativeEngine
         return new[] { output, png };
     }
 
+    private void WaitForNativeConfiguration(int inactivitySeconds, Action<string> progress)
+    {
+        progress("native_configuration_initialize");
+        object manager = Call(injector!, "Resolve", Type("Bizagi.ProcessModeler.BusinessLogic.dll",
+            "Bizagi.ProcessModeler.BusinessLogic.General.IElementConfigurationManager"))!;
+        var inactivity = Stopwatch.StartNew();
+        string previous = "";
+        string path = Path.Combine(localSettings, "DefaultElementConfig.xml");
+        while (true)
+        {
+            // The constructor starts an unexposed background Task. DocumentationConfigValue is assigned after
+            // the dictionary is populated; the XML marker is written by the final native initialization step.
+            Thread.MemoryBarrier();
+            bool ready = Optional(manager, "DocumentationConfigValue") != null && Optional(manager, "ElementConfigValues") != null;
+            string xml = "";
+            try { if (File.Exists(path)) xml = File.ReadAllText(path); }
+            catch (IOException) { /* A native write is still in progress; readiness is not inferred from existence. */ }
+            if (xml != previous) { previous = xml; inactivity.Restart(); }
+            if (ready && xml.Contains("<ID>TextAttributeVisualization</ID>"))
+            {
+                var document = new XmlDocument { XmlResolver = null };
+                try
+                {
+                    using var input = new StringReader(xml);
+                    using var reader = XmlReader.Create(input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 1024 * 1024 });
+                    document.Load(reader);
+                    progress("native_configuration_ready");
+                    return;
+                }
+                catch (XmlException) { /* Native serialization may not yet have closed the document. */ }
+            }
+            if (inactivity.Elapsed.TotalSeconds > inactivitySeconds)
+                throw new TimeoutException("Native graphical configuration did not finish initialization in the configured inactivity window.");
+            Thread.Sleep(50);
+        }
+    }
+
     private string WaitForCompleteSvg(string[] expected, int inactivitySeconds, Action<string> progress)
     {
         var inactivity = Stopwatch.StartNew();
@@ -73,6 +116,8 @@ public sealed partial class NativeEngine
         int stableSamples = 0, lastCount = -1;
         while (true)
         {
+            string error = EvaluateInNativeBrowser("window.__mcpRenderErrors.join(' | ')");
+            if (!string.IsNullOrEmpty(error)) throw new InvalidOperationException("Native asynchronous rendering failed: " + error);
             string svg = EvaluateInNativeBrowser("exportSubprocessToSVG(false,false)");
             var xml = new XmlDocument { XmlResolver = null };
             using (var input = new StringReader(svg))

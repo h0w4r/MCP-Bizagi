@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
+    <!-- The native settings provider uses this executable metadata; keep its namespace separate from Modeler. -->
+    <Company>h0w4r</Company><Product>McpBizagi.Worker</Product>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects><GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <ItemGroup>

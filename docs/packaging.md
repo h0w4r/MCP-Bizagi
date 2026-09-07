@@ -34,13 +34,19 @@ independent client at that extracted package:
 ```powershell
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native
-dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --extended --simulation --render --recovery --external-state
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --extended --simulation --render --recovery --external-state --settings-contention
 ```
 
 The first command proves actual packaged stdio/XML behavior. The second also
 requires the native installation and tests native persistence, copy-only edits,
 failure reporting, cancellation, and recovery. Neither substitutes for broad
 rich-content or visual Modeler acceptance.
+
+The expanded command also checks the worker settings namespace, explicit native
+settings contention and recovery. Repeat focused renderer startup checks with
+`--native --render-only --input C:/Processes/example.bpm` against the same extracted
+package. A single successful image is not sufficient to dismiss a reproducible
+asynchronous initialization failure.
 
 Configure an MCP client with command `dotnet` and argument
 `C:/Packages/MCP-Bizagi/McpBizagi.Server.dll`, adjusting the path. The worker is

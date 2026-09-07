@@ -9,6 +9,8 @@
 - Add actual native validation and experimental simulation; verify a level-one scenario completing 1,000 instances.
 - Add native offscreen SVG and transparent PNG rendering with explicit script/result checks.
 - Wait for actual renderer element completion and stable SVG; reject stalled partial diagrams.
+- Synchronize native graphical defaults before creating renderer DTOs and surface asynchronous browser errors.
+- Verify the worker-only settings namespace and exclude concurrent native workers across different state directories.
 - Add opaque native artifact references for MCP-only chaining across private state boundaries.
 - Supervise all owned job processes and their CPU/I/O activity, not only the worker PID.
 - Add an exclusive state lease, durable flushed journals and orderly shutdown cancellation.
