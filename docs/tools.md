@@ -27,6 +27,8 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_probe` | None | Resolve actual native services in an isolated worker |
 | `native_roundtrip` | `path`; optional `modelName`, `additionalPaths` | Import one BPMN file per native diagram, persist `.bpm`, reopen/export, report per-input bounded fidelity findings |
 | `native_inspect` | `path` | Private native read: IDs, containment, geometry, descriptions, source/target references, scenarios and revision; no BPMN projection required |
+| `native_diagrams_get` | `path` | Native diagram IDs/names, persisted ordered tab preferences, native preference scope and source revision |
+| `native_diagrams_apply` | `path`, `expectedRevision`, `patch` | Create/rename/clone/delete diagrams and explicitly replace ordered tab preferences; native ID map and fresh-reader fidelity; [contract](native-diagrams.md) |
 | `native_metadata_get` | `path` | Native resource catalog, activity RACI, full diagram BPSim XML, element `Id` and `BpmnId`, source revision |
 | `native_metadata_apply` | `path`, `expectedRevision`, `patch` | Resource changes, full activity assignments and full diagram simulation replacements; new native artifact, fresh-worker readback and whole-archive fidelity |
 | `native_attributes_get` | `path` | Native definitions, per-element values, embedded file inventory and hashes; linked files are not opened |

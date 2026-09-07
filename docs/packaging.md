@@ -67,12 +67,13 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --pac
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --metadata-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --attributes-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --containers-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --diagrams-only
 ```
 
 Use `--containers-only --input C:/Processes/rich-model.bpm` to exercise the
 container lifecycle while preserving an existing model's other native content.
 Run focused native circuits sequentially because the installed engine's settings
-namespace is protected by an exclusive worker lease. Attribute and container
+namespace is protected by an exclusive worker lease. Attribute, container and diagram
 tools require the newer source snapshot, not the old published 0.4 ZIP.
 
 For a separately reviewed PDF downsampling test, add `--allow-image-resampling`

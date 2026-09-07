@@ -24,6 +24,7 @@ public sealed class EngineRequest
     public NativeMetadataPatch? MetadataPatch { get; set; }
     public NativeDocumentationPatch? DocumentationPatch { get; set; }
     public NativeAttachmentInfo? Attachment { get; set; }
+    public NativeDiagramPatch? DiagramPatch { get; set; }
     public string[] ScenarioIds { get; set; } = System.Array.Empty<string>();
 }
 
@@ -112,6 +113,8 @@ public sealed class EngineReply
     public string[] IntegrationAdjustments { get; set; } = System.Array.Empty<string>();
     public NativeMetadataSnapshot? Metadata { get; set; }
     public NativeDocumentationSnapshot? Documentation { get; set; }
+    public NativeDiagramSnapshot? DiagramState { get; set; }
+    public NativeDiagramClone[] DiagramClones { get; set; } = System.Array.Empty<NativeDiagramClone>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
 }
 

@@ -147,7 +147,7 @@ public static class NativeFidelity
             else atoms.Add(location + "/#node[" + i + "]", new(children[i] is XText text ? text.Value : children[i].ToString(), id, null, metadata, ImplicitDefault: defaulted, RuntimePath: element.Annotation<RuntimePathMarker>()?.Value));
         }
     }
-    private static bool IsNativeNameOwner(XElement element)
+    internal static bool IsNativeNameOwner(XElement element)
     {
         if (element.Name.NamespaceName != Xpdl || element.Attribute("Id") == null) return false;
         if (element.Name.LocalName == "Package") return element.Parent == null;

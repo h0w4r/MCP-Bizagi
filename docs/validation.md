@@ -1,8 +1,61 @@
 # Verification baselines
 
+## Unreleased native diagram lifecycle — 2026-09-07
+
+Current source exposes **26 MCP tools** and passes **360 unit tests**. The actual
+stdio MCP lifecycle passed with Modeler **4.3.0.008**, native persistence and
+independent fresh-worker readback. This is source after 0.4.0-alpha.1, not a claim
+about that older release asset or full Modeler automation.
+
+| Circuit | Run | Operations | Worker observations / samples | Transcript SHA-256 |
+| --- | --- | --- | --- | --- |
+| Nested/message-flow model | `20260907-122919-0edf61` | 14: 11 completed, 3 expected failures | 22 / 441 | `1bba008f5aa9e754b8d2ac2b07af2574fa99018e0ea41d5cc045d2e7da49288e` |
+| Existing rich native model | `20260907-123401-abc39a` | 13: 10 completed, 3 expected failures | 20 / 132 | `2bcfb20643400e4d0a516b93b9c45baeaf5f00c933040063d8927fd0405282f5` |
+
+Both runs created a diagram, changed ordered/selected native tab preferences,
+renamed it, cloned an existing diagram using native-generated ID maps, retabbed,
+saved without edits, rendered the clone and deleted only the requested diagrams.
+Subprocess tabs were exercised on the nested model. Duplicate names, deleting an
+opened diagram without replacement preferences and deleting the final diagram
+failed for the expected reasons; a subsequent fresh read confirmed recovery and
+the retained output revision.
+
+The rich input carried 11 extended-attribute definitions, table/scalar values
+and an embedded image. Clone comparison mapped known native owners/references
+and checked every copied leaf and attachment byte, while the original diagram
+and all unrelated entries remained under the existing whole-container gate.
+
+Actual native serializer/cloner behavior drove the implementation: initial empty
+collections are materialized before the first save; package-header description
+is a derived diagram-name field, not documentation; explicit empty element-value
+containers omitted by the native cloner are retained; scenario objects are not
+shared with the source; message-flow references are checked at their exact native
+locations. Unknown XML changes are still rejected.
+
+No visible or foreground owned worker window was observed in the periodic
+samples. This is not continuous proof or independent desktop visual accreditation.
+See the [diagram contract](native-diagrams.md) for scope and remaining families.
+
+The expanded source regression also passed: run `20260907-123755-4e0424`,
+17 operations (13 completed, two failed, one cancelled and one interrupted as
+expected), 21 owned-worker observations / 128 periodic samples. Transcript
+SHA-256: `a0b2bd6438e5e7a8ffb4d4b2f70ae986f77d4d1897c9ee19036c7c4c8729857e`.
+This included actual simulation results, nesting, rendering, settings contention,
+active cancellation, host termination, Job Object cleanup and journal recovery.
+
+The configured simulation/RACI corpus also passed after native cloning in run
+`20260907-124216-99853e`: 15 operations, 12 completed and three expected failures,
+22 worker observations / 128 samples, transcript
+`39b2d5ba3846dae996d59dc540eea94418299751ab1be84ab18e5b46c6584fcb`.
+The copied resource/calendar scenarios completed 12 task instances each, with
+three-minute average processing time, total task cost 84, one resource used at
+a time and actual contention. The shift calendar delayed work by at least 450
+minutes on average. These are real cloned-engine results, not just preserved
+configuration strings. Saved-result cloning and other distributions remain open.
+
 ## Unreleased native container lifecycle — 2026-09-07
 
-Current source exposes **24 MCP tools** and passes **327 unit tests**. The
+That checkpoint exposed **24 MCP tools** and passed **327 unit tests**. The
 container circuit uses the official MCP client, stdio host, isolated worker,
 installed Modeler **4.3.0.008**, durable `.bpm` output and fresh-reader workers.
 No mocks or direct adapter calls accredit these operations.

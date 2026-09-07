@@ -92,6 +92,14 @@ try
     var tools = await client.ListToolsAsync();
     Console.WriteLine("tools=" + tools.Count);
     await Call("capabilities_get");
+    if (args.Contains("--diagrams-only"))
+    {
+        if (!native) throw new ArgumentException("Diagram acceptance requires --native.");
+        int inputArgument = Array.IndexOf(args, "--input");
+        await NativeDiagramAcceptance.Run(repo, run, inputArgument >= 0 ? args[inputArgument + 1] : null,
+            (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, args.Contains("--configured-clone-simulation"));
+        Console.WriteLine("NATIVE_DIAGRAM_LIFECYCLE_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--containers-only"))
     {
         if (!native) throw new ArgumentException("Container acceptance requires --native.");

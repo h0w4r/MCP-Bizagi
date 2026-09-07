@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add native diagram creation, renaming, cloning, deletion and persisted ordered/selected tab preferences through two revision-checked MCP tools.
+- Verify native clone identity bijections, known references, nested content and original preservation; retain explicit empty attribute containers omitted by the native cloner.
+- Restrict tab-preference projection to independently reported default/current-user entries and preserve all unrelated settings.
 - Add explicit participant/process identities, stable process-owned lanes, native milestones and two-level embedded subprocess lifecycle through native mutation batches.
 - Require complete lane/milestone partition geometry; add separate expanded subprocess sizes and preserve them while collapsed.
 - Verify linked native process/activity-set structures without masking unrequested children, runtime fields or same-ID unknown XML names.
@@ -10,7 +13,7 @@
 - Exercise all 12 native attribute kinds, a two-row table, rich no-op save, unrelated name editing and actual failure/recovery through MCP.
 - Treat embedded XML-named files as opaque bytes, not native metadata.
 - Classify proven native definition audit timestamps and archive-owned attachment path relocation without waiving unrelated content changes.
-- Keep complete editor constraints, rich publication, diagram lifecycle, moves/layout, visual compatibility and live-session integration open under the full automation objective.
+- Keep complete editor constraints, rich publication, broader diagram relationships, moves/layout, visual compatibility and live-session integration open under the full automation objective.
 
 ## 0.4.0-alpha.1
 

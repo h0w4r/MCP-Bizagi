@@ -22,6 +22,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Native offscreen SVG/PNG | Basic and two-level expanded corpus locally verified | Native child completion, all-level graphical IDs, expanded bounds and transparent corners; rich visual corpus still pending |
 | Structural/geometry/style edits | Partial native acceptance | 22 task/event/gateway variants created/deleted; UserTask/SequenceFlow insertion, reconnection, bounds, colors, descriptions verified; rich styles and layout remain open |
 | Native containers | Experimental source after 0.4 | Explicit pool/process IDs, stable lanes, milestones, nested embedded subprocess lifecycle and separate expanded bounds; [contract and open families](native-containers.md) |
+| Diagram lifecycle and persisted tabs | Experimental source after 0.4 | Creation, name/derived-header change, native cloning with checked ID maps, deletion and ordered/selected diagram/subprocess tabs; [contract and remaining corpus](native-diagrams.md) |
 | Extended attributes/attachments editing | Experimental source acceptance after 0.4 | 12 definition/value kinds, two-row table, embedded file/image, lifecycle, rich no-op and unrelated edit; [contract and remaining corpus](native-attributes.md) |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |
