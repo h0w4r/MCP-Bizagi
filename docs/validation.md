@@ -57,6 +57,26 @@ These source changes are not in the published 0.4.0-alpha.1 archive. See the
 [container contract](native-containers.md) for open diagram, move, call-activity,
 layout and visual families. **Full automation remains open.**
 
+### Extracted container snapshot
+
+A clean snapshot of commit `ea1ff5573fa031c4f0cec46ef79486223f13a75c` was built,
+ZIP-extracted and executed independently of development output. Its inherited
+assembly label is still 0.4.0-alpha.1; it is **not** that published release asset.
+
+- ZIP: **6,523,028 bytes**; SHA-256 `f2db6f1c66036134ca9e3886b003e3cf387badfd37c7304107115cfc9321c562`.
+- **312 manifest entries** verified before and after both circuits, with no extra package files.
+- Rich container lifecycle: `20260907-115445-28a8f9`, 11 operations (9 completed, 2 expected failures), 17 worker observations / 112 samples.
+- Rich transcript: `a8190c35405b0a6dea0b7c99ac6cf4b5e98b78ea71a59a0bf1cd1d625709976b`.
+- Packaged general native/recovery circuit: `20260907-115631-e77547`, 17 operations (13 completed, 2 failed, 1 cancelled, 1 interrupted as expected), 21 worker observations / 111 samples.
+- General transcript: `bf33f733d54e640765e89cad4a326278c03622b1e07ecb2bb2f7db173ab95e9c`.
+
+This rich package run includes the final explicit coordinates, documentation
+clearing, expanded/collapsed sizes, native attributes and embedded-image
+preservation. [Public CI for the code commit](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34118920328)
+also passed locked restore, build, **327 unit tests** and the actual MCP XML
+circuit. Native accreditation remains the separate controlled Windows evidence,
+not the public CI badge. The full-automation goal is still active.
+
 ## Current source — extended attributes and attachments (unreleased)
 
 Real MCP acceptance on **2026-09-07 UTC**, using installed **Modeler 4.3.0.008**.

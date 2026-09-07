@@ -64,7 +64,16 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --pac
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --palette-only --input C:/Processes/example.bpm
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --publication-only --input C:/Processes/example.bpm
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --expanded-render-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --metadata-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --attributes-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --containers-only
 ```
+
+Use `--containers-only --input C:/Processes/rich-model.bpm` to exercise the
+container lifecycle while preserving an existing model's other native content.
+Run focused native circuits sequentially because the installed engine's settings
+namespace is protected by an exclusive worker lease. Attribute and container
+tools require the newer source snapshot, not the old published 0.4 ZIP.
 
 For a separately reviewed PDF downsampling test, add `--allow-image-resampling`
 to publication acceptance. This is explicit fidelity acceptance, not an automatic
