@@ -38,6 +38,26 @@ This verifies the documented **source circuit**, not inclusion in the old 0.4
 release archive, every desktop editor constraint, rich publication behavior or
 independent Modeler visual compatibility. [Contract and open corpus](native-attributes.md).
 
+### Extracted source-snapshot package
+
+The same attribute/attachment circuit also passed from an independently built,
+ZIP-extracted **unreleased snapshot** of commit
+`f10683c699251971480ddf8e2b2ff7325dfc0718`, with a clean checkout recorded in
+`package.json`. This private validation candidate is **not** the published
+0.4.0-alpha.1 release asset; identify it by commit and hash, not the inherited
+assembly version label.
+
+- ZIP bytes: **6,509,623**; SHA-256: `8fd09e28831e7f17dbaa4842b3fe146676bec2b8a5322fc75c5c27a2c0d34296`.
+- **311 manifest entries**, verified before and after actual execution; no additional package files appeared.
+- Run: `20260907-110637-ccaa1f`; **18 operations**, including the three expected native failure cases.
+- **29 worker observations / 162 periodic samples**, with no visible or foreground owned worker window observed.
+- Transcript SHA-256: `24c74f537a31423c79f253bddc10a18c6f169da706ace4c77ccaabef3c2ef15c`.
+
+[Public CI for that code commit](https://github.com/h0w4r/MCP-Bizagi/actions/runs/34114729926)
+also passed the locked restore, build, 298 unit tests and actual MCP XML circuit.
+The native engine is not installed in public CI; its evidence remains the
+separate controlled Windows runs described above. Full automation remains open.
+
 ## Released baseline — 0.4.0-alpha.1
 
 Real source acceptance on **2026-09-07 UTC**, against installed **Modeler 4.3.0.008**.
