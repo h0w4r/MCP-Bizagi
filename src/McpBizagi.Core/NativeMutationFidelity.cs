@@ -24,6 +24,8 @@ public static class NativeMutationFidelity
             var a = Read(left[entry]); var b = Read(right[entry]);
             if (a.Root?.Name != Xpdl + "Package" || b.Root?.Name != Xpdl + "Package") continue;
             NativeSemanticPolicy.ProjectDerivedQuantities(a, b, changes, reopened);
+            NativeDataPolicy.ProjectStoreStates(a, b, changes, reopened);
+            NativeDataFlowPolicy.ProjectDerived(a, b, changes, reopened);
             var removeLeft = new HashSet<XElement>(); var removeRight = new HashSet<XElement>();
             foreach (var c in changes)
             {
@@ -62,6 +64,7 @@ public static class NativeMutationFidelity
                 if (x.Length != 1 || y.Length != 1) throw new InvalidDataException("Ambiguous native XML mutation identity.");
                 if (c.EventProperties != null) NativeEventPolicy.Project(x[0], y[0], c.EventProperties);
                 if (c.EventPayloads != null) NativeEventPayloadPolicy.Project(x[0], y[0], c.EventPayloads);
+                if (c.DataProperties != null || c.Documentation != null && x[0].Name.LocalName is "DataObject" or "DataStore") NativeDataPolicy.Project(x[0], y[0], c, reopened);
                 if (c.CallTarget != null) NativeCallFidelity.ProjectTarget(x[0], y[0], c.CallTarget);
                 if (c.ActivityLoop != null) NativeLoopPolicy.Project(x[0], y[0], c.ActivityLoop);
                 if (c.ActivityProperties != null || c.FlowCondition != null || c.GatewayDirection != null) NativeSemanticPolicy.Project(x[0], y[0], c);
@@ -112,7 +115,8 @@ public static class NativeMutationFidelity
                 }
                 if (c.Operation == "reconnect")
                 {
-                    RestoreAttribute(x[0], y[0], "From", c.SourceId); RestoreAttribute(x[0], y[0], "To", c.TargetId);
+                    bool association = x[0].Name == Xpdl + "Association" || x[0].Name == Xpdl + "MessageFlow";
+                    RestoreAttribute(x[0], y[0], association ? "Source" : "From", c.SourceId); RestoreAttribute(x[0], y[0], association ? "Target" : "To", c.TargetId);
                     var oldGraphics = x[0].Element(Xpdl + "ConnectorGraphicsInfos")?.Element(Xpdl + "ConnectorGraphicsInfo");
                     var newGraphics = y[0].Element(Xpdl + "ConnectorGraphicsInfos")?.Element(Xpdl + "ConnectorGraphicsInfo");
                     if (oldGraphics == null || newGraphics == null) throw new InvalidDataException("Missing native connector graphics.");
@@ -149,7 +153,7 @@ public static class NativeMutationFidelity
         };
     }
     private static XElement[] Identified(XDocument doc, string id) => doc.Descendants().Where(e => NativeFidelity.IsNativeNameOwner(e) &&
-        (string?)e.Attribute("Id") == id && new[] { "Activity", "Transition", "Pool", "Lane", "Milestone", "Artifact", "MessageFlow" }.Contains(e.Name.LocalName)).ToArray();
+        (string?)e.Attribute("Id") == id && new[] { "Activity", "Transition", "Pool", "Lane", "Milestone", "Artifact", "MessageFlow", "Association", "DataObject", "DataStoreReference", "DataStore" }.Contains(e.Name.LocalName)).ToArray();
 
     private static void ProjectEmptyCollections(XElement[] candidates, XDocument peer, string entry, List<NativeDifference> evidence)
     {
@@ -161,9 +165,9 @@ public static class NativeMutationFidelity
             if (collection.Document == null || owner == null || !NativeFidelity.IsNativeNameOwner(owner) || collection.Name.Namespace != Xpdl || !Empty(collection)) continue;
             string[] allowed = owner.Name.LocalName switch
             {
-                "Package" => ["Pools", "WorkflowProcesses", "MessageFlows", "Artifacts"],
-                "WorkflowProcess" => ["Activities", "Transitions", "ActivitySets", "Artifacts"],
-                "ActivitySet" => ["Activities", "Transitions", "Artifacts"],
+                "Package" => ["Pools", "WorkflowProcesses", "MessageFlows", "Artifacts", "Associations", "DataStores"],
+                "WorkflowProcess" => ["Activities", "Transitions", "ActivitySets", "Artifacts", "Associations", "DataObjects", "DataStoreReferences"],
+                "ActivitySet" => ["Activities", "Transitions", "Artifacts", "Associations", "DataObjects", "DataStoreReferences"],
                 "Pool" => ["Lanes", "Milestones"],
                 _ => []
             };

@@ -99,6 +99,9 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
             var edited = await Execute(new EngineRequest { OperationId = id, Action = "mutate_save", InputPath = source, OutputPath = output, Mutations = mutations },
                 RunDirectory(id, "editor"), progress, token);
             var reopened = await Execute(new EngineRequest { OperationId = id, Action = "inspect", InputPath = output }, RunDirectory(id, "reader"), progress, token);
+            // Preserve both real worker observations even if a postcondition throws before
+            // a fidelity report can be produced. Raw model details stay in private artifacts.
+            File.WriteAllText(Path.Combine(directory, "mutation-readback.json"), JsonSerializer.Serialize(new { edited, reopened }));
             progress("native_mutation_fidelity");
             var fidelity = NativeMutationFidelity.Compare(input.Bytes, File.ReadAllBytes(output), mutations, reopened.Elements);
             File.WriteAllText(Path.Combine(directory, "native-fidelity.json"), JsonSerializer.Serialize(fidelity, new JsonSerializerOptions { WriteIndented = true }));

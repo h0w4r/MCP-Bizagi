@@ -153,7 +153,9 @@ public static class NativeDiagramPolicy
         var reverse = clone.Identities.ToDictionary(i => i.TargetId, i => i.SourceId);
         if (!reverse.TryGetValue(clone.TargetId, out var root) || root != clone.SourceId || reverse.Values.Distinct().Count() != reverse.Count)
             throw new InvalidDataException("Clone identity mapping is incomplete or ambiguous.");
-        var nodes = reopened.Where(e => e.DiagramId == clone.TargetId).ToArray();
+        var mainNodes = reopened.Where(e => e.DiagramId == clone.TargetId).ToArray();
+        var nodes = mainNodes.Concat(mainNodes.SelectMany(NativeDataFlowPolicy.OwnedNodes)).ToArray();
+        NativeDataFlowPolicy.VerifyClonedData(Read(result[Prefix(clone.TargetId) + "Diagram.xml"]), mainNodes);
         if (nodes.Length != reverse.Count || nodes.Any(e => !reverse.ContainsKey(e.Id))) throw new InvalidDataException("Clone readback does not cover every mapped native identity.");
         var left = original.Where(p => p.Key.StartsWith(Prefix(clone.SourceId), StringComparison.OrdinalIgnoreCase)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         string sourceXml = Prefix(clone.SourceId) + "Diagram.xml";
@@ -185,6 +187,10 @@ public static class NativeDiagramPolicy
                         reference |= node.Name == Xpdl + "BlockActivity" && attr.Name == "ActivitySetId" && node.Parent?.Name == Xpdl + "Activity" && NativeFidelity.IsNativeNameOwner(node.Parent);
                         reference |= NativeCallFidelity.IsCallReference(node) && attr.Name == "Id";
                         reference |= NativeEventPayloadPolicy.IsCompensationReference(node) && attr.Name == "ActivityId";
+                        reference |= owner && node.Name == Xpdl + "Association" && (attr.Name == "Source" || attr.Name == "Target");
+                        reference |= owner && node.Name == Xpdl + "DataStoreReference" && attr.Name == "DataStoreRef";
+                        reference |= owner && node.Name == Xpdl + "DataAssociation" && (attr.Name == "From" || attr.Name == "To");
+                        reference |= NativeDataFlowPolicy.IsSetReference(node) && attr.Name == "ArtifactId";
                         // Only the persisted boundary target is a cloned native activity reference.
                         // Same-named Target attributes on unknown extensions remain compared verbatim.
                         reference |= node.Name == Xpdl + "IntermediateEvent" && attr.Name == "Target" && (string?)node.Attribute("IsAttached") == "true" &&

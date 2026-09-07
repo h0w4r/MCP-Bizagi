@@ -155,17 +155,18 @@ public static class NativeFidelity
         {
             "Activity" => "Activities", "Transition" => "Transitions", "Pool" => "Pools", "Lane" => "Lanes",
             "Artifact" => "Artifacts", "MessageFlow" => "MessageFlows", "WorkflowProcess" => "WorkflowProcesses",
-            "ActivitySet" => "ActivitySets", "Milestone" => "Milestones", "DataObject" => "DataObjects", "DataStoreReference" => "DataStoreReferences",
+            "ActivitySet" => "ActivitySets", "Milestone" => "Milestones", "DataObject" => "DataObjects", "DataStoreReference" => "DataStoreReferences", "DataStore" => "DataStores", "Association" => "Associations",
+            "DataInput" or "DataOutput" => "DataInputOutputs", "DataAssociation" => "DataAssociations",
             _ => null
         };
         if (collection == null || element.Parent?.Name != XName.Get(collection, Xpdl)) return false;
         var container = element.Parent.Parent;
         return element.Name.LocalName switch
         {
-            "Pool" or "WorkflowProcess" or "MessageFlow" => IsContainer(container, "Package"),
+            "Pool" or "WorkflowProcess" or "MessageFlow" or "DataStore" => IsContainer(container, "Package"),
             "Lane" or "Milestone" => IsContainer(container, "Pool"),
             "ActivitySet" => IsContainer(container, "WorkflowProcess"),
-            "Artifact" => IsContainer(container, "Package") || IsContainer(container, "ActivitySet") || IsContainer(container, "WorkflowProcess"),
+            "Artifact" or "Association" => IsContainer(container, "Package") || IsContainer(container, "ActivitySet") || IsContainer(container, "WorkflowProcess"),
             _ => IsContainer(container, "WorkflowProcess") || IsContainer(container, "ActivitySet")
         };
     }

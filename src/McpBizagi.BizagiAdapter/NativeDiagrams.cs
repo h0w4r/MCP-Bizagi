@@ -120,9 +120,12 @@ public sealed partial class NativeEngine
         Set(parameters, "Source", model); Set(parameters, "Target", model);
         var map = (IDictionary)Get(parameters, "Guids"); object attributes = Get(model, "ExtendedAttributes");
         foreach (object definition in Items(attributes, "Definitions")) map.Add(Get(definition, "Id"), Get(definition, "Id"));
-        string sourceId = Text(source, "Id"); var original = Graph(model).Where(e => e.DiagramId == sourceId).Select(Describe).ToArray();
+        string sourceId = Text(source, "Id"); var originalGraph = Graph(model).Where(e => e.DiagramId == sourceId).ToArray();
+        var original = originalGraph.Concat(originalGraph.SelectMany(DataFlowNodes)).Select(Describe).ToArray();
         object sourceSimulation = Get(source, "BPSimData");
-        object clone = Call(NativeCloner("ICollaborationCloner"), "Clone", source, parameters)!;
+        object clone = CloneWithoutSharedDataFlow(source, parameters);
+        CloneDataStoreCatalog(source, clone, map, original);
+        CloneDataFlows(source, clone, map);
         foreach (var invisible in original.Where(e => e.IsMainParticipant == true))
         {
             // The installed participant cloner resets an invisible pool's size to zero, which
@@ -164,10 +167,11 @@ public sealed partial class NativeEngine
         // installed recursive updater with its real identity map, not a string replacement pass.
         Call(NativeCloner("CallActivity.IRerefenceUpdater"), "Update", model, clone, parameters);
         RemapCompensationTargets(model, sourceId, targetId, map);
-        var cloned = Graph(model).Where(e => e.DiagramId == targetId).Select(Describe).ToDictionary(e => e.Id);
+        var clonedGraph = Graph(model).Where(e => e.DiagramId == targetId).ToArray();
+        var cloned = clonedGraph.Concat(clonedGraph.SelectMany(DataFlowNodes)).Select(Describe).ToDictionary(e => e.Id);
         var identities = original.Select(e =>
         {
-            string id = map[Guid.Parse(e.Id)]?.ToString() ?? throw new InvalidDataException("Native clone omitted an identity mapping.");
+            string id = map[Guid.Parse(e.Id)]?.ToString() ?? throw new InvalidDataException("Native clone omitted an identity mapping for " + e.Kind + " " + e.Id + ".");
             if (!cloned.TryGetValue(id, out var copy)) throw new InvalidDataException("Mapped native clone identity is absent.");
             return new NativeCloneIdentity { SourceId = e.Id, TargetId = id, SourceBpmnId = e.BpmnId, TargetBpmnId = copy.BpmnId };
         }).ToArray();

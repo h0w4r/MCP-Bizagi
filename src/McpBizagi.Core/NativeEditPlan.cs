@@ -8,7 +8,7 @@ public static class NativeEditPlan
     public static readonly string[] CreatableTypes = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask",
         "NoneStart", "MessageStart", "TimerStart", "NoneEnd", "MessageEnd", "TerminateEnd", "NoneIntermediate", "MessageIntermediate", "TimerIntermediate",
         "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway", "SubProcess", "CallActivity", "Participant", "Lane", "Milestone",
-        "SequenceFlow", "MessageFlow", "TextAnnotation", "Group", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
+        "SequenceFlow", "MessageFlow", "Association", "DataStore", "TextAnnotation", "Group", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
 
     public static void Validate(NativeMutation[] changes)
     {
@@ -30,7 +30,7 @@ public static class NativeEditPlan
             else if (c.ParentId != "" || c.ElementType != "") throw new InvalidDataException("Parent and element type apply only to creation.");
             if (c.Operation == "create" && c.ElementType == "Participant") Id(c.ProcessId);
             else if (c.ProcessId != "") throw new InvalidDataException("ProcessId applies only to participant creation.");
-            bool connection = c.Operation == "reconnect" || c.Operation == "create" && c.ElementType is "SequenceFlow" or "MessageFlow";
+            bool connection = c.Operation == "reconnect" || c.Operation == "create" && c.ElementType is "SequenceFlow" or "MessageFlow" or "Association";
             if (connection)
             {
                 Id(c.SourceId); Id(c.TargetId);
@@ -38,12 +38,12 @@ public static class NativeEditPlan
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
             }
             else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
-            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null))
+            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
-            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null) throw new InvalidDataException("An update must specify an actual property.");
             NativeSemanticPolicy.Validate(c);
             NativeEventPolicy.Validate(c);
-            NativeEventPayloadPolicy.Validate(c);
+            NativeEventPayloadPolicy.Validate(c); NativeDataPolicy.Validate(c);
             NativeSubProcessPolicy.Validate(c);
             if (c.ActivityLoop != null)
             {
@@ -90,13 +90,18 @@ public static class NativeEditPlan
             var e = matches[0];
             NativeSemanticPolicy.Verify(c, e, elements);
             NativeEventPolicy.Verify(c, e, elements);
-            NativeEventPayloadPolicy.Verify(c, e, elements);
+            NativeEventPayloadPolicy.Verify(c, e, elements); NativeDataPolicy.Verify(c, e, elements);
             NativeSubProcessPolicy.Verify(c, e);
             if (c.ActivityLoop != null) NativeLoopPolicy.Verify(c.ActivityLoop, e.ActivityLoop);
-            if (c.Operation == "create" && (e.ParentId != c.ParentId || e.ElementType != c.ElementType)) throw new InvalidDataException("Created native type/containment differs from the request.");
+            if (c.Operation == "create" && (e.ParentId != c.ParentId || (c.ElementType == "DataStore" ? e.Kind != "DataStore" || e.ElementType != "Other" : e.ElementType != c.ElementType))) throw new InvalidDataException("Created native type/containment differs from the request.");
             if (c.ProcessId != "" && elements.Count(p => p.Id == c.ProcessId && p.Kind == "Process" && p.ParentId == c.ElementId && p.DiagramId == e.DiagramId) != 1)
                 throw new InvalidDataException("Created participant process identity/ownership differs from the request.");
             if (c.Name != null && e.Name != c.Name || c.Documentation != null && e.Documentation != c.Documentation) throw new InvalidDataException("Native text readback differs from the request.");
+            // Every connector lifecycle must prove actual endpoints and the complete path,
+            // including creation where the new XML subtree is projected from comparison.
+            if (c.SourceId != "" && (e.SourceId != c.SourceId || e.TargetId != c.TargetId || e.Points.Length != c.Points.Length ||
+                c.Points.Where((p, i) => !Same(p.X, e.Points[i].X) || !Same(p.Y, e.Points[i].Y)).Any()))
+                throw new InvalidDataException("Native connector endpoints or path differ after restart.");
             if (c.CallTarget is { } call)
             {
                 var reference = e.CallReference;

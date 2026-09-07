@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add native data object properties, shared store catalogs/references and exact
+  data-state, collection, capacity, unlimited flag and documentation fidelity.
+- Reconcile association-derived activity I/O using installed native utilities;
+  expose owned ports, associations and ordered sets in independent readback.
+- Restore nested I/O through the installed loader using original durable records,
+  isolate native shallow-clone state and explicitly remap catalog/port identities.
+  Preserve mutation readback diagnostics even when a postcondition rejects output.
+
 - Add typed existing-event definition payload patches, canonical native timer
   values, conditional text, names and error/escalation codes with independent
   restart verification and exact field-level archive comparison.

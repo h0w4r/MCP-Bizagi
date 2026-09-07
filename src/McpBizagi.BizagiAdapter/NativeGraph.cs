@@ -75,6 +75,8 @@ public sealed partial class NativeEngine
             CallReference = DescribeCall(element),
             ActivityProperties = DescribeActivity(element), ActivityLoop = DescribeLoop(element), FlowCondition = DescribeCondition(element),
             SubProcess = DescribeSubProcess(element), Event = DescribeEvent(element),
+            Data = DescribeData(element),
+            DataFlow = DescribeDataFlow(entry),
             EventGateway = element.GetType().Name == "EventBasedGateway" ? new NativeEventGatewayInfo
             { Instantiate = (bool)Get(element, "Instantiate"), Kind = Text(element, "EventGatewayType") } : null,
             GatewayDirection = Optional(element, "GatewayDirection")?.ToString(), DefaultSequenceFlowIds = DefaultFlowIds(element),
@@ -87,7 +89,7 @@ public sealed partial class NativeEngine
             Documentation = Text(element, "Documentation"),
             Geometry = geometry,
             ExpandedGeometry = expandedGeometry,
-            SourceRef = Text(element, "SourceRef"),
+            SourceRef = Optional(element, "SourceRef") is string[] sourceRefs ? string.Join(" ", sourceRefs) : Text(element, "SourceRef"),
             TargetRef = Text(element, "TargetRef"),
             SourceId = Optional(element, "Source") is object source ? Text(source, "Id") : "",
             TargetId = Optional(element, "Target") is object target ? Text(target, "Id") : "",

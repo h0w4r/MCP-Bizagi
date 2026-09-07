@@ -54,6 +54,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > [Event definition payloads](docs/native-event-payloads.md) add typed names,
 > conditions, timer values, error/escalation codes and compensation targets.
 > Editing existing definitions is distinct from collection editing or execution.
+> [Native data and activity I/O](docs/native-data.md) adds data objects, shared
+> stores, visible references and association-derived bindings, with explicit
+> nested-loader and clone identity checks. General I/O editing remains separate.
 
 ## Why this project
 

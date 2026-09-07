@@ -99,7 +99,7 @@ public sealed partial class NativeEngine
                 return false;
             }
             var expected = graph.Where(e => Optional(e.Value, "GraphicalProperties") != null &&
-                !new[] { "Collaboration", "Process", "LaneSet", "Resource" }.Contains(e.Value.GetType().Name) && InSurface(e) &&
+                !new[] { "Collaboration", "Process", "LaneSet", "Resource", "DataStore" }.Contains(e.Value.GetType().Name) && InSurface(e) &&
                 // Native main participants have BoundaryVisible=false. An empty invisible shell need
                 // not have an SVG identity, but every graphical child remains required independently.
                 !(e.Value.GetType().Name == "Participant" && (bool)Get(e.Value, "IsMainParticipant")))

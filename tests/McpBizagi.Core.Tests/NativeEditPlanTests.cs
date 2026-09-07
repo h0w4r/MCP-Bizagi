@@ -97,6 +97,8 @@ public sealed class NativeEditPlanTests
         {
             var mutation = Create(type);
             if (type == "Participant") mutation.ProcessId = TargetId;
+            if (type == "DataStore") mutation.Geometry = null;
+            if (type == "DataStoreReference") mutation.DataProperties = new() { StoreId = TargetId };
             if (type.EndsWith("Intermediate", StringComparison.Ordinal))
             {
                 mutation.EventMode = type is "NoneIntermediate" or "EscalationIntermediate" or "CompensationIntermediate" ? "Throw" : "Catch";
@@ -106,7 +108,7 @@ public sealed class NativeEditPlanTests
                     mutation.EventProperties = new() { AttachedToActivityId = TargetId };
                 }
             }
-            if (type is "SequenceFlow" or "MessageFlow")
+            if (type is "SequenceFlow" or "MessageFlow" or "Association")
             {
                 mutation.Geometry = null; mutation.SourceId = SourceId; mutation.TargetId = TargetId;
                 mutation.Points = [new() { X = 0, Y = 0 }, new() { X = 100, Y = 0 }];

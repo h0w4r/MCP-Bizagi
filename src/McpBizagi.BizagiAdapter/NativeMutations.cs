@@ -11,14 +11,17 @@ public sealed partial class NativeEngine
         foreach (var change in changes)
         {
             var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
+            var dataLinks = RequiredDataLinks(graph.Values);
             object Require(string id) => graph.TryGetValue(id, out var entry) ? entry.Value : throw new InvalidDataException("Unknown native identity: " + id);
             object element;
             if (change.Operation == "create")
             {
-                if (graph.ContainsKey(change.ElementId)) throw new InvalidDataException("Native identity already exists: " + change.ElementId);
+                if (graph.ContainsKey(change.ElementId) || graph.Values.SelectMany(DataFlowNodes).Any(e => Text(e.Value, "Id") == change.ElementId))
+                    throw new InvalidDataException("Native identity already exists: " + change.ElementId);
                 object parent = Require(change.ParentId);
                 // Use the installed factory so event definitions and element-specific defaults remain vendor-owned.
-                object kind = Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.ElementType, false);
+                // DataStore is a native catalog class whose ElementType is Other, not a palette enum.
+                object kind = Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.ElementType == "DataStore" ? "Other" : change.ElementType, false);
                 object descriptor = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementDescriptor"), kind);
                 // The native factory requires an explicit intermediate-event mode. Current names use
                 // NoneIntermediate = throw, MessageIntermediate/TimerIntermediate = catch.
@@ -28,7 +31,7 @@ public sealed partial class NativeEngine
                 if (change.ElementType == "SubProcess" && change.SubProcessKind is "Transaction" or "AdHoc")
                     Set(descriptor, "Options", Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementTypeOptions"),
                         change.SubProcessKind == "Transaction" ? "TransactionSubProcess" : "AdHocSubProcess"));
-                element = Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IElementFactory"), "Create", descriptor)
+                element = (change.ElementType == "DataStore" ? New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.DataStore")) : Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IElementFactory"), "Create", descriptor))
                     ?? throw new NotSupportedException("Native factory does not create this element type.");
                 Set(element, "Id", Guid.Parse(change.ElementId));
                 Set(element, "DisplayName", change.Name ?? "");
@@ -50,7 +53,7 @@ public sealed partial class NativeEngine
                         Set(runtime, "MilestoneType", Enum.Parse(runtime.GetType().GetProperty("MilestoneType")!.PropertyType, "Process"));
                     }
                 }
-                Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnUtilFacade"), "SetDefaultBizAgiName", parent, element);
+                if (change.ElementType != "DataStore") Call(Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.IBpmnUtilFacade"), "SetDefaultBizAgiName", parent, element);
                 Call(MutationCollection(parent, element), "Add", element);
                 graph.Add(change.ElementId, new GraphEntry(element, change.ParentId, graph[change.ParentId].DiagramId));
             }
@@ -64,6 +67,7 @@ public sealed partial class NativeEngine
                     if (change.SubProcessProperties != null) ApplySubProcessProperties(element, change.SubProcessProperties);
                     if (change.EventProperties != null) ApplyEventProperties(element, change.EventProperties, graph);
                     if (change.EventPayloads != null) ApplyEventPayloads(element, change.EventPayloads, graph);
+                    if (change.DataProperties != null) ApplyDataProperties(element, change.DataProperties, graph);
                     if (change.CallTarget != null) ApplyCallTarget(element, change.CallTarget, graph);
                     if (change.ActivityProperties != null) ApplyActivityProperties(element, change.ActivityProperties);
                     if (change.ActivityLoop != null) ApplyLoop(element, change.ActivityLoop);
@@ -93,6 +97,8 @@ public sealed partial class NativeEngine
                     string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
                     RequireNoAttachedBoundaries(graph.Values, change.ElementId);
                     RequireNoCompensationTargets(graph.Values, change.ElementId);
+                    RequireNoStoreReferences(graph.Values, change.ElementId);
+                    RequireStoreStateCarrier(graph.Values, element);
                     RequireNoIncomingCalls(graph.Values, new HashSet<string>(new[] { change.ElementId, processId }.Where(v => v != ""), StringComparer.Ordinal));
                     if (processId != "" && ((bool)Get(element, "IsMainParticipant") || graph.Values.Count(e => e.DiagramId == graph[change.ElementId].DiagramId && e.Value.GetType().Name == "Participant") <= 1))
                         throw new InvalidDataException("Deleting the main or last participant would invoke native implicit-model reconstruction.");
@@ -113,9 +119,11 @@ public sealed partial class NativeEngine
                 SynchronizeDefaultFlow(previousSource);
                 if (change.Operation != "delete") SynchronizeDefaultFlow(Optional(element, "Source"));
             }
+            SynchronizeDataLinks(model, dataLinks);
             progress("native_mutation:" + change.Operation + ":" + change.ElementId);
         }
         ValidateSubProcessContexts(model, changes);
+        ValidateDataStateOwnership(model, changes);
         ValidateLanePartitions(model);
     }
 
@@ -176,6 +184,7 @@ public sealed partial class NativeEngine
             "Lane" => "Lanes",
             "Milestone" => "Milestones",
             "MessageFlow" => "MessageFlows",
+            "DataStore" when parent.GetType().Name == "Collaboration" => "DataStore",
             _ when Derives("FlowElement") => "FlowElements",
             _ when Derives("Artifact") => "Artifacts",
             _ => throw new NotSupportedException("Unsupported native containment for " + element.GetType().Name)
@@ -210,7 +219,15 @@ public sealed partial class NativeEngine
     private static void Connect(object connection, object source, object target, NativePoint[] points, Dictionary<string, GraphEntry> graph)
     {
         string kind = connection.GetType().Name;
-        if (kind is not "SequenceFlow" and not "MessageFlow") throw new NotSupportedException("Only native sequence/message flows can be connected.");
+        if (kind is not "SequenceFlow" and not "MessageFlow" and not "Association") throw new NotSupportedException("Unsupported native connector kind.");
+        if (kind == "Association")
+        {
+            var owner = graph[Text(connection, "Id")];
+            if (!graph.TryGetValue(Text(source, "Id"), out var a) || !graph.TryGetValue(Text(target, "Id"), out var b) ||
+                a.DiagramId != owner.DiagramId || b.DiagramId != owner.DiagramId || a.ParentId != owner.ParentId || b.ParentId != owner.ParentId ||
+                Optional(source, "GraphicalProperties") == null || Optional(target, "GraphicalProperties") == null || source == connection || target == connection)
+                throw new InvalidDataException("Association endpoints must be graphical elements in the same native container.");
+        }
         if (kind == "SequenceFlow")
         {
             // Event subprocesses exist outside their parent's normal sequence flow.
@@ -227,8 +244,8 @@ public sealed partial class NativeEngine
             UnlinkSequence(connection);
         }
         Set(connection, "Source", source); Set(connection, "Target", target);
-        Set(connection, "SourceRef", kind == "MessageFlow" ? new System.Xml.XmlQualifiedName(Text(source, "BpmnId")) : (object)Text(source, "BpmnId"));
-        Set(connection, "TargetRef", kind == "MessageFlow" ? new System.Xml.XmlQualifiedName(Text(target, "BpmnId")) : (object)Text(target, "BpmnId"));
+        Set(connection, "SourceRef", kind != "SequenceFlow" ? new System.Xml.XmlQualifiedName(Text(source, "BpmnId")) : (object)Text(source, "BpmnId"));
+        Set(connection, "TargetRef", kind != "SequenceFlow" ? new System.Xml.XmlQualifiedName(Text(target, "BpmnId")) : (object)Text(target, "BpmnId"));
         object vertices = Get(connection, "Points"); Call(vertices, "Clear");
         foreach (var point in points) Call(vertices, "Add", new PointF((float)point.X, (float)point.Y));
         if (kind == "SequenceFlow")
