@@ -61,6 +61,21 @@ Set `MCP_BIZAGI_ROOT` and opt into native diagnostics as described in
 
 ## Additional native acceptance families
 
+The `0.5.0-alpha.1` source candidate consolidates the newer native families.
+Use a newly extracted candidate, not the immutable `0.4.0-alpha.1` ZIP, for
+the following additional focused circuits. Execute them sequentially against
+the same package directory; retain each transcript and recheck the package
+manifest afterward. A package's presence is not acceptance of these routes.
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --refactoring-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --xpdl-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --conversions-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --images-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --custom-artifacts-only
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --styles-only
+```
+
 Run the focused clients against the same extracted package, using a reviewed
 native file with a task and incoming flow for the mutation test:
 

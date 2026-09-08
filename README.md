@@ -8,7 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.4.0--alpha.1-orange)](Directory.Build.props)
+[![Source version](https://img.shields.io/badge/source-0.5.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.

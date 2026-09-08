@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.5.0-alpha.1 candidate
+
+This consolidated source version remains experimental. A version bump or
+successful build is not package acceptance: an extracted distribution must
+pass the independent MCP/native circuits before release publication. The
+earlier 0.4.0-alpha.1 archive remains immutable and does not gain these features.
+
+- Extract ordinary root/nested embedded subprocesses into native reusable
+  diagrams, retaining descendant identities, original archive content,
+  attachments, images and persisted current-user tab references. Guard scenario
+  and presentation migrations; do not claim simulation or GUI equivalence.
+- Import/export XPDL 2.2 with the installed Unicode serializer and importer,
+  independent native restart validation and explicit graph/XML/archive losses.
+  Extended attribute conversion and omitted attachments remain visible losses,
+  not an interchangeable native backup format.
+
 - Add explicit, revision-checked task/gateway type conversion through the
   installed native command, preserving identities, collection order, common
   graphics and remaining archive content across three separate workers.
