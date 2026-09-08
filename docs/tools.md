@@ -105,6 +105,11 @@ that a BPMN export contains extended attributes and attachments.
 
 ## Results and failure handling
 
+`native_subprocess_extract` uses an existing native subprocess ID and a new
+diagram name to perform installed-engine embedded-to-reusable refactoring.
+See its [copy-only contract](native-refactoring.md) for descendant/file fidelity,
+persisted tab remapping, explicit simulation boundaries and failure quarantine.
+
 For selected-diagram XPDL 2.2 exchange, use `native_xpdl_export` and
 `native_xpdl_import`, not the BPMN roundtrip tool. Both require explicit format
 loss acknowledgement and source revisions. The [XPDL contract](native-xpdl.md)

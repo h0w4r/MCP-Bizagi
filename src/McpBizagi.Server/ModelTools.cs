@@ -44,6 +44,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
             nativeXpdl = new { version = "2.2", tools = new[] { "native_xpdl_import", "native_xpdl_export" }, maximumDocuments = 100,
                 scope = "explicit_interchange_projection_with_differences_not_native_backup_or_visual_equivalence" },
+            nativeRefactoring = new { tool = "native_subprocess_extract", operation = "embedded_to_reusable", sourceKind = "ordinary_SubProcess",
+                scope = "native_command_descendant_relocation_current_user_tab_remap_and_whole_container_gate_not_behavioral_equivalence_or_arbitrary_selection_refactoring" },
             nativeConversions = new { tool = "native_elements_convert", taskTypes = NativeConversionPolicy.TaskTypes, gatewayTypes = NativeConversionPolicy.GatewayTypes,
                 maximumBatchSize = 1000, scope = "same_category_explicit_expected_type_and_revision_no_silent_content_retirement" },
             nativeStyles = new { patch = "NativeMutation.Style", fontInventoryTool = "native_fonts_get", fontSize = "whole_native_units_1_to_512_not_css_pixels",
@@ -70,6 +72,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_workspace_commit_and_reconciliation", status = "experimental_byte_exact_adoption_durable_intent_backup_and_fresh_native_readback_no_blind_replay", backend = "bizagi_worker" },
                 new { name = "native_structural_geometry_documentation_batches", status = "experimental_palette_connections_and_explicit_pool_lane_milestone_subprocess_lifecycle_not_full_editor", backend = "bizagi_worker" },
                 new { name = "native_task_gateway_type_conversion", status = "experimental_installed_command_three_process_readback_and_whole_archive_gate_not_event_conversion_subprocess_refactoring_or_live_sessions", backend = "bizagi_worker" },
+                new { name = "native_embedded_subprocess_extraction", status = "experimental_installed_command_root_and_nested_extraction_with_rich_content_and_persisted_tab_readback_not_general_reparenting_or_scenario_migration", backend = "bizagi_worker" },
                 new { name = "native_event_boundary_lifecycle", status = "experimental_explicit_modes_interruption_activity_references_and_clone_remapping_not_simulation_accreditation", backend = "bizagi_worker" },
                 new { name = "native_event_definition_payloads", status = "experimental_unique_existing_kind_text_timer_and_compensation_patches_not_definition_collection_editing_or_execution_validation", backend = "bizagi_worker" },
                 new { name = "native_data_and_activity_io", status = "experimental_native_data_properties_store_references_and_derived_activity_and_event_bindings_with_fresh_readback_not_full_io_editor_or_visual_accreditation", backend = "bizagi_worker" },
@@ -109,6 +112,10 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_probe"), Description("Experimental native service bootstrap. Returns an operation ID, not a claim of full engine support.")]
     public CallToolResult Probe() => Guard(() => native.Probe());
+
+    [McpServerTool(Name = "native_subprocess_extract"), Description("Experimental native embedded-to-reusable subprocess extraction on a private copy. Explicit source ID, target diagram name and revision; original retained. Fresh-reader and whole-container gates quarantine unaccredited changes. Poll operation_get; tool availability is not operational accreditation.")]
+    public CallToolResult ExtractSubProcess(string path, string expectedRevision, NativeSubProcessExtraction extraction) =>
+        Guard(() => native.ExtractSubProcess(path, expectedRevision, extraction));
 
     [McpServerTool(Name = "native_xpdl_import"), Description("Import 1-100 revision-checked XPDL 2.2 files or completed export artifacts through the installed importer, save a new .bpm, reopen and re-export with explicit XML differences. Requires acknowledgeFormatLimits=true; never overwrites sources or promises lossless interchange. Poll operation_get.")]
     public CallToolResult ImportXpdl(NativeExchangeInput[] inputs, bool acknowledgeFormatLimits, string modelName = "Imported XPDL") =>

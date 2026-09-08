@@ -166,6 +166,18 @@ try
         await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--refactoring-only"))
+    {
+        if (!native) throw new ArgumentException("Refactoring acceptance requires --native.");
+        int extractionInput = Array.IndexOf(args, "--input");
+        if (extractionInput >= 0)
+        {
+            if (extractionInput + 1 >= args.Length) throw new ArgumentException("--input requires an existing native model path.");
+            await NativeRefactoringAcceptance.RunExisting(run, args[extractionInput + 1], (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        }
+        else await NativeRefactoringAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_REFACTORING_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--conversions-only"))
     {
         if (!native) throw new ArgumentException("Conversion acceptance requires --native.");

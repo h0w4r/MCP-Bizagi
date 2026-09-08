@@ -89,12 +89,27 @@ public static class NativeDiagramPolicy
         if (state.Diagrams.Length != expected.Count || state.Diagrams.Select(d => d.Id).Distinct().Count() != state.Diagrams.Length || state.Diagrams.Any(d => !expected.TryGetValue(d.Id, out var name) || name != d.Name))
             throw new InvalidDataException("Fresh-worker diagram snapshot differs from durable XML.");
         if (patch.OpenedItems is { } opened)
+            ProjectOpenedItems(left, right, opened, state, edited.DiagramState);
+        foreach (string id in deleted) foreach (string key in left.Keys.Where(k => k.StartsWith(Prefix(id), StringComparison.OrdinalIgnoreCase)).ToArray()) left.Remove(key);
+        foreach (string id in created) foreach (string key in right.Keys.Where(k => k.StartsWith(Prefix(id), StringComparison.OrdinalIgnoreCase)).ToArray()) right.Remove(key);
+        foreach (var change in patch.Changes.Where(c => c.Operation == "rename"))
         {
+            string key = Prefix(change.DiagramId) + "Diagram.xml"; var original = Read(left[key]); var resulting = Read(right[key]);
+            ProjectDerivedDescription(original, resulting, change.Name!); right[key] = Bytes(resulting);
+        }
+        var names = patch.Changes.Where(c => c.Operation == "rename").Select(c => new ExpectedNativeName(c.DiagramId, c.Name!)).ToArray();
+        var report = NativeFidelity.CompareEntries(left, right, names);
+        return report with { Differences = report.Differences.Concat(patch.Changes.Select(c => new NativeDifference("request", c.Operation, "verified_diagram_lifecycle", c.DiagramId, null, "fresh-worker and durable container checked"))).ToArray() };
+    }
+    // Shared exact native preference projection for diagram operations and subprocess extraction.
+    internal static void ProjectOpenedItems(Dictionary<string, byte[]> left, Dictionary<string, byte[]> right, NativeOpenedItem[] opened,
+        NativeDiagramSnapshot state, NativeDiagramSnapshot? editedState)
+    {
             if (!opened.Select(ItemKey).SequenceEqual(state.OpenedItems.Select(ItemKey))) throw new InvalidDataException("Native tab preferences did not survive restart.");
             var scope = state.PreferenceEntries;
             if (scope.Length is < 1 or > 2 || scope.Distinct(StringComparer.OrdinalIgnoreCase).Count() != scope.Length ||
                 !scope.Contains("Users/Default/UserPreferences.xml", StringComparer.OrdinalIgnoreCase) ||
-                !scope.SequenceEqual(edited.DiagramState?.PreferenceEntries ?? [], StringComparer.OrdinalIgnoreCase))
+                !scope.SequenceEqual(editedState?.PreferenceEntries ?? [], StringComparer.OrdinalIgnoreCase))
                 throw new InvalidDataException("Native preference write scope is absent or changed across workers.");
             foreach (string key in scope)
             {
@@ -113,18 +128,7 @@ public static class NativeDiagramPolicy
                     throw new InvalidDataException("Durable opened-item preferences differ from the complete requested list.");
                 y.ReplaceWith(new XElement(x)); right[key] = Bytes(b);
             }
-        }
-        foreach (string id in deleted) foreach (string key in left.Keys.Where(k => k.StartsWith(Prefix(id), StringComparison.OrdinalIgnoreCase)).ToArray()) left.Remove(key);
-        foreach (string id in created) foreach (string key in right.Keys.Where(k => k.StartsWith(Prefix(id), StringComparison.OrdinalIgnoreCase)).ToArray()) right.Remove(key);
-        foreach (var change in patch.Changes.Where(c => c.Operation == "rename"))
-        {
-            string key = Prefix(change.DiagramId) + "Diagram.xml"; var original = Read(left[key]); var resulting = Read(right[key]);
-            ProjectDerivedDescription(original, resulting, change.Name!); right[key] = Bytes(resulting);
-        }
-        var names = patch.Changes.Where(c => c.Operation == "rename").Select(c => new ExpectedNativeName(c.DiagramId, c.Name!)).ToArray();
-        var report = NativeFidelity.CompareEntries(left, right, names);
-        return report with { Differences = report.Differences.Concat(patch.Changes.Select(c => new NativeDifference("request", c.Operation, "verified_diagram_lifecycle", c.DiagramId, null, "fresh-worker and durable container checked"))).ToArray() };
-    }
+            }
     private static string ItemKey(NativeOpenedItem i) => i.DiagramId + ":" + i.SubProcessId + ":" + i.IsSelected;
     private static void ProjectDerivedDescription(XDocument source, XDocument target, string requestedName)
     {

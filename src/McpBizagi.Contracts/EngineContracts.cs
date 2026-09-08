@@ -13,6 +13,7 @@ public sealed class EngineRequest
     public NativeNameChange[] Changes { get; set; } = System.Array.Empty<NativeNameChange>();
     public NativeMutation[] Mutations { get; set; } = System.Array.Empty<NativeMutation>();
     public NativeTypeConversion[] Conversions { get; set; } = System.Array.Empty<NativeTypeConversion>();
+    public NativeSubProcessExtraction? Extraction { get; set; }
     public string DiagramId { get; set; } = "";
     public string SubProcessId { get; set; } = "";
     public string ImageElementId { get; set; } = "";
@@ -169,6 +170,7 @@ public sealed class EngineReply
     public string OperationId { get; set; } = "";
     public string[] Artifacts { get; set; } = System.Array.Empty<string>();
     public NativeExchangeArtifact[] ExchangeFiles { get; set; } = System.Array.Empty<NativeExchangeArtifact>();
+    public NativeExtractionReceipt? Extraction { get; set; }
     public string[] Diagrams { get; set; } = System.Array.Empty<string>();
     public NativeElement[] Elements { get; set; } = System.Array.Empty<NativeElement>();
     public NativeValidationMessage[] Validation { get; set; } = System.Array.Empty<NativeValidationMessage>();

@@ -1,0 +1,13 @@
+{
+  "description": "Replace the sample path, source SHA-256 and embedded-subprocess GUID with actual native_inspect results. Poll operation_get and review the completed fidelity receipt before publishing the new model.",
+  "tool": "native_subprocess_extract",
+  "arguments": {
+    "path": "models/reviewed-source.bpm",
+    "expectedRevision": "REPLACE_WITH_SOURCE_SHA256",
+    "extraction": {
+      "ElementId": "11111111-1111-4111-8111-111111111111",
+      "NewDiagramName": "Reusable approval process"
+    }
+  },
+  "boundary": "Creates a separate native artifact and retains the original. Reusable calls are simulator black boxes, not equivalent embedded execution. Inspect docs/native-refactoring.md for scenario, presentation, attribute-scope and live-session boundaries."
+}

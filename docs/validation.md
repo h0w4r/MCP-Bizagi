@@ -1,5 +1,61 @@
 # Verification baselines
 
+## Native embedded-subprocess extraction — 2026-09-08 UTC
+
+The enriched independent MCP run `20260908-040825-01d182` passed root and
+nested extraction through the installed `RefactorElementsCommand`, durable
+native persistence and fresh-process reads. Its 15 terminal native operations
+include 14 completed and one expected wrong-element-type failure; a stale
+revision was separately rejected at MCP preflight. Inspection afterward
+confirmed recovery and the unchanged original source revision.
+
+The client authored two diagrams, root/nested subprocesses, internal and
+incident external connections, Unicode names, all four RACI assignment sets,
+extended text, an embedded attachment and a nested transparent image. Root
+extraction `99f39533963149559686e8bd13519212` moved five descendant identities;
+nested extraction `bd2528a7df324a068858d86f9e6fbddc` independently moved two
+from the same original source. The tests checked attachment/image bytes,
+unchanged incident flow references, native no-op saving, SVG rendering, and
+the order, selected state and remapping of four persisted current-user tabs.
+
+All 30 owned workers exited. The 178 periodic read-only samples observed no
+visible worker window or foreground ownership; this is sampled evidence, not
+continuous desktop tracing or independent Modeler visual compatibility.
+The transcript SHA-256 is
+`c54329b997410f47b05a9f0755110fda3669c7c9b11ef2d2057e0d8a355a2843`.
+
+After the final archive-identity guards were added, the current-source real
+MCP replay `20260908-041340-817091` independently extracted each ordinary
+subprocess from the retained rich native model and saved each result again.
+All five operations completed; 11 workers exited and 66 periodic samples
+observed no visible window or foreground ownership. This replay used actual
+workers and native files, not a comparison-only fixture. Its transcript is
+`b79562484d6dc64363cb4e8e7f8eba4ff7f56a251412ede84ad3e6ab67a7f06a`.
+
+An earlier diagnostic run `20260908-034749-bbb9cf` correctly failed because
+the installed reader materialized a call QName absent immediately after the
+native command. The adapter now initializes both native call representations
+before saving. The fresh-reader comparison was not weakened to hide this
+difference. Diagnostic artifacts remain private.
+
+The source build completed with zero warnings/errors and **909 separate
+unit/component tests** passed, including 13 extraction-policy cases. These
+tests are not substitutes for the native acceptance above. The subsequent
+general MCP circuit `20260908-041807-b9e3eb` passed with
+`--native --extended --simulation --render --recovery`: 12 completed native
+operations, one expected failure, one cancellation and one deliberate
+host-death interruption. It covered actual XML MCP, native persistence and
+edits, validation, simulation, SVG, corrupt input, cancellation/recovery,
+Job Object cleanup and state-lease rejection. Its transcript SHA-256 is
+`44741a05fbcda3b83b427067a19ecd55ac0690bd32150afb5a29404b9aa5f084`.
+
+See [the extraction contract](native-refactoring.md) for interpretation and
+remaining boundaries. Reusable calls are not simulator-equivalent to embedded
+execution. Configured child scenarios, presentation actions, special subprocess
+types and arbitrary selection refactoring remain separate work. The earlier
+immutable 0.4.0-alpha.1 ZIP does not include this capability; this milestone
+does not close full Modeler automation.
+
 ## Native XPDL 2.2 interchange — 2026-09-08 UTC
 
 The enriched independent MCP circuit `20260908-032836-a1a99d` passed **13
