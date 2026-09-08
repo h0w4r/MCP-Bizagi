@@ -1,0 +1,17 @@
+{
+  "path": "<native path or artifact URI>",
+  "expectedRevision": "<sourceRevision from native_presentation_get>",
+  "changes": [
+    {
+      "Operation": "upsert",
+      "Action": {
+        "DiagramId": "<native diagram GUID>",
+        "ElementId": "<native graphical owner GUID>",
+        "Type": "Text",
+        "TypeValue": "Normal",
+        "DisplayName": "Review guidance",
+        "Content": "Original instructions for this element."
+      }
+    }
+  ]
+}

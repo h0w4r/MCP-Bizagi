@@ -193,6 +193,12 @@ try
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--presentation-only"))
+    {
+        if (!native) throw new ArgumentException("Presentation acceptance requires --native.");
+        await NativePresentationAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_PRESENTATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--artifacts-only"))
     {
         if (!native) throw new ArgumentException("Artifact acceptance requires --native.");

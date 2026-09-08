@@ -34,6 +34,8 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_diagrams_apply` | `path`, `expectedRevision`, `patch` | Create/rename/clone/delete diagrams and explicitly replace ordered tab preferences; native ID map and fresh-reader fidelity; [contract](native-diagrams.md) |
 | `native_metadata_get` | `path` | Native resource catalog, activity RACI, full diagram BPSim XML, element `Id` and `BpmnId`, source revision |
 | `native_metadata_apply` | `path`, `expectedRevision`, `patch` | Resource changes, full activity assignments and full diagram simulation replacements; new native artifact, fresh-worker readback and whole-archive fidelity |
+| `native_presentation_get` | `path` | Native per-owner action definitions and normal embedded payload hashes; never activates content; [contract](native-presentation.md) |
+| `native_presentation_apply` | `path`, `expectedRevision`, `changes` | Complete action upsert/delete, native description/attribute references, explicit File/Image bytes; original retained, whole-archive and fresh-reader gates |
 | `native_attributes_get` | `path` | Native definitions, per-element values, embedded file inventory and hashes; linked files are not opened |
 | `native_attributes_apply` | `path`, `expectedRevision`, `patch` | Explicit native definition XML, complete element values and byte transactions; [contract](native-attributes.md) |
 | `native_attachment_export` | `path`, `diagramId`, `elementId`, `fileName` | Export known native-loaded embedded bytes to an operation artifact, verify against the source archive and output hash |

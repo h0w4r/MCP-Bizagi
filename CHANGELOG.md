@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add typed native presentation action inspection and complete per-owner
+  upsert/deletion in revision-checked copies. Use installed action collections,
+  selected native description/attribute resolvers, opaque embedded payloads and
+  independent fresh-reader/whole-archive gates. Content is never activated.
+  Playback, live documents and cross-diagram action migration remain separate.
+  This source addition is not included in the immutable 0.6.0-alpha.1 ZIP.
+
+
 - Add explicit same-role native event kind conversion through the installed
   command, with `ExpectedEventMode`, neutral-definition checks, preserved I/O,
   interruption and attachments, protected message references and strict runtime

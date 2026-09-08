@@ -49,7 +49,7 @@ public static class NativeArchive
             }
             if (payload.Length != entry.Length) throw new InvalidDataException("Native archive entry length mismatch.");
             payload.Position = 0;
-            bool embeddedFile = depth == 1 && name.StartsWith("Files/", StringComparison.OrdinalIgnoreCase);
+            bool embeddedFile = depth == 1 && (name.StartsWith("Files/", StringComparison.OrdinalIgnoreCase) || name.StartsWith("Actions/", StringComparison.OrdinalIgnoreCase));
             if (name.EndsWith(".diag", StringComparison.OrdinalIgnoreCase) && !embeddedFile)
             {
                 Inspect(payload, depth + 1, ref expanded, ref entryCount, entries, prefix + name + "!/");

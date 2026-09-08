@@ -27,6 +27,7 @@ public sealed class EngineRequest
     public string ScenarioId { get; set; } = "";
     public int SimulationLevel { get; set; } = 1;
     public NativeSimulationResultWrite? SimulationResultWrite { get; set; }
+    public NativePresentationActionChange[] PresentationChanges { get; set; } = System.Array.Empty<NativePresentationActionChange>();
     public string PublicationFormat { get; set; } = "";
     public string PublicationTitle { get; set; } = "Process documentation";
     public string[] SelectedDiagramIds { get; set; } = System.Array.Empty<string>();
@@ -201,6 +202,7 @@ public sealed class EngineReply
     public NativeFontFamily[] Fonts { get; set; } = System.Array.Empty<NativeFontFamily>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
     public NativeSavedSimulationResult[] SavedSimulationResults { get; set; } = System.Array.Empty<NativeSavedSimulationResult>();
+    public NativePresentationSnapshot? Presentation { get; set; }
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
     public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();
 }

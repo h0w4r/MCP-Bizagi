@@ -38,7 +38,7 @@ public static class NativeFidelity
                     had ? BpmnDocument.Revision(original!) : null, has ? BpmnDocument.Revision(resulting!) : null));
                 continue;
             }
-            if (!entry.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) || entry.Contains(".diag!/Files/", StringComparison.OrdinalIgnoreCase))
+            if (!entry.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) || entry.Contains(".diag!/Files/", StringComparison.OrdinalIgnoreCase) || entry.Contains(".diag!/Actions/", StringComparison.OrdinalIgnoreCase))
             {
                 checkedAtoms++;
                 if (!original!.AsSpan().SequenceEqual(resulting))
@@ -88,6 +88,16 @@ public static class NativeFidelity
             // The native loader relocates only embedded files. Linked files and arbitrary paths remain exact.
             string diagramId = entry[..entry.IndexOf(".diag!/", StringComparison.OrdinalIgnoreCase)];
             var normalized = NativeMetadataPolicy.Read(NativeDocumentationPolicy.ValuesContent(doc.ToString(), diagramId, archive));
+            var sources = doc.Descendants().ToArray(); var targets = normalized.Descendants().ToArray();
+            for (int i = 0; i < sources.Length; i++)
+                if (sources[i].Name == "Content" && sources[i].Value != targets[i].Value)
+                { string original = sources[i].Value; sources[i].Value = targets[i].Value; sources[i].AddAnnotation(new RuntimePathMarker(original)); }
+        }
+        if (entry.EndsWith(".diag!/Actions.xml", StringComparison.OrdinalIgnoreCase) && doc.Root.Name == "DiagramActions")
+        {
+            // Normalize only archive-owned native payload locations, never links or literal text.
+            string diagram = entry[..entry.IndexOf(".diag!/", StringComparison.OrdinalIgnoreCase)];
+            var normalized = NativeMetadataPolicy.Read(NativePresentationPolicy.Normalize(doc.ToString(), diagram, archive));
             var sources = doc.Descendants().ToArray(); var targets = normalized.Descendants().ToArray();
             for (int i = 0; i < sources.Length; i++)
                 if (sources[i].Name == "Content" && sources[i].Value != targets[i].Value)

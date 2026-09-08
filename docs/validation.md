@@ -1,5 +1,68 @@
 # Verification baselines
 
+## Native presentation actions — source after 0.6, 2026-09-08 UTC
+
+Final official-SDK stdio circuit `20260908-215517-c1fc42` passed **27 terminal
+operations: 22 completed and five expected failures**, plus two expected
+parameter/protocol rejections. The installed Modeler 4.3.0.008 engine created,
+persisted and independently reopened the actual native action collections.
+
+- Normal Text, Link, None, File and Image actions were created and updated on
+  native task/start/end owners. Description content came from the installed
+  selected-owner resolver, not a host substitute. No content was activated.
+- Eight referenced attribute kinds were exercised: Text, LongText, Number, Date,
+  Link, FileLinked, FileEmbedded and Image. Native values/attachments were authored
+  through MCP first; each selected native action cache matched the expected value.
+- An actual installed-renderer PNG and an opaque non-XML `.xml` payload retained
+  exact bytes. The independent client decoded the native ZIP/diagram archive and
+  compared contents, in addition to the host's whole-archive and native hash gates.
+- Native no-op saves preserved normal files and referenced embedded content.
+  Byte replacement retained the unrelated image. Deleting the final actions
+  removed their owned payloads and survived a new process; subsequent creation
+  recovered after an expected absent-action deletion failure.
+- Invalid image bytes failed in the worker. Wrong reference type, missing owner,
+  unrelated-file overwrite and absent deletion were rejected; stale revision and
+  unsafe filename requests were rejected at the protocol boundary. Expected error
+  messages were retained and checked, not substituted with successful fixtures.
+- All **61 workers / 66 owned processes** exited. **400 sampled desktop
+  observations** recorded no owned visible window or worker foreground takeover;
+  this is periodic observation, not continuous proof or independent GUI playback.
+- A post-run audit rehashed **18 prior durable output artifacts**, **19 captured
+  inputs** and **111 distinct loaded vendor module contents**. Earlier outputs
+  remained unchanged after later writes/failures; module fingerprints still
+  matched the local installation, including culture-specific resource assemblies.
+
+Transcript SHA-256:
+`5d088a5ecae9a651fa06e5d591fcdbce74764f0148c593af3ec607bb9a39a7a0`.
+Independent presentation receipt SHA-256:
+`9e10d116c8a03d0504e93914b79367fb4b1bddd1b3c900c9aab4e3a8905baefa`.
+
+Locked restore and Release build passed with zero warnings/errors; **1,261
+unit/component tests** passed. The separate XML-only MCP circuit
+`20260908-215241-dabec0` exposed 46 tools and passed without running the native
+engine. Eighteen package-integrity policy cases passed; these are not packaged
+native acceptance. The immutable 0.6 ZIP was not replaced.
+
+Earlier diagnostic runs exposed an incorrect interface assembly lookup and
+inter-record whitespace retained by the expected XML after deleting the last
+action. Both failures remain in private evidence. The final run used the corrected
+installed service contract, targeted intent formatting and the existing native
+image-size guard; unknown content and explicit whitespace-preservation remain
+protected. See the [action contract](native-presentation.md).
+
+The unchanged extended-attribute/attachment circuit also passed on the final
+source: `20260908-220319-8a6554`, **18 terminal operations (15 completed, three
+expected failures)**, 29 workers / 35 owned processes exited, and 224 sampled
+desktop observations without an owned visible window/foreground takeover. This
+regression covers twelve native attribute kinds, table rows, embedded file/image
+bytes, export, no-op saving and unrelated edits. Its transcript SHA-256 is
+`cf09bc59a15b6b711bfcf801e2989686f49f82f226d1d6308bae4e87e3ca7e68`;
+independent receipt SHA-256 is
+`f5a366ba35ddd5672c798d93febdb1a8b9512ff66c11838ead35ad7134bac908`.
+The post-run audit retained ten prior outputs and six input snapshots unchanged.
+This does **not** accredit playback, action migration between diagrams, unsaved
+Modeler documents, independent GUI compatibility or full Modeler automation.
+
 ## Native saved simulation results — source after 0.6, 2026-09-08 UTC
 
 Final official-SDK stdio circuit `20260908-210023-dbb545` passed **28 terminal
