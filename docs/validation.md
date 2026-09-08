@@ -1,5 +1,68 @@
 # Verification baselines
 
+## Bidirectional task / unbound-call conversion — source after 0.6, 2026-09-08 UTC
+
+Final circuit `20260908-174732-45dbd8` passed **29 completed native operations**
+and five expected protocol-level rejections through the actual SDK stdio client,
+installed Modeler 4.3.0.008 commands and independent native reader processes.
+
+- Forward operation `66ed1180e14a4414bf73b676c93f0d16` verified nine task-to-call
+  changes. Reverse operation `43111ebe46754fe5b05d05bc13f93c73` verified eleven
+  call-to-task changes, both with whole-archive fidelity preserved.
+- Reverse coverage includes all eight task destination types, an additional
+  nested task, and two independently factory-created calls: a root call converted
+  to `ManualTask` and a nested call converted to `ScriptTask`. It is not merely
+  a roundtrip of objects produced by the forward adapter.
+- Native binding and unlinking of root/nested calls, standard/multi-instance
+  loops, quantities, incident flows, data inputs, boundary/compensation references,
+  geometry, Unicode descriptions, RACI, scoped attributes and byte-exact embedded
+  content survived. The original file remained unchanged; no target process was
+  deleted or inlined. Native no-op save and nested rendering also completed.
+- The client independently verifies the two newly created activities' complete
+  empty RACI rows before comparing every original metadata row and role array.
+  These are declared additions, not permission to ignore assignment changes.
+- Protocol rejections cover attribute applicability, stale revision with checked
+  cause, stale source type, unrelated cross-category conversion and conversion
+  while a call is still bound. Explicit unlinking then enabled conversion.
+- **45 workers and 51 owned-process records exited.** Across **478 periodic
+  read-only desktop samples**, no owned visible window or foreground process was
+  observed. Sampled observation is not continuous proof or independent GUI
+  compatibility accreditation.
+- Transcript SHA-256:
+  `87c165d3ad2b4ecfad4117815f1440eae7583ccb00d6f7b70d6c18b02d1fb66c`.
+  Operation receipt SHA-256:
+  `11491901b32a0f924bf649abc98084c754f04784bd47cc795b0c9c3b3a1eef04`.
+
+Same-category regression `20260908-175417-000f8d` passed **19 completed operations**
+and three expected protocol rejections, including the 99 forward and 99 reverse
+task/gateway conversions with rich-content readback and whole-archive fidelity.
+All 31 workers and 36 owned-process records exited; 194 periodic samples showed
+no owned visible/foreground process. Transcript SHA-256:
+`0f3228dada4158b804bb19ca216326adb6d701582fafbd36a6abb7943849a1ec`.
+
+Release build passed with zero warnings/errors; **1,134 unit/component tests**
+passed without skips. Final real XML-only MCP run `20260908-180058-2d26a2` passed
+discovery and XML workflows, with native execution explicitly not run there.
+Policy fixtures cover bound/external references, custom/mismatched latent layout,
+foreign graphics tool IDs and nondefault/unknown call runtime content. Those
+fixtures are not a native corpus of every possible call configuration.
+
+The earlier `20260908-172112-66d3b3` circuit passed nine forward/nine reverse
+changes before direct factory calls were added. Direct-factory attempt
+`20260908-172729-bc0169` then exposed their actual paired 270 × 180 latent default;
+the adapter checks the installed default and Core independently checks the
+version-specific native XML baseline. Custom sizes are not broadly waived.
+Run `20260908-173445-1fd32f` passed the eleven-change native/fidelity operation but
+its client rejected the legitimate two new empty RACI rows. The final run above
+uses exact declared-row verification instead of that incorrect equality assumption.
+Slow native registration retained the same live processes; no total-duration
+cancellation or synthetic result replaced a real execution.
+
+See the [reverse conversion contract](native-conversions.md#unbound-call-to-a-task).
+Reverse subprocess inlining, event conversion, live unsaved editing and independent
+Modeler GUI compatibility remain separate. This addition is not in the immutable
+0.6 package and does not complete full Modeler automation.
+
 ## Native task-to-unbound-call conversion — source after 0.6, 2026-09-08 UTC
 
 Final circuit `20260908-170532-265468` passed through the actual official SDK

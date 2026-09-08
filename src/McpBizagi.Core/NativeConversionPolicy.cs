@@ -15,6 +15,11 @@ public static class NativeConversionPolicy
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";
 
     public static bool IsTaskToCall(NativeTypeConversion change) => TaskTypes.Contains(change.ExpectedType) && change.TargetType == "CallActivity";
+    public static bool IsCallToTask(NativeTypeConversion change) => change.ExpectedType == "CallActivity" && TaskTypes.Contains(change.TargetType);
+
+    // Independent, version-specific constructor baseline observed in Modeler
+    // 4.3.0.008: this is not three times the user's current collapsed rectangle.
+    private static bool NeutralCallSize(double width, double height) => width == 0 && height == 0 || width == 270 && height == 180;
 
     public static void Validate(NativeTypeConversion[] changes)
     {
@@ -24,8 +29,8 @@ public static class NativeConversionPolicy
         {
             if (!Guid.TryParseExact(c.ElementId, "D", out var id) || id == Guid.Empty || id.ToString() != c.ElementId || !ids.Add(c.ElementId))
                 throw new InvalidDataException("Conversion identities must be distinct canonical native GUIDs.");
-            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType) || IsTaskToCall(c)))
-                throw new NotSupportedException("Conversion requires different task/gateway types within one category, or a task to an unbound CallActivity.");
+            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType) || IsTaskToCall(c) || IsCallToTask(c)))
+                throw new NotSupportedException("Conversion requires different task/gateway types within one category, or task/unbound-CallActivity conversion.");
         }
     }
 
@@ -63,6 +68,17 @@ public static class NativeConversionPolicy
                     a["ExpandedGeometry"] = JsonSerializer.SerializeToNode(expected);
                 }
                 if (GatewayTypes.Contains(c.ExpectedType)) { a.Remove("EventGateway"); b.Remove("EventGateway"); }
+                if (IsCallToTask(c))
+                {
+                    // Explicitly unlink a bound call first. Type conversion is not
+                    // permission to silently retire a process/external reference.
+                    var reference = source[id].CallReference ?? throw new InvalidDataException("Missing source call reference readback.");
+                    if (!JsonNode.DeepEquals(JsonSerializer.SerializeToNode(reference), JsonSerializer.SerializeToNode(new NativeCallReference())))
+                        throw new InvalidDataException("Unlink the call explicitly before converting it to a task.");
+                    if (source[id].ExpandedGeometry is not { Expanded: false } layout || !NeutralCallSize(layout.Width, layout.Height) || source[id].Geometry?.Expanded != false)
+                        throw new InvalidDataException("Call conversion cannot retire nondefault expanded layout.");
+                    a["CallReference"] = null; a["ExpandedGeometry"] = null;
+                }
             }
             if (!JsonNode.DeepEquals(a, b)) throw new InvalidDataException("Conversion changed unrequested native graph properties: " + id);
         }
@@ -100,9 +116,21 @@ public static class NativeConversionPolicy
                 if (owners.Length == 0) continue;
                 if (owners.Length != 1 || !found.Add(c.ElementId)) throw new InvalidDataException("Ambiguous native conversion identity.");
                 string type = result ? c.TargetType : c.ExpectedType;
-                if (result && IsTaskToCall(c)) ProjectUnboundCall(owners[0], c.ExpectedType);
+                if (!result && IsCallToTask(c))
+                {
+                    ProjectUnboundCall(owners[0]);
+                    foreach (var graphics in owners[0].Elements(Ns + "NodeGraphicsInfos").Elements(Ns + "NodeGraphicsInfo"))
+                    {
+                        string width = (string?)graphics.Attribute("ExpandedWidth") ?? "0", height = (string?)graphics.Attribute("ExpandedHeight") ?? "0";
+                        bool factory = (string?)graphics.Attribute("ToolId") == "BizAgi_Process_Modeler" && width == "270" && height == "180";
+                        if (((string?)graphics.Attribute("Expanded") ?? "false") != "false" || !(width == "0" && height == "0" || factory))
+                            throw new InvalidDataException("Call conversion cannot retire nondefault expanded layout.");
+                        if (factory) { graphics.Attribute("ExpandedWidth")!.Remove(); graphics.Attribute("ExpandedHeight")!.Remove(); }
+                    }
+                }
+                else if (result && IsTaskToCall(c)) ProjectUnboundCall(owners[0], c.ExpectedType);
                 else if (TaskTypes.Contains(type)) ProjectTask(owners[0], type); else ProjectGateway(owners[0], type);
-                if (IsTaskToCall(c))
+                if (IsTaskToCall(c) || IsCallToTask(c))
                     foreach (var graphics in owners[0].Elements(Ns + "NodeGraphicsInfos").Elements(Ns + "NodeGraphicsInfo"))
                         foreach (var attribute in graphics.Attributes().Where(a => a.Name == "Expanded" && a.Value == "false" ||
                             (a.Name == "ExpandedWidth" || a.Name == "ExpandedHeight") && a.Value == "0").ToArray())
@@ -140,19 +168,19 @@ public static class NativeConversionPolicy
         }
     }
 
-    private static void ProjectUnboundCall(XElement owner, string sourceTaskType)
+    private static void ProjectUnboundCall(XElement owner, string? sourceTaskType = null)
     {
         // Only the native type selector changes. Reject a silently introduced call
         // target, external reference or any unknown payload instead of projecting it away.
-        ProjectTaskRuntime(owner, sourceTaskType);
+        if (sourceTaskType != null) ProjectTaskRuntime(owner, sourceTaskType);
         ProjectTaskRuntime(owner, "CallActivity");
         var implementations = owner.Elements(Ns + "Implementation").ToArray();
-        if (implementations.Length != 1) throw new InvalidDataException("Converted call must have one native Implementation.");
+        if (implementations.Length != 1) throw new InvalidDataException("Call conversion requires one native Implementation.");
         var children = implementations[0].Elements().ToArray();
-        if (children.Length != 1 || children[0].Name != Ns + "SubFlow") throw new InvalidDataException("Converted call must have one native SubFlow.");
+        if (children.Length != 1 || children[0].Name != Ns + "SubFlow") throw new InvalidDataException("Call conversion requires one native SubFlow.");
         var call = children[0];
         if (call.Attributes().Any(a => a.Name != "Id" || a.Value != "") || call.Nodes().Any())
-            throw new InvalidDataException("Task conversion cannot introduce a bound or unknown call payload.");
+            throw new InvalidDataException("Conversion cannot retire or introduce a bound or unknown call payload.");
         call.ReplaceWith(new XElement(Ns + "Task"));
     }
 

@@ -113,6 +113,24 @@ internal static class NativeConversionAcceptance
         var beforeDocumentation = baseline.GetProperty("result").GetProperty("Documentation");
         var metadataBaseline = await Op("native_metadata_get", new() { ["path"] = path });
         var beforeMetadata = metadataBaseline.GetProperty("result").GetProperty("Metadata");
+        var additionalUnassignedActivities = new HashSet<string>(StringComparer.Ordinal);
+        bool MetadataEquivalent(JsonElement actual)
+        {
+            var expected = JsonNode.Parse(beforeMetadata.GetRawText())!;
+            var observed = JsonNode.Parse(actual.GetRawText())!;
+            var rows = observed["Assignments"]!.AsArray();
+            foreach (string id in additionalUnassignedActivities)
+            {
+                var matches = rows.Where(r => r!["ElementId"]!.GetValue<string>() == id).ToArray();
+                // Newly created activities legitimately add empty RACI rows. Match
+                // the complete declared row before removing it in the comparison
+                // copy; retain all original row order, role arrays and other data.
+                var empty = JsonSerializer.SerializeToNode(new { ElementId = id, Responsible = Array.Empty<string>(), Accountable = Array.Empty<string>(), Consulted = Array.Empty<string>(), Informed = Array.Empty<string>() });
+                if (matches.Length != 1 || !JsonNode.DeepEquals(matches[0], empty)) return false;
+                rows.Remove(matches[0]);
+            }
+            return JsonNode.DeepEquals(expected, observed);
+        }
         async Task VerifyRichContent(JsonElement result)
         {
             var after = result.GetProperty("reopened");
@@ -129,7 +147,7 @@ internal static class NativeConversionAcceptance
             var metadataRead = await Op("native_metadata_get", new() { ["path"] = path });
             if (beforeDocumentation.ValueKind != JsonValueKind.Object || beforeMetadata.ValueKind != JsonValueKind.Object ||
                 !DocumentationEquivalent(beforeDocumentation, documentationRead.GetProperty("result").GetProperty("Documentation")) ||
-                !JsonElement.DeepEquals(beforeMetadata, metadataRead.GetProperty("result").GetProperty("Metadata")))
+                !MetadataEquivalent(metadataRead.GetProperty("result").GetProperty("Metadata")))
                 throw new InvalidDataException("Conversion changed native attributes, attachment metadata or RACI.");
             var exported = await Op("native_attachment_export", new() { ["path"] = path, ["diagramId"] = diagram, ["elementId"] = documentedTask, ["fileName"] = fileName });
             if (!File.ReadAllBytes(S(exported, "artifactPath")).SequenceEqual(payload)) throw new InvalidDataException("Conversion changed embedded attachment bytes.");
@@ -161,7 +179,6 @@ internal static class NativeConversionAcceptance
                     reference.GetProperty("External").ValueKind != JsonValueKind.Null)
                     throw new InvalidDataException("Task-to-call did not produce an explicit unbound call.");
             }
-            await error("native_elements_convert", new() { ["path"] = path, ["expectedRevision"] = revision, ["changes"] = reverse });
             string targetDiagram = S(graph.Single(e => S(e, "Kind") == "Collaboration" && S(e, "Name") == "Explicit call target Ω"), "Id");
             string targetPool = S(graph.Single(e => S(e, "Kind") == "Participant" && S(e, "DiagramId") == targetDiagram && !e.GetProperty("IsMainParticipant").GetBoolean()), "Id");
             string targetProcess = S(graph.Single(e => S(e, "Kind") == "Process" && S(e, "ParentId") == targetPool), "Id");
@@ -175,6 +192,30 @@ internal static class NativeConversionAcceptance
                     if (S(bound.GetProperty("reopened").GetProperty("Elements").EnumerateArray().Single(e => S(e, "Id") == id).GetProperty("CallReference"), "CatalogProcessId") != binding)
                         throw new InvalidDataException("Explicit call binding did not survive a fresh worker.");
                 await VerifyRichContent(bound);
+                if (binding != "")
+                {
+                    var rejected = await error("native_elements_convert", new() { ["path"] = path, ["expectedRevision"] = revision, ["changes"] = reverse });
+                    if (!rejected.GetRawText().Contains("call payload", StringComparison.Ordinal)) throw new InvalidDataException("Wrong bound-call conversion rejection cause.");
+                }
+            }
+            // Independently constructed calls must work too; a task->call->task
+            // roundtrip alone cannot accredit the native call factory's defaults.
+            var directCalls = new[] { (Id: Guid.NewGuid().ToString(), Parent: process, Target: "ManualTask"),
+                (Id: Guid.NewGuid().ToString(), Parent: sub, Target: "ScriptTask") };
+            var direct = await Op("native_mutate", new() { ["path"] = path, ["expectedRevision"] = revision,
+                ["mutations"] = directCalls.Select(c => new { Operation = "create", ElementId = c.Id, ParentId = c.Parent, ElementType = "CallActivity",
+                    Name = "Factory call Ω " + c.Target, Geometry = new { X = 60, Y = 160, Width = 120, Height = 65 }, ActivityProperties = new { StartQuantity = 2, CompletionQuantity = 3 } }).ToArray() });
+            path = S(direct, "outputArtifact"); revision = S(direct, "outputRevision");
+            foreach (var item in directCalls) additionalUnassignedActivities.Add(item.Id);
+            var allReverse = reverse.Concat(directCalls.Select(c => new Conversion(c.Id, "CallActivity", c.Target))).ToArray();
+            var restored = await Op("native_elements_convert", new() { ["path"] = path, ["expectedRevision"] = revision, ["changes"] = allReverse });
+            path = S(restored, "outputArtifact"); revision = S(restored, "outputRevision");
+            await VerifyRichContent(restored);
+            foreach (var change in allReverse)
+            {
+                var node = restored.GetProperty("reopened").GetProperty("Elements").EnumerateArray().Single(e => S(e, "Id") == change.ElementId);
+                if (S(node, "ElementType") != change.TargetType || node.GetProperty("CallReference").ValueKind != JsonValueKind.Null)
+                    throw new InvalidDataException("Explicit reverse conversion did not restore the requested task type.");
             }
         }
         else

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Extend native conversion to unbound-call-to-task through the installed type-change
+  command. Require explicit unlinking before conversion and protect nondefault
+  expanded layout/runtime content. Preserve common graph/archive data; never
+  delete or inline a called process. Reverse acceptance includes native factory
+  calls as well as task-to-call roundtrips; see the conversion execution record.
 - Add task-to-unbound-`CallActivity` conversion through the installed refactoring
   command, including native configuration-service initialization, stable shape
   size/order, reference reconciliation and three-process fidelity. No implicit

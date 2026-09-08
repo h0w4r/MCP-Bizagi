@@ -7,7 +7,7 @@ diagram through BPMN import, rewrite native archive XML or control desktop UI.
 The source file is retained; a successful operation returns a new native artifact.
 
 This is an **experimental file-based capability**, not full Modeler automation.
-Same-category conversion is included in the 0.6 package. Task-to-call conversion
+Same-category conversion is included in the 0.6 package. Task/call conversion
 and destination attribute-scope checks are newer source additions, not changes
 to the immutable 0.6.0-alpha.1 release ZIP.
 
@@ -20,8 +20,8 @@ Submit `path`, `expectedRevision` and a `changes` array. Each
 | Field | Meaning |
 | --- | --- |
 | `ElementId` | Existing nonzero canonical native GUID; not an imported BPMN identifier |
-| `ExpectedType` | Exact current palette type, checked before the command executes |
-| `TargetType` | Different allowed type within the same category, or `CallActivity` for a task source |
+| `ExpectedType` | Exact current palette type, checked before the command executes; `CallActivity` requires an explicitly unbound source for conversion to a task |
+| `TargetType` | Different allowed type within the same category, `CallActivity` for a task source, or a task type for an unbound call |
 
 A batch contains 1–1,000 distinct identities. Duplicate identities, an unchanged
 type, a stale source revision, an absent source identity and other cross-category
@@ -43,8 +43,8 @@ The native class for `AbstractTask` is `Task`; the three event gateway selectors
 share the `EventBasedGateway` class. Both class and palette selector are checked.
 
 Tasks in native processes and embedded subprocesses use the same contract.
-Event conversion, task-to-embedded-subprocess conversion, reverse call-to-task
-conversion, conditional/bot task options and live unsaved documents are not included.
+Event conversion, task-to-embedded-subprocess conversion, conditional/bot task
+options and live unsaved documents are not included.
 Embedded-subprocess extraction has its own [refactoring contract](native-refactoring.md).
 
 ### Task to an unbound call
@@ -68,6 +68,30 @@ would otherwise reset. Newly exposed `ExpandedGeometry` coordinates, colors and
 expansion state must match the common source geometry. Hidden expanded dimensions
 remain protected by whole-archive comparison; they are not silently assigned a
 new layout. This does not make an unbound call executable by the simulator.
+
+### Unbound call to a task
+
+Use `ExpectedType=CallActivity` and one of the eight task `TargetType` values.
+The installed `ChangeElementTypeCommand` performs the replacement, preserving
+the native activity identity and common content. The result must have no
+`CallReference`; it is a task, not an unresolved call with a different label.
+An [editable reverse request](../examples/native-call-to-task.json) is provided;
+replace its source, revision and identity after any explicit unlinking operation.
+
+A bound local call must first be explicitly unlinked through `native_mutate`
+with an empty `CallTarget.ProcessId`. Replacing an external reference also needs
+the existing `ReplaceExternalReference=true` acknowledgement. Conversion never
+clears these links implicitly, deletes the target process, or moves its children.
+It is **not reverse subprocess inlining** and it is not a restoration of unseen
+historical task content. The requested task receives its native factory defaults.
+
+Nondefault call runtime content and expanded layout cannot silently disappear.
+The reverse path requires a collapsed call with zero latent expanded dimensions
+or the installed native factory's paired 270 × 180 baseline. That baseline is
+not recalculated from the user's current collapsed rectangle. A native file with
+other expanded layout is rejected rather
+than normalized into that corpus. Destination attribute definitions must apply
+to the requested task type, just as in other conversion directions.
 
 ## Execution and fidelity
 
@@ -155,8 +179,11 @@ The separate task-to-call circuit covers all eight root task types and one neste
 task, native input associations, boundary/compensation references, incident flow,
 loops, quantities, RACI, scoped Unicode attributes and a byte-exact attachment.
 It exercises scope rejection followed by explicit definition repair, checks that
-no diagram was created, binds and clears both root/nested calls, and saves/renders
-the result. Reverse conversion is explicitly rejected, not simulated.
+no diagram was created, binds and clears both root/nested calls, rejects conversion
+while bound, and explicitly converts calls back to task types before native
+save/render. Independent factory-created calls extend the reverse corpus beyond
+the objects produced by task-to-call conversion. See the execution record for
+the exact verified runs; a test's presence is not its operational accreditation.
 
 ```powershell
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build --no-restore -- . --native --task-to-call-only

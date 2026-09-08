@@ -145,7 +145,8 @@ try
         var payloads = advertised.GetProperty("nativeEventPayloadKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var taskToCall = advertised.GetProperty("nativeConversions").GetProperty("taskToUnboundCall");
         if (taskToCall.GetProperty("targetType").GetString() != "CallActivity" || taskToCall.GetProperty("createsDiagram").GetBoolean() ||
-            taskToCall.GetProperty("selectsTarget").GetBoolean() || taskToCall.GetProperty("reverseSupported").GetBoolean() ||
+            taskToCall.GetProperty("selectsTarget").GetBoolean() || !taskToCall.GetProperty("reverseSupported").GetBoolean() ||
+            !taskToCall.GetProperty("reverseRequiresUnbound").GetBoolean() || taskToCall.GetProperty("reverseInlinesProcess").GetBoolean() ||
             taskToCall.GetProperty("bindingTool").GetString() != "native_mutate" || taskToCall.GetProperty("bindingField").GetString() != "CallTarget.ProcessId")
             throw new InvalidDataException("Task-to-call discovery misrepresents its explicit scope.");
         if (types.Length == 0 || types.Distinct(StringComparer.Ordinal).Count() != types.Length ||

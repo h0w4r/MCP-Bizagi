@@ -31,7 +31,7 @@ public sealed partial class NativeWorkflows
             File.WriteAllText(Path.Combine(directory, "native-fidelity.json"), JsonSerializer.Serialize(fidelity, new JsonSerializerOptions { WriteIndented = true }));
             if (!fidelity.Preserved) throw new InvalidDataException("Native conversion fidelity rejected unexplained changes; original unchanged. Inspect " + directory);
             return new { before, edited, reopened, fidelity, nativeSourceUnmodified = true, requestedChangesVerified = captured.Length,
-                conversionInterpretationWarning = "Requested type selectors and observed neutral type-owned factory defaults may change. Task-to-call conversion produces an unbound CallActivity, not a new diagram or a chosen target; bind it explicitly with native_mutate CallTarget. All other archive content remains protected. Successful persistence does not establish model validity, equivalent simulation behavior or desktop visual compatibility.",
+                conversionInterpretationWarning = "Requested type selectors and observed neutral type-owned factory defaults may change. Task-to-call conversion produces an unbound CallActivity, not a new diagram or a chosen target; bind it explicitly with native_mutate CallTarget. Call-to-task requires an unbound call with no nondefault expanded layout; unlink explicitly first. It never deletes or inlines a called process. All other archive content remains protected. Successful persistence does not establish model validity, equivalent simulation behavior or desktop visual compatibility.",
                 outputArtifact = "artifact:" + id + ":edited.bpm", outputRevision = BpmnDocument.Revision(File.ReadAllBytes(output)) };
         });
     }

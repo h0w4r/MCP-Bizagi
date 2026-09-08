@@ -126,7 +126,7 @@ public sealed class NativeConversionTests
         var change = Change(source, "CallActivity");
         string common = "<Unknown>keep</Unknown><Loop><LoopStandard LoopMaximum='4'/></Loop>";
         Assert.True(NativeConversionPolicy.Compare(Archive(Task(selector) + common), Archive("<Implementation><SubFlow Id='' /></Implementation>" + common), [change]).Preserved);
-        Assert.Throws<NotSupportedException>(() => NativeConversionPolicy.Validate([Change("CallActivity", source)]));
+        Assert.True(NativeConversionPolicy.Compare(Archive("<Implementation><SubFlow Id='' /></Implementation>" + common), Archive(Task(selector) + common), [Change("CallActivity", source)]).Preserved);
     }
 
     [Theory]
@@ -190,5 +190,58 @@ public sealed class NativeConversionTests
         Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Preflight(Source("UserTask"), [Change("UserTask", target)]));
         Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Preflight(Archive(Task("<TaskUser/>"), values: values), [Change("UserTask", target)]));
         NativeConversionPolicy.Preflight(Source(target), [Change("UserTask", target)]);
+    }
+
+    [Theory]
+    [InlineData("<Implementation><SubFlow Id='22222222-2222-4222-8222-222222222222'/></Implementation>")]
+    [InlineData("<Implementation><SubFlow Id='' Unknown='keep'/></Implementation>")]
+    [InlineData("<Implementation><SubFlow Id=''/></Implementation><NodeGraphicsInfos><NodeGraphicsInfo Expanded='true'/></NodeGraphicsInfos>")]
+    [InlineData("<Implementation><SubFlow Id=''/></Implementation><NodeGraphicsInfos><NodeGraphicsInfo ExpandedWidth='400'/></NodeGraphicsInfos>")]
+    public void ReverseConversionCannotRetireBoundOrExpandedCallData(string body)
+    { Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Preflight(Archive(body), [Change("CallActivity", "UserTask")])); }
+
+    [Fact] public void ReverseGraphConversionRequiresUnboundCallAndRetainsCommonFields()
+    {
+        var source = new NativeElement { Id = Id, Kind = "CallActivity", ElementType = "CallActivity", CallReference = new(), ExpandedGeometry = new(), Geometry = new() { Width = 140, Height = 70 },
+            ActivityProperties = new() { StartQuantity = 2, CompletionQuantity = 3 } };
+        var result = JsonSerializer.Deserialize<NativeElement>(JsonSerializer.Serialize(source))!;
+        result.Kind = result.ElementType = "UserTask"; result.CallReference = null; result.ExpandedGeometry = null;
+        NativeConversionPolicy.Verify([source], [result], [Change("CallActivity", "UserTask")]);
+        source.CallReference.CatalogProcessId = Id;
+        Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Verify([source], [result], [Change("CallActivity", "UserTask")]));
+        source.CallReference.CatalogProcessId = ""; source.CallReference.External = new() { ProcessId = Id };
+        Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Verify([source], [result], [Change("CallActivity", "UserTask")]));
+        source.CallReference.External = null; source.ExpandedGeometry.Width = 400;
+        Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Verify([source], [result], [Change("CallActivity", "UserTask")]));
+        source.ExpandedGeometry.Width = 0; result.ActivityProperties!.CompletionQuantity = 1;
+        Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Verify([source], [result], [Change("CallActivity", "UserTask")]));
+    }
+
+    [Theory]
+    [InlineData("270", "180", "BizAgi_Process_Modeler", true)]
+    [InlineData("270", "0", "BizAgi_Process_Modeler", false)]
+    [InlineData("0", "180", "BizAgi_Process_Modeler", false)]
+    [InlineData("400", "300", "BizAgi_Process_Modeler", false)]
+    [InlineData("270", "180", "OtherEditor", false)]
+    public void ReverseConversionRecognizesOnlyThePairedNativeCallLayoutDefault(string width, string height, string tool, bool accepted)
+    {
+        string common = $"<NodeGraphicsInfos><NodeGraphicsInfo ToolId='{tool}'><Coordinates XCoordinate='10' YCoordinate='20'/></NodeGraphicsInfo></NodeGraphicsInfos>";
+        string expanded = common.Replace($"ToolId='{tool}'", $"ToolId='{tool}' Expanded='false' ExpandedWidth='{width}' ExpandedHeight='{height}'");
+        var before = Archive("<Implementation><SubFlow Id=''/></Implementation>" + expanded);
+        if (accepted) Assert.True(NativeConversionPolicy.Compare(before, Archive(Task("<TaskManual/>") + common), [Change("CallActivity", "ManualTask")]).Preserved);
+        else Assert.Throws<InvalidDataException>(() => NativeConversionPolicy.Preflight(before, [Change("CallActivity", "ManualTask")]));
+    }
+
+    [Theory]
+    [InlineData("{&quot;priority&quot;:5}")]
+    [InlineData("{&quot;exitMode&quot;:&quot;OneToken&quot;}")]
+    [InlineData("{&quot;inputMappingType&quot;:&quot;Custom&quot;}")]
+    [InlineData("{&quot;unknown&quot;:false}")]
+    [InlineData("{&quot;asynchronousBehavior&quot;:{&quot;isAsynchronous&quot;:true}}")]
+    public void ReverseConversionDoesNotWaiveNondefaultOrUnknownCallRuntime(string runtime)
+    {
+        var before = Archive("<Implementation><SubFlow Id=''/></Implementation><ExtendedAttributes><ExtendedAttribute Name='RuntimeProperties' Value='" + runtime + "'/></ExtendedAttributes>");
+        var after = Archive(Task("<TaskManual/>") + "<ExtendedAttributes/>");
+        Assert.False(NativeConversionPolicy.Compare(before, after, [Change("CallActivity", "ManualTask")]).Preserved);
     }
 }

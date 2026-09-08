@@ -25,8 +25,9 @@ public sealed partial class NativeEngine
             foreach (var change in changes)
             {
                 bool toCall = tasks.Contains(change.ExpectedType) && change.TargetType == "CallActivity";
-                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType) || toCall) || change.ExpectedType == change.TargetType)
-                    throw new NotSupportedException("Explicit conversions require different task/gateway types in the same category, or task to unbound call.");
+                bool fromCall = change.ExpectedType == "CallActivity" && tasks.Contains(change.TargetType);
+                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType) || toCall || fromCall) || change.ExpectedType == change.TargetType)
+                    throw new NotSupportedException("Explicit conversions require different task/gateway types in the same category, or task/unbound-call conversion.");
                 var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
                 if (!graph.TryGetValue(change.ElementId, out var entry) || ConversionType(entry.Value) != change.ExpectedType)
                     throw new InvalidDataException("Conversion source identity or expected native type does not match.");
@@ -37,6 +38,19 @@ public sealed partial class NativeEngine
                 if (index < 0) throw new InvalidDataException("Conversion source is absent from its native owner.");
                 var links = RequiredDataLinks(graph.Values);
                 object graphics = Get(old, "GraphicalProperties");
+                if (fromCall)
+                {
+                    // Enforce the explicit boundary again inside the worker, not
+                    // only in the host's archive preflight.
+                    var reference = DescribeCall(old)!;
+                    if (reference.CatalogProcessId != "" || reference.BpmnName != "" || reference.BpmnNamespace != "" || reference.External != null)
+                        throw new InvalidDataException("Unlink the call explicitly before converting it to a task.");
+                    double width = Convert.ToDouble(Get(graphics, "ExpandedWidth")), height = Convert.ToDouble(Get(graphics, "ExpandedHeight"));
+                    object defaults = Get(old, "DefaultGraphicalProperties");
+                    bool neutral = width == 0 && height == 0 || width == Convert.ToDouble(Get(defaults, "ExpandedWidth")) && height == Convert.ToDouble(Get(defaults, "ExpandedHeight"));
+                    if ((bool)Get(graphics, "Expanded") || !neutral)
+                        throw new InvalidDataException("Call conversion cannot retire nondefault expanded layout.");
+                }
                 object converted;
                 if (toCall)
                 {
