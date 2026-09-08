@@ -217,6 +217,12 @@ try
         await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--cross-diagram-only"))
+    {
+        if (!native) throw new ArgumentException("Cross-diagram acceptance requires --native.");
+        await NativeReparentingAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true), crossDiagram: true);
+        Console.WriteLine("NATIVE_CROSS_DIAGRAM_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--reparenting-only"))
     {
         if (!native) throw new ArgumentException("Reparenting acceptance requires --native.");

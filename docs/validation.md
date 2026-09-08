@@ -1,5 +1,78 @@
 # Verification baselines
 
+## Explicit cross-diagram reparenting — source after 0.6, 2026-09-08 UTC
+
+Final real MCP/native circuit `20260908-192630-4daae1` passed **28 terminal
+operations: 26 completed and two expected operation failures**, plus one
+expected stale-revision protocol rejection. It used the official SDK stdio
+client, installed Modeler 4.3.0.008 and separate source/editor/reopened workers.
+
+- Forward subtree move `3ccf036e9d614eeda888cb634a9215f9` and reverse
+  `90947ba768f7400f8d17c0320faa3ae6` retained all nine subtree graph elements and
+  their native I/O records across diagrams. The client independently compared
+  every observed graph field after changing only the requested parent, diagram
+  and nested I/O diagram identities. The destination already contained a task.
+- Standalone task forward/reverse moves
+  `5145866eb5b848898f429f061f8a1ac9` /
+  `82c4212070ec4eac960f21cc0ce149a5`, and image moves
+  `83f8b59c3e9a44baa335628e22f436f8` /
+  `8bce6372e1c144cdb7f7a040566c252a`, also passed. All six moves passed native
+  restart and whole-archive fidelity, including the diagram-wide root-artifact
+  ownership route, not only embedded subtree containment.
+- Independent native exports verified exact original image and embedded-file
+  bytes. Complete extended-definition/value and attachment records, RACI,
+  current-user tab order/selection and unchanged destination content were
+  checked. The existing native definition `ModificationDate` refresh was
+  recorded separately; `ModifiedBy` and all substantive fields remained checked.
+- Native no-op save, nested SVG generation, inverse graph equivalence, a final
+  fresh reader and both original input revision checks passed. These are not
+  Modeler GUI or simulated behavioral equivalence checks.
+- Configured moved-element simulation parameters and omitted explicit diagram
+  identities produced distinct checked failures. A separate explicit metadata
+  replacement cleared only the test scenario before migration; this is **not**
+  automatic scenario migration, and the configured original remained unchanged.
+- **53 workers and 59 owned-process records exited.** Across **560 periodic
+  read-only desktop samples**, no owned visible window or foreground process
+  was observed. Sampling is not continuous proof or independent GUI testing.
+- Transcript SHA-256:
+  `07dddd264e4581fe0a875e684b22731c6f7c8e3b43dcd1dd15f2cd99a19cd082`.
+  Cross-diagram receipt SHA-256:
+  `035429384a309d61bad907668853e664cbad14bf19b952503ec806ce592967ca`.
+
+Earlier run `20260908-191152-515b5b` passed the same 28-operation flow before
+the independent full documentation-record comparison was added. Its 53 workers,
+63 owned records and 353 periodic desktop samples passed. Transcript SHA-256:
+`035c43189f74a794c64063c202ffa2da6e8881fb443b96700af21e803a30f191`.
+
+Diagnostic runs remain recorded as diagnostics, not successes.
+`20260908-190704-7851d4` exposed a missing editor preference-scope snapshot;
+the editor reply was corrected, without weakening the restart gate.
+`20260908-192033-40d896` stopped at the stronger documentation assertion because
+the native loader refreshed the known definition audit timestamp; the verifier
+now validates that exact timestamp scope while retaining all other fields.
+
+Same-diagram regression `20260908-193338-5cd15d` subsequently passed **21 terminal
+operations: 19 completed and two expected closure/cycle failures**, plus one
+stale-revision protocol rejection. It retained the configured scenario, rich
+attributes, native I/O, images and RACI through six-request forward/inverse
+batches, whole-subprocess cross-process moves and explicit root-artifact
+coordinates. No-op save, nested rendering, recovery and original revision
+checks passed. **44 workers and 49 owned-process records exited**, with no owned
+visible/foreground process observed in **294 periodic desktop samples**.
+Transcript SHA-256:
+`7c14e10615386aaa37f78c1b176076f1d48331bef3c5f26d7bda1386c67749a2`.
+Receipt SHA-256:
+`c4cb9a9caecb92546c5b6592bb19a44e4bf4a6b4679ec86535587bc8107d6ebc`.
+
+Locked restore and Release compilation passed with zero warnings/errors;
+**1,174 unit tests** and **18 package-policy fixtures** passed. Real MCP XML
+acceptance `20260908-192121-f75dc0` passed with 43 tools and explicitly reported
+native execution as **not run**. Unit/XML/package-policy results do not accredit
+the native engine. The immutable 0.6.0-alpha.1 distribution is unchanged;
+cross-diagram migration requires the later source build. Full automation,
+configured scenario/action migration, global layout, live unsaved documents
+and independent GUI accreditation remain open.
+
 ## Same-role native event conversion — source after 0.6, 2026-09-08 UTC
 
 Final real MCP/native circuit `20260908-183108-989082` passed **19 terminal

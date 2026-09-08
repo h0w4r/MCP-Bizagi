@@ -3,9 +3,10 @@
 `native_elements_reparent` changes explicit containment in a private native
 `.bpm` copy. It uses actual installed domain objects and collections, not the
 clipboard, generated replacement XML, simulated input or a foreground window.
-This remains experimental, with a real reparenting circuit in the
+This remains experimental, with a real **same-diagram** reparenting circuit in the
 [0.6.0-alpha.1 package acceptance](validation-package-0.6.md).
-The immutable 0.5 ZIP predates the tool. Full Modeler automation remains open.
+Cross-diagram migration is a later **source-build** capability, not part of that
+immutable ZIP. The immutable 0.5 ZIP predates the tool. Full Modeler automation remains open.
 
 ## Request
 
@@ -16,7 +17,9 @@ Each `NativeReparenting` entry contains:
 | --- | --- |
 | `ElementId` | Actual native GUID of the selected subtree root |
 | `ExpectedParentId` | Required current container GUID, checked before editing |
-| `TargetParentId` | Existing process or embedded subprocess in the same diagram |
+| `TargetParentId` | Existing process or embedded subprocess |
+| `ExpectedDiagramId` | Required original diagram GUID when crossing diagrams; optional paired assertion otherwise |
+| `TargetDiagramId` | Required **final** destination diagram GUID when crossing diagrams; pair with `ExpectedDiagramId` |
 | `Position` | Optional `NativePoint` with `X` and `Y`; no implicit resizing |
 
 Use `native_inspect` to obtain actual IDs and revision. Select 1–1000 distinct
@@ -52,6 +55,41 @@ scenario definitions and persisted user preferences remain subject to the
 whole-container gate. Retained IDs keep these references stable. This does not
 promise equivalent simulated behavior after changing execution containment.
 
+## Cross-diagram content migration (source after 0.6)
+
+Every selected root that changes diagram must explicitly provide both diagram
+IDs. A stale or omitted identity rejects before editor dispatch. Descendants
+follow the final containment chain, including native I/O ports and bindings.
+The source observation must already have consistent containment and diagram IDs;
+the operation never silently repairs unrelated fields.
+
+The adapter moves the original native value objects and their complete embedded
+owner folders inside the isolated model scratch directory. It relocates image
+sidecars and updates native embedded-file references. Linked files are not
+opened. Conflicting destination files or owner records reject rather than
+overwrite. Current-user subprocess tabs retain their order and selected state,
+changing only the diagram of a moved subprocess. Other users' preferences stay
+subject to the full archive gate.
+
+The comparator checks the actual destination XML owners across separate diagram
+documents, then reverses only the declared relocation in comparison copies.
+Unknown owner payload, unrelated diagrams, attribute definitions, values and
+all original binary bytes remain checked. Image and attachment export, native
+no-op save and fresh-process graph readback are independent acceptance steps.
+The native loader refreshes the definition root's `ModificationDate`; this
+observed audit timestamp is recorded separately from substantive definition
+fidelity. The independent acceptance retains `ModifiedBy` and all other fields.
+
+This initial migration contract **rejects configured simulation parameters that
+reference moved elements**, and rejects nonempty presentation actions or
+simulation results in affected diagrams. It does not erase or implicitly move
+them. Explicit scenario replacement, when requested by an operator, is a separate
+`native_metadata_apply` operation; such replacement is not scenario migration.
+Automatic scenario/action migration remains unfinished.
+
+See [the cross-diagram request template](../examples/native-cross-diagram-reparenting.json).
+Its placeholders must be replaced with actual native IDs from the input model.
+
 ## Coordinates are explicit, not automatic layout
 
 Omitting `Position` retains the selected root's native coordinates. Supplying
@@ -84,8 +122,8 @@ the MCP transcript. These may contain operator model data and are not uploaded.
 
 ## Boundaries that remain explicit
 
-- Cross-diagram moves require metadata, file, scenario and preference migration;
-  this tool rejects them rather than silently convert through BPMN.
+- Cross-diagram moves with unrepresented scenario/action migration requirements
+  reject. No route silently converts the native model through BPMN.
 - Diagram catalogs, participants/processes, groups, lanes and milestones have
   separate lifecycle and ordering contracts, not this contained-element move.
 - This is not copy/paste, extraction, reverse inlining, automatic layout,
@@ -99,6 +137,7 @@ the MCP transcript. These may contain operator model data and are not uploaded.
 dotnet build -c Release
 dotnet test tests/McpBizagi.Core.Tests -c Release --no-build
 dotnet tests/McpBizagi.Acceptance/bin/Release/net10.0-windows/McpBizagi.Acceptance.dll . --native --reparenting-only
+dotnet tests/McpBizagi.Acceptance/bin/Release/net10.0-windows/McpBizagi.Acceptance.dll . --native --cross-diagram-only
 ```
 
 The client creates two diagrams, native pools/subprocesses, nested tasks,
@@ -110,6 +149,18 @@ save and rendering. Stale revision, incomplete closure, cyclic selection,
 subsequent recovery and unchanged-original checks are independent assertions.
 Pure policy tests remain separate from actual installed-engine acceptance.
 
+The cross-diagram client authors three diagrams and reuses the same MCP-authored
+rich seed, not production policy code. It checks explicit configured-scenario
+rejection, then replaces the test scenario through a separate native operation.
+It moves the rich subtree into a destination that already has content, verifies
+the complete graph, definitions/values, original embedded and image bytes, RACI
+and tabs, then exercises standalone task/image migration and the inverse subtree
+move. It verifies both the configured original and the migration source remain
+unchanged. Rendering evidence is not separate Modeler GUI accreditation.
+
 The [verification ledger](validation.md#native-same-diagram-reparenting--2026-09-08-utc)
 records the successful rich run, exact transcript hash, failure assertions and
 worker-exit/desktop observations. It does not accredit arbitrary untested models.
+The later [cross-diagram ledger](validation.md#explicit-cross-diagram-reparenting--source-after-06-2026-09-08-utc)
+records the six successful migration directions, independent content checks and
+the retained diagnostic runs.

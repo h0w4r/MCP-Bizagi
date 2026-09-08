@@ -78,9 +78,49 @@ public sealed class NativeReparentingTests
     }
     [Fact] public void OverlappingSelectionRejects() => Reject(() => NativeReparentingPolicy.Expected(Graph(),
         [new() { ElementId = A, ExpectedParentId = P, TargetParentId = B }, Moves[0]]));
-    [Fact] public void CrossDiagramRequiresMigration()
+    [Fact] public void InconsistentSourceDiagramCannotBeSilentlyRepaired()
     {
         var graph = Graph(); graph.Single(e => e.Id == B).DiagramId = Id(99); Reject(() => NativeReparentingPolicy.Expected(graph, Moves));
+    }
+    private static NativeElement[] CrossGraph()
+    {
+        // Distinct real containment chains, rather than changing only a label.
+        return Graph().Concat(new[] {
+            new NativeElement { Id = Id(90), Kind = "Collaboration", DiagramId = Id(90) },
+            new NativeElement { Id = Id(91), Kind = "Participant", ParentId = Id(90), DiagramId = Id(90) },
+            new NativeElement { Id = Id(92), Kind = "Process", ParentId = Id(91), DiagramId = Id(90) }
+        }).ToArray();
+    }
+    private static NativeReparenting CrossMove() => new() { ElementId = A, ExpectedParentId = P,
+        TargetParentId = Id(92), ExpectedDiagramId = D, TargetDiagramId = Id(90) };
+    [Fact] public void CrossDiagramRequiresExplicitDiagramIdentities()
+    {
+        var move = CrossMove(); move.ExpectedDiagramId = null; move.TargetDiagramId = null;
+        Reject(() => NativeReparentingPolicy.Expected(CrossGraph(), [move]));
+    }
+    [Theory] [InlineData(true)] [InlineData(false)]
+    public void StaleCrossDiagramIdentityRejects(bool source)
+    {
+        var move = CrossMove(); if (source) move.ExpectedDiagramId = Id(99); else move.TargetDiagramId = Id(99);
+        Reject(() => NativeReparentingPolicy.Expected(CrossGraph(), [move]));
+    }
+    [Fact] public void CrossDiagramSubtreeAndNestedIoFollowFinalOwner()
+    {
+        var graph = CrossGraph(); graph.Single(e => e.Id == Task).DataFlow = new() {
+            Inputs = [new() { Id = Id(80), ParentId = Task, DiagramId = D, Kind = "DataInput" }],
+            InputAssociations = [new() { Id = Id(81), ParentId = Task, DiagramId = D, Kind = "DataInputAssociation" }] };
+        var after = NativeReparentingPolicy.Expected(graph, [CrossMove()]).ToDictionary(e => e.Id);
+        Assert.Equal(Id(92), after[A].ParentId); Assert.Equal(A, after[Task].ParentId);
+        Assert.Equal(Id(90), after[A].DiagramId); Assert.Equal(Id(90), after[Task].DiagramId);
+        Assert.Equal(Id(90), after[Task].DataFlow!.Inputs[0].DiagramId);
+        Assert.Equal(Id(90), after[Task].DataFlow!.InputAssociations[0].DiagramId);
+        Assert.Equal(D, after[B].DiagramId); Assert.Equal(D, graph.Single(e => e.Id == Task).DiagramId);
+    }
+    [Fact] public void IncidentMessageFlowCannotBeAbandonedInSourceDiagram()
+    {
+        var graph = CrossGraph().Append(new NativeElement { Id = Id(70), Kind = "MessageFlow", ParentId = D,
+            DiagramId = D, SourceId = Task, TargetId = B }).ToArray();
+        Reject(() => NativeReparentingPolicy.Expected(graph, [CrossMove()]));
     }
     [Fact] public void IncompleteSequenceClosureRejects()
     {

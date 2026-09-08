@@ -49,7 +49,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeRefactoring = new { tool = "native_subprocess_extract", operation = "embedded_to_reusable", sourceKind = "ordinary_SubProcess",
                 scope = "native_command_descendant_relocation_current_user_tab_remap_and_whole_container_gate_not_behavioral_equivalence_or_arbitrary_selection_refactoring" },
             nativeReparenting = new { tool = "native_elements_reparent", maximumBatchSize = 1000,
-                scope = "same_diagram_explicit_process_or_embedded_subprocess_ownership_complete_reference_closure_and_optional_node_position_not_cross_diagram_migration_or_automatic_layout" },
+                crossDiagram = new { requires = new[] { "ExpectedDiagramId", "TargetDiagramId" }, migrates = new[] { "native_subtree", "extended_values", "embedded_files", "images", "current_user_subprocess_tabs" },
+                    configuredSimulationMigration = false, presentationActionMigration = false },
+                scope = "explicit_process_or_embedded_subprocess_ownership_complete_reference_closure_and_optional_node_position_with_archive_and_fresh_reader_gates_not_automatic_layout_or_live_documents" },
             nativeAlignment = new { tool = "native_elements_align", modes = NativeAlignmentPolicy.Modes, maximumSelection = 1000,
                 scope = "experimental_native_editor_selected_shape_alignment_with_revision_callback_and_archive_gates_not_global_layout_or_visual_accreditation" },
             nativeSelectionCopy = new { tool = "native_elements_copy", maximumSelection = 1000,
@@ -86,6 +88,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_task_gateway_type_conversion", status = "experimental_installed_command_three_process_readback_and_whole_archive_gate_including_guarded_same_role_events_not_live_sessions", backend = "bizagi_worker" },
                 new { name = "native_embedded_subprocess_extraction", status = "experimental_installed_command_root_and_nested_extraction_with_rich_content_and_persisted_tab_readback_not_general_reparenting_or_scenario_migration", backend = "bizagi_worker" },
                 new { name = "native_explicit_same_diagram_reparenting", status = "experimental_copy_only_native_collections_three_process_readback_and_whole_archive_gate_not_cross_diagram_migration_layout_or_live_sessions", backend = "bizagi_worker" },
+                new { name = "native_explicit_cross_diagram_reparenting", status = "experimental_explicit_subtree_content_and_current_user_tab_migration_three_process_readback_and_whole_archive_gate_not_scenario_action_migration_layout_or_live_sessions", backend = "bizagi_worker" },
                 new { name = "native_event_boundary_lifecycle", status = "experimental_explicit_modes_interruption_activity_references_and_clone_remapping_not_simulation_accreditation", backend = "bizagi_worker" },
                 new { name = "native_event_definition_payloads", status = "experimental_unique_existing_kind_text_timer_and_compensation_patches_not_definition_collection_editing_or_execution_validation", backend = "bizagi_worker" },
                 new { name = "native_data_and_activity_io", status = "experimental_native_data_properties_store_references_and_derived_activity_and_event_bindings_with_fresh_readback_not_full_io_editor_or_visual_accreditation", backend = "bizagi_worker" },
@@ -137,7 +140,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     public CallToolResult ExtractSubProcess(string path, string expectedRevision, NativeSubProcessExtraction extraction) =>
         Guard(() => native.ExtractSubProcess(path, expectedRevision, extraction));
 
-    [McpServerTool(Name = "native_elements_reparent"), Description("Experimental explicit native reparenting between processes and embedded subprocesses in the same diagram. Preserve identities, subtree content and original file; require complete connector/boundary closure. Optional Position changes only the selected node's coordinates. Three workers verify native persistence and remaining archive content. Poll operation_get; this is not clipboard or automatic layout.")]
+    [McpServerTool(Name = "native_elements_reparent"), Description("Experimental explicit native reparenting between processes and embedded subprocesses. Cross-diagram moves require ExpectedDiagramId and TargetDiagramId on every crossing root; migrate native values, embedded/image files and current-user tabs. Configured moved-element simulation parameters and affected presentation actions/results reject. Preserve identities, original file and complete connector/boundary closure. Optional Position changes only the selected node's coordinates. Three workers verify persistence and archive content. Poll operation_get; not clipboard, automatic layout or live document editing.")]
     public CallToolResult ReparentNative(string path, string expectedRevision, NativeReparenting[] moves) =>
         Guard(() => native.Reparent(path, expectedRevision, moves));
 

@@ -5,16 +5,17 @@ namespace McpBizagi.BizagiAdapter;
 
 public sealed partial class NativeEngine
 {
-    private void Reparent(object model, NativeReparenting[] changes, Action<string> progress)
+    private void Reparent(object model, object persistence, NativeReparenting[] changes, Action<string> progress)
     {
         var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
+        var imageFiles = DescribeImageFiles(model);
         if ((bool)Get(Get(model, "ModelInfo"), "IsInCollaboration")) throw new NotSupportedException("Shared enterprise models are outside local reparenting.");
         // Work with the installed domain collections and actual objects, never cut/paste XML
         // or a clipboard command. Capture the original owners before performing any move.
         foreach (var change in changes)
         {
             var entry = graph[change.ElementId]; var target = graph[change.TargetParentId];
-            if (entry.ParentId != change.ExpectedParentId || target.DiagramId != entry.DiagramId ||
+            if (entry.ParentId != change.ExpectedParentId || change.ExpectedDiagramId != null && change.ExpectedDiagramId != entry.DiagramId ||
                 target.Value.GetType().Name != "Process" && !IsNativeSubProcess(target.Value))
                 throw new InvalidDataException("Native reparenting owner or diagram precondition failed.");
             string property = CollectionFor(target.Value, entry.Value);
@@ -31,6 +32,15 @@ public sealed partial class NativeEngine
             }
             progress("native_reparent:" + change.ElementId);
         }
+        var resulting = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
+        foreach (var change in changes)
+        {
+            string sourceDiagram = graph[change.ElementId].DiagramId, destination = resulting[change.ElementId].DiagramId;
+            if (sourceDiagram != destination && (change.ExpectedDiagramId != sourceDiagram || change.TargetDiagramId != destination) ||
+                change.TargetDiagramId != null && change.TargetDiagramId != destination)
+                throw new InvalidDataException("Native reparenting diagram expectation does not match final ownership.");
+        }
+        RelocateReparentedContent(model, persistence, graph, resulting, imageFiles, progress);
         // The same context checks used by native creation apply to the final moved graph.
         // Connector/reference closure is checked independently before dispatch and after restart.
         ValidateSubProcessContexts(model, changes.Select(c => new NativeMutation { Operation = "create", ElementId = c.ElementId }).ToArray());

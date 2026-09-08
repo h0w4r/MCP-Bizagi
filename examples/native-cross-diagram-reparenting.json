@@ -1,0 +1,13 @@
+{
+  "path": "model.bpm",
+  "expectedRevision": "REPLACE_WITH_ACTUAL_SOURCE_SHA256",
+  "moves": [
+    {
+      "ElementId": "REPLACE_WITH_ACTUAL_SUBTREE_ROOT_GUID",
+      "ExpectedParentId": "REPLACE_WITH_ACTUAL_SOURCE_CONTAINER_GUID",
+      "TargetParentId": "REPLACE_WITH_ACTUAL_DESTINATION_CONTAINER_GUID",
+      "ExpectedDiagramId": "REPLACE_WITH_ACTUAL_SOURCE_DIAGRAM_GUID",
+      "TargetDiagramId": "REPLACE_WITH_ACTUAL_FINAL_DESTINATION_DIAGRAM_GUID"
+    }
+  ]
+}

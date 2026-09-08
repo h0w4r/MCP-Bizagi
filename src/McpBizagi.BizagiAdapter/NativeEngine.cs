@@ -257,7 +257,7 @@ public sealed partial class NativeEngine
             {
                 if (request.Action == "align_save") reply.Alignment = Align(model, persistence, request, progress);
                 if (request.Action == "copy_save") reply.SelectionCopy = CopySelection(model, persistence, request, progress);
-                if (request.Action == "reparent_save") Reparent(model, request.Reparentings, progress);
+                if (request.Action == "reparent_save") Reparent(model, persistence, request.Reparentings, progress);
                 if (request.Action == "extract_save") reply.Extraction = ExtractSubProcess(model, persistence, request.Extraction ?? throw new InvalidDataException("Missing extraction request."), progress);
                 if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
                 if (request.Action == "custom_save") EditCustomArtifacts(model, request.CustomArtifactPatch ?? throw new InvalidDataException("Missing custom artifact patch."), progress);
@@ -306,7 +306,9 @@ public sealed partial class NativeEngine
         reply.CustomArtifactImports = customArtifactImports.ToArray();
         reply.VisioPages = visioPages.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
-        if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "exchange_read") reply.DiagramState = DiagramState(model);
+        // Reparenting can migrate current-user subprocess tabs across diagrams;
+        // preserve the editor's actual write scope for independent restart checks.
+        if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "reparent_save" or "exchange_read") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);
         if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Documentation = Documentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)

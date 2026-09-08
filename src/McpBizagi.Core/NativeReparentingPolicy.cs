@@ -6,7 +6,7 @@ using McpBizagi.Contracts;
 namespace McpBizagi.Core;
 
 /// <summary>Explicit final-state containment and original-preserving native XML relocation checks.</summary>
-public static class NativeReparentingPolicy
+public static partial class NativeReparentingPolicy
 {
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";
     private sealed record Container(string Kind, string Id, string Collection);
@@ -19,6 +19,9 @@ public static class NativeReparentingPolicy
         foreach (var c in changes)
         {
             NativeMetadataPolicy.RequireId(c.ElementId); NativeMetadataPolicy.RequireId(c.ExpectedParentId); NativeMetadataPolicy.RequireId(c.TargetParentId);
+            if (c.ExpectedDiagramId != null) NativeMetadataPolicy.RequireId(c.ExpectedDiagramId);
+            if (c.TargetDiagramId != null) NativeMetadataPolicy.RequireId(c.TargetDiagramId);
+            if ((c.ExpectedDiagramId == null) != (c.TargetDiagramId == null)) throw new InvalidDataException("Supply both source and final target diagram identities.");
             if (c.ExpectedParentId == c.TargetParentId || c.ElementId == c.TargetParentId) throw new InvalidDataException("Reparenting requires a different container, not the element itself.");
             if (c.Position is { } p && (!double.IsFinite(p.X) || !double.IsFinite(p.Y) || Math.Abs(p.X) > 1000000 || Math.Abs(p.Y) > 1000000))
                 throw new InvalidDataException("Native coordinates must be finite and within the supported range.");
@@ -29,6 +32,12 @@ public static class NativeReparentingPolicy
     {
         Validate(changes);
         var before = source.ToDictionary(e => e.Id); var after = Copy(source).ToDictionary(e => e.Id);
+        // Reject inconsistent observations before deriving final containment. A
+        // relocation must not silently repair an unrelated stale diagram field.
+        foreach (var item in source)
+            if (item.ParentId != "" && (!before.TryGetValue(item.ParentId, out var parent) ||
+                item.DiagramId != (parent.Kind == "Collaboration" ? parent.Id : parent.DiagramId)))
+                throw new InvalidDataException("Source containment has an inconsistent diagram or an absent parent.");
         var selected = changes.Select(c => c.ElementId).ToHashSet(StringComparer.Ordinal);
         foreach (var c in changes)
         {
@@ -37,7 +46,6 @@ public static class NativeReparentingPolicy
             if (item.Kind is "Collaboration" or "Participant" or "Process" or "Lane" or "Milestone" or "Group" or "HeaderArtifact" or "DataStore" ||
                 target.Kind != "Process" && target.SubProcess == null || before[item.ParentId].Kind != "Process" && before[item.ParentId].SubProcess == null)
                 throw new NotSupportedException("Move contained native elements between participant processes or embedded subprocesses; diagram-owned catalogs, groups and partitions have separate contracts.");
-            if (item.DiagramId != target.DiagramId) throw new NotSupportedException("Cross-diagram moves require explicit metadata, file, scenario and preference migration; no implicit conversion was performed.");
             string parent = item.ParentId; var seen = new HashSet<string>();
             while (parent != "")
             {
@@ -59,17 +67,38 @@ public static class NativeReparentingPolicy
             while (parent != "")
             {
                 if (!seen.Add(parent) || !after.TryGetValue(parent, out var owner)) throw new InvalidDataException("Final containment is cyclic or orphaned.");
+                if (owner.Kind == "Collaboration") item.DiagramId = owner.Id;
                 parent = owner.ParentId;
             }
-            if (item.Kind is "SequenceFlow" or "Association" && (selected.Contains(item.Id) || selected.Contains(item.SourceId) || selected.Contains(item.TargetId)))
+        }
+        foreach (var c in changes)
+        {
+            var item = before[c.ElementId]; var result = after[c.ElementId];
+            if (item.DiagramId != result.DiagramId && (c.ExpectedDiagramId != item.DiagramId || c.TargetDiagramId != result.DiagramId) ||
+                c.ExpectedDiagramId != null && (c.ExpectedDiagramId != item.DiagramId || c.TargetDiagramId != result.DiagramId))
+                throw new InvalidDataException("Cross-diagram moves require exact explicit source and final target diagram identities.");
+        }
+        var affected = after.Values.Where(e => e.DiagramId != before[e.Id].DiagramId || selected.Contains(e.Id)).Select(e => e.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var item in after.Values)
+        {
+            // Ports/associations are nested readback records, not top-level graph
+            // objects. Their diagram follows their actual native event/activity.
+            if (item.DiagramId != before[item.Id].DiagramId && item.DataFlow is { } io)
+                foreach (var port in io.Inputs.Concat(io.Outputs).Concat(io.InputAssociations).Concat(io.OutputAssociations)) port.DiagramId = item.DiagramId;
+            if (item.Kind is "SequenceFlow" or "Association" && (affected.Contains(item.Id) || affected.Contains(item.SourceId) || affected.Contains(item.TargetId)))
             {
-                if (!after.TryGetValue(item.SourceId, out var start) || !after.TryGetValue(item.TargetId, out var end) || start.ParentId != end.ParentId || item.ParentId != start.ParentId)
+                if (!after.TryGetValue(item.SourceId, out var start) || !after.TryGetValue(item.TargetId, out var end) || start.ParentId != end.ParentId || item.ParentId != start.ParentId ||
+                    start.DiagramId != item.DiagramId || end.DiagramId != item.DiagramId)
                     throw new InvalidDataException("Move the complete connection closure; reparenting cannot leave a cross-container flow or association.");
             }
+            if (item.Kind == "MessageFlow" && (affected.Contains(item.SourceId) || affected.Contains(item.TargetId)) &&
+                (!after.TryGetValue(item.SourceId, out var messageSource) || !after.TryGetValue(item.TargetId, out var messageTarget) ||
+                 messageSource.DiagramId != item.DiagramId || messageTarget.DiagramId != item.DiagramId))
+                throw new InvalidDataException("Cross-diagram moves cannot leave incident message flows in another diagram.");
             if (item.Event is { } ev)
             {
                 foreach (string targetId in new[] { ev.AttachedToActivityId }.Concat(ev.Definitions.Select(d => d.Compensation?.ActivityId ?? "")).Where(id => id != ""))
-                    if ((selected.Contains(item.Id) || selected.Contains(targetId)) && (!after.TryGetValue(targetId, out var attached) || attached.ParentId != item.ParentId))
+                    if ((affected.Contains(item.Id) || affected.Contains(targetId)) && (!after.TryGetValue(targetId, out var attached) || attached.ParentId != item.ParentId || attached.DiagramId != item.DiagramId))
                         throw new InvalidDataException("Move the complete boundary/compensation reference closure.");
                 after.TryGetValue(item.ParentId, out var owner);
                 if (selected.Contains(item.Id) && (item.ElementType == "CancelEnd" && owner?.SubProcess?.Kind != "Transaction" ||
@@ -88,9 +117,12 @@ public static class NativeReparentingPolicy
             if (JsonSerializer.Serialize(expected[id]) != JsonSerializer.Serialize(actual[id])) throw new InvalidDataException("Reparenting changed unrequested native graph fields: " + id);
     }
 
-    public static NativeFidelityReport Compare(byte[] beforeBytes, byte[] afterBytes, NativeElement[] before, NativeElement[] after, NativeReparenting[] changes)
+    public static NativeFidelityReport Compare(byte[] beforeBytes, byte[] afterBytes, NativeElement[] before, NativeElement[] after, NativeReparenting[] changes,
+        EngineReply? sourceReply = null, EngineReply? editedReply = null, EngineReply? reopenedReply = null)
     {
         Verify(before, after, changes);
+        if (before.Any(e => after.Single(a => a.Id == e.Id).DiagramId != e.DiagramId))
+            return CompareCrossDiagram(beforeBytes, afterBytes, before, after, changes, sourceReply, editedReply, reopenedReply);
         var original = before.ToDictionary(e => e.Id); var expected = Expected(before, changes).ToDictionary(e => e.Id);
         var left = NativeArchive.ReadEntries(beforeBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(afterBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
@@ -179,7 +211,7 @@ public static class NativeReparentingPolicy
         if (collection.Name.Namespace != Ns || owner.Name.Namespace != Ns) throw new InvalidDataException("Unexpected native collection namespace.");
         return new(owner.Name.LocalName, (string?)owner.Attribute("Id") ?? "", collection.Name.LocalName);
     }
-    private static XElement Owner(XDocument doc, Container key) => doc.Descendants(Ns + key.Kind).Single(e => (string?)e.Attribute("Id") == key.Id && NativeFidelity.IsNativeNameOwner(e));
+    private static XElement Owner(IReadOnlyList<XDocument> docs, Container key) => docs.SelectMany(doc => doc.Descendants(Ns + key.Kind)).Single(e => (string?)e.Attribute("Id") == key.Id && NativeFidelity.IsNativeNameOwner(e));
     private static string RecordKey(XElement e) => e.Name + "|" + ((string?)e.Attribute("Id") ?? throw new InvalidDataException("Unrepresented collection member."));
     private static void Plain(XElement? collection)
     {
@@ -189,6 +221,11 @@ public static class NativeReparentingPolicy
             throw new InvalidDataException("Reparenting cannot normalize unknown collection attributes, comments or preserved text.");
     }
     private static void RestoreCollections(XDocument before, XDocument after, (XElement Old, XElement Current)[] records)
+        => RestoreCollections([before], [after], records);
+
+    // Documents remain separate roots: joining them beneath a synthetic XML root
+    // would invalidate the exact native-container provenance checks.
+    private static void RestoreCollections(IReadOnlyList<XDocument> before, IReadOnlyList<XDocument> after, (XElement Old, XElement Current)[] records)
     {
         if (records.Length == 0) return;
         var selected = records.ToDictionary(p => RecordKey(p.Old), p => p.Current);

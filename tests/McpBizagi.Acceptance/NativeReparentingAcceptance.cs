@@ -9,7 +9,7 @@ internal static class NativeReparentingAcceptance
     private static string S(JsonElement e, string name) => e.GetProperty(name).GetString()!;
     private static string Id() => Guid.NewGuid().ToString();
     public static async Task Run(string repo, string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
-        Func<string, string, Task<JsonElement>> wait, Action<string> exited, Func<string, Dictionary<string, object?>, Task<JsonElement>> error)
+        Func<string, string, Task<JsonElement>> wait, Action<string> exited, Func<string, Dictionary<string, object?>, Task<JsonElement>> error, bool crossDiagram = false)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string tool, Dictionary<string, object?> input, string state = "completed")
@@ -19,7 +19,8 @@ internal static class NativeReparentingAcceptance
             File.WriteAllText(Path.Combine(run, "native-reparenting.json"), JsonSerializer.Serialize(receipts, new JsonSerializerOptions { WriteIndented = true }));
             return state == "completed" ? response.GetProperty("Result") : response;
         }
-        var created = await Op("native_model_create", new() { ["diagramNames"] = new[] { "Reparent source Ω", "Unrelated 日本語" } });
+        var created = await Op("native_model_create", new() { ["diagramNames"] = crossDiagram
+            ? new[] { "Reparent source Ω", "Cross target Ω", "Unrelated 日本語" } : new[] { "Reparent source Ω", "Unrelated 日本語" } });
         string path = S(created, "outputArtifact"), revision = S(created, "outputRevision");
         var initial = created.GetProperty("reopened").GetProperty("Elements").EnumerateArray().ToArray();
         string diagram = S(initial.Single(e => S(e, "Kind") == "Collaboration" && S(e, "Name") == "Reparent source Ω"), "Id");
@@ -80,6 +81,14 @@ internal static class NativeReparentingAcceptance
                 new XElement(sim + "ProcessingTime", new XElement(sim + "FloatingParameter", new XAttribute("value", 3)))), new XElement(sim + "PropertyParameters"))));
         await Patch("native_metadata_apply", new { Simulations = new[] { new { DiagramId = diagram, Xml = config.ToString() } }, DiscardSimulationResults = true });
         await Patch("native_diagrams_apply", new { OpenedItems = new[] { new { DiagramId = diagram, SubProcessId = a, IsSelected = true }, new { DiagramId = diagram, SubProcessId = nested, IsSelected = false } } });
+        if (crossDiagram)
+        {
+            // Reuse only MCP-authored seed setup. The cross-diagram verifier is
+            // independent of production policies and the same-diagram assertions.
+            await NativeCrossDiagramAcceptance.Run(run, call, wait, exited, error,
+                new(path, revision, diagram, process, a, nested, child, leaf, image, fileName, payload));
+            return;
+        }
         string originalPath = path, originalRevision = revision;
         string[] selected = [child, nested, flow, data, association, boundary];
         object[] Moves(string from, string to) => selected.Select(id => (object)new { ElementId = id, ExpectedParentId = from, TargetParentId = to }).ToArray();
