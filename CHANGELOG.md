@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Correct native Excel validation for empty visible/implicit pools using actual
+  native mapper projections and source identities. Return explicit per-pool
+  publication omissions; require exact populated row IDs in independent workbook
+  readback so duplicate names cannot hide missing rows. Preserve the real native
+  rejection of a workbook with no visible sheets rather than fabricating output.
 - Add experimental native Web publication through the installed generator,
   portable relative images and default logo, independently checked page/search
   inventories, native PNG hashes and selected content. Reuse native search DTOs

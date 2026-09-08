@@ -461,6 +461,13 @@ try
         Console.WriteLine("NATIVE_PALETTE_CREATE_DELETE_PASS types=" + types.Length + " evidence=" + run);
         return 0;
     }
+    if (args.Contains("--excel-publication-only"))
+    {
+        if (!native) throw new ArgumentException("Excel publication acceptance requires --native.");
+        await NativeExcelPublicationAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_EXCEL_EMPTY_POPULATED_POOL_PROJECTION_PASS evidence=" + run);
+        return 0;
+    }
     if (args.Contains("--web-publication-only"))
     {
         if (!native) throw new ArgumentException("Web publication acceptance requires --native.");

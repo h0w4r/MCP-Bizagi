@@ -1,5 +1,52 @@
 # Verification baselines
 
+## Native Excel pool projection — source after 0.6, 2026-09-08 UTC
+
+Final visible-row run `20260908-161951-57f636` traversed actual MCP stdio, isolated installed
+Modeler 4.3.0.008 workers and independent workbook/native readers. **10 terminal
+operations: 8 completed and 2 expected native failures.**
+
+- Both visible and implicit pools were tested empty and populated across two
+  native diagrams, with Unicode names and nonempty pool documentation. The native
+  mapper's selected participant/child inventory was compared to the source graph.
+- The mixed publication reported exactly two omitted empty-pool sheets; selecting
+  one diagram reported exactly one. After populating the remaining processes,
+  both whole-model publications reported zero omissions and verified all expected
+  populated pool/task row IDs, not merely duplicate-prone names.
+- A wholly empty workbook reached the native generator and failed because it had
+  no visible worksheet. A missing selected diagram also failed. Subsequent real
+  publication and native inspection succeeded without changing the source revision.
+- **18 worker records, 21 owned-process records, all exited.** Across 318 periodic
+  read-only desktop observations, no owned visible window or foreground process
+  was observed. These are sampled observations, not continuous monitoring.
+- Transcript SHA-256:
+  `86d2410bb7177319247e02c4b73901c61b616133be983a20edd01d094e59fadc`.
+  Native receipt SHA-256:
+  `e4d3f6c8aa9b440f4e7a3d63f5d20cdb9581d142de54d34dab81b0870680facf`.
+
+Final-source rich Excel regression `20260908-162426-41c2ed` passed the originally
+failing Web corpus with structured visible row readback. The earlier projection
+regressions `20260908-161150-ddea2c` and `20260908-161218-b9c96d` passed before
+the stronger row-position checks. That improvement now requires the native ID in
+column zero and its source name in column one of a visible sheet, not a match
+anywhere in flattened workbook text or its hidden index.
+Final visible-row nested regression `20260908-162629-bde08a` and real XML MCP
+run `20260908-162654-9ddc8b` also passed. All 18 independent package-policy
+fixtures passed; those fixtures and the XML-only run are not native accreditation.
+The real exported embedded file retained SHA-256
+`c3b288b545076f681cb415f5f565a0848819512a69d4094acf88e2dc45be01a5`.
+Excel/Word/PDF also passed regression run `20260908-160559-639d7e` before the
+final stricter Excel child-identity assertion; Word/PDF logic was unchanged by
+that assertion. Native Web regression `20260908-161243-a56847`
+also passed independent directory/image readback; this is not a repeat browser
+quality accreditation. Locked restore, Release build (zero warnings/errors) and
+**1,097 unit/component tests** passed with no skips. Unit fixtures do not
+accredit the native engine. The new source is not in the immutable 0.6 package.
+
+The [publication contract](native-publication.md) explains structured omissions.
+Initial all-empty run `20260908-155720-f99fab` failed for the actual native
+visible-sheet constraint; no synthetic worksheet was introduced to hide it.
+
 ## Native Web publication — source after 0.6, 2026-09-08 UTC
 
 The [Web execution record](validation-web-publication.md) retains 10 terminal

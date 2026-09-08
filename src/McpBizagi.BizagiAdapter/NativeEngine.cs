@@ -244,7 +244,7 @@ public sealed partial class NativeEngine
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
             if (request.Action is "simulate" or "what_if") reply.SimulationInputs = VerifySimulationInputs(reply.Artifacts, simulationActivities);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
-            if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
+            if (request.Action == "publish") reply.Artifacts = Publish(model, request, reply, progress);
             if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
             if (request.Action == "custom_export") reply.Artifacts = new[] { ExportCustomArtifacts(model, request, progress) };
             if (request.Action == "visio_export") reply.Artifacts = new[] { ExportVisio(model, request, progress) };

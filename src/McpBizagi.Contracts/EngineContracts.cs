@@ -184,6 +184,7 @@ public sealed class EngineReply
     public NativeValidationMessage[] Validation { get; set; } = System.Array.Empty<NativeValidationMessage>();
     public NativeScenario[] Scenarios { get; set; } = System.Array.Empty<NativeScenario>();
     public NativePublicationReadback? Publication { get; set; }
+    public NativeExcelPoolProjection[]? ExcelPoolProjection { get; set; }
     public string[] IntegrationAdjustments { get; set; } = System.Array.Empty<string>();
     public NativeMetadataSnapshot? Metadata { get; set; }
     public NativeDocumentationSnapshot? Documentation { get; set; }
@@ -239,6 +240,16 @@ public sealed class NativePublicationReadback
     public int Images { get; set; }
     public NativeImageSize[] ImageSizes { get; set; } = System.Array.Empty<NativeImageSize>();
     public NativeWebPublication? Web { get; set; }
+    public NativeExcelRow[] ExcelRows { get; set; } = System.Array.Empty<NativeExcelRow>();
+}
+
+/// <summary>First-column identity and second-column name read from a visible native workbook sheet.</summary>
+public sealed class NativeExcelRow
+{
+    public string Sheet { get; set; } = "";
+    public int RowNumber { get; set; }
+    public string ElementId { get; set; } = "";
+    public string Name { get; set; } = "";
 }
 
 /// <summary>Independent Web directory readback; never evaluates generated JavaScript.</summary>
@@ -265,6 +276,24 @@ public sealed class NativeWebAsset
     public string Path { get; set; } = "";
     public long Length { get; set; }
     public string Sha256 { get; set; } = "";
+}
+
+/// <summary>Actual participant entries returned by the installed Excel documentation mapper.</summary>
+public sealed class NativeExcelPoolProjection
+{
+    public string DiagramId { get; set; } = "";
+    public string ElementId { get; set; } = "";
+    public string[] MappedElementIds { get; set; } = System.Array.Empty<string>();
+}
+
+/// <summary>Input-specific publication loss; source model bytes remain unchanged.</summary>
+public sealed class NativePublicationOmission
+{
+    public string Code { get; set; } = "";
+    public string DiagramId { get; set; } = "";
+    public string ElementId { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Message { get; set; } = "";
 }
 
 public sealed class NativeImageSize

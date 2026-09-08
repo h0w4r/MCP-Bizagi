@@ -184,7 +184,12 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                     .ToDictionary(p => Path.GetFileNameWithoutExtension(p)!, p => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(p))));
                 NativeWebPublicationPolicy.Verify(published.Elements, web, selected, title, renders);
             }
-            var names = published.Elements.Where(e => (selected.Length == 0 || selected.Contains(e.DiagramId)) &&
+            var publicationOmissions = format == "excel"
+                ? NativeExcelPublicationPolicy.Verify(published.Elements, published.ExcelPoolProjection, selected)
+                : Array.Empty<NativePublicationOmission>();
+            if (format == "excel") NativeExcelPublicationPolicy.VerifyReadback(published.ExcelPoolProjection!, published.Elements, readback.ExcelRows);
+            var omittedIds = publicationOmissions.Select(o => o.ElementId).ToHashSet(StringComparer.Ordinal);
+            var names = published.Elements.Where(e => !omittedIds.Contains(e.Id) && (selected.Length == 0 || selected.Contains(e.DiagramId)) &&
                 (((e.Kind.EndsWith("Task", StringComparison.Ordinal) || format != "excel" && e.Kind == "CallActivity") && (format == "excel" || !string.IsNullOrWhiteSpace(e.Documentation))) ||
                     e.Kind == (format == "excel" ? "Participant" : "Collaboration")) && !string.IsNullOrWhiteSpace(e.Name)).Select(e => e.Name).Distinct().ToArray();
             // Logos alone must not satisfy the diagram-image gate. Match the actual rendered PNG dimensions as a multiset.
@@ -210,6 +215,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 expectedImages,
                 expectedNames = names,
                 missingNames = missing,
+                publicationOmissions,
                 independentReader = true
             }));
             if (readback.PagesOrSheets == 0 || string.IsNullOrWhiteSpace(readback.Text) || missing.Length > 0)
@@ -226,6 +232,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 sourceRevision = input.Revision,
                 nativeSourceUnmodified = true,
                 verifiedNames = names.Length,
+                publicationOmissions,
                 verifiedImages = readback.Images,
                 imageMatches,
                 warning = format == "web"

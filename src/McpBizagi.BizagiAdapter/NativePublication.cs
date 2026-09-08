@@ -11,7 +11,7 @@ public sealed partial class NativeEngine
     private object PublicationService(string name) => Call(injector!, "Resolve",
         Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Documentation." + name))!;
 
-    private string[] Publish(object model, EngineRequest request, Action<string> progress)
+    private string[] Publish(object model, EngineRequest request, EngineReply reply, Action<string> progress)
     {
         string extension = request.PublicationFormat switch
         {
@@ -107,6 +107,16 @@ public sealed partial class NativeEngine
             // The vendor's public Excel WriteToFile also opens the default desktop application.
             // Compose its real mapper, generator and persistence steps, deliberately excluding that launcher.
             object mapped = Call(PublicationService("Mappers.IPublicationModelMapper"), "CreateDocumentationModel", model, environment)!;
+            // The native sheet maker omits participant sheets with no mapped child
+            // elements, including visible pools. Preserve its actual projection so
+            // the host can verify each omission against the source graph and report it.
+            reply.ExcelPoolProjection = Items(mapped, "Pages").SelectMany(page => Items(page, "Elements")
+                .Where(element => Text(element, "ElementType") == "Participant")
+                .Select(element => new NativeExcelPoolProjection
+                {
+                    DiagramId = Text(page, "Id"), ElementId = Text(element, "Id"),
+                    MappedElementIds = Items(element, "PageElements").Select(child => Text(child, "Id")).ToArray()
+                })).ToArray();
             object tables = Call(PublicationService("Mappers.Excel.IMainMapper"), "MapToExcelModel", mapped, model, false, environment)!;
             object writer = Call(injector!, "Resolve", Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Util.Excel.IAsposeExcelWriter"))!;
             Call(writer, "GenerateFile", tables); Call(writer, "SaveFile", output);
@@ -157,11 +167,26 @@ public sealed partial class NativeEngine
         {
             object workbook = New(Type("Aspose.Cells.dll", "Aspose.Cells.Workbook"), request.InputPath);
             var text = new List<string>();
+            var rows = new List<NativeExcelRow>();
             foreach (object sheet in (IEnumerable)Get(workbook, "Worksheets"))
             {
                 result.PagesOrSheets++;
-                foreach (object cell in (IEnumerable)Get(sheet, "Cells")) text.Add(Text(cell, "StringValue"));
+                var identities = new Dictionary<int, string>(); var names = new Dictionary<int, string>();
+                bool visible = Text(sheet, "VisibilityType") == "Visible";
+                foreach (object cell in (IEnumerable)Get(sheet, "Cells"))
+                {
+                    string value = Text(cell, "StringValue"); text.Add(value);
+                    if (!visible) continue; // Hidden native index entries cannot prove visible data rows.
+                    int row = (int)Get(cell, "Row"), column = (int)Get(cell, "Column");
+                    if (row == 0) continue; // Installed native column headers are not model data.
+                    if (column == 0 && Guid.TryParseExact(value, "D", out _)) identities[row] = value;
+                    if (column == 1) names[row] = value;
+                }
+                foreach (var row in identities)
+                    rows.Add(new NativeExcelRow { Sheet = Text(sheet, "Name"), RowNumber = row.Key, ElementId = row.Value,
+                        Name = names.TryGetValue(row.Key, out var name) ? name : "" });
             }
+            result.ExcelRows = rows.ToArray();
             result.Text = string.Join("\n", text);
             if (workbook is IDisposable disposable) disposable.Dispose();
         }

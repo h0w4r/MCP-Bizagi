@@ -47,6 +47,36 @@ durable output; line/page wrapping whitespace is normalized for text comparison.
 The native Word/PDF publisher can omit element sections without documentation;
 their shapes remain in the diagram image. Excel's selection behavior differs.
 
+### Excel pool projection (current source after 0.6)
+
+The installed Excel sheet maker only emits a participant sheet when its mapped
+process contains child elements. This applies to both visible and implicit
+participants; excluding every implicit participant would incorrectly hide
+populated processes.
+
+`published.ExcelPoolProjection` records every selected participant's native
+mapper identity and actual mapped child IDs. The host checks this inventory
+against the source graph before allowing an empty pool's name to be excluded
+from the workbook-name assertion. A nonempty source process with an empty mapped
+list, a missing source child even in a nonempty mapped list, unknown ownership,
+duplicate identities or a missing projection is a hard
+failure, not a successful degraded publication.
+
+The separate workbook reader must also recover the native IDs of populated
+participant rows and their mapped child rows in column zero of visible sheets,
+with source names in column one. `NativePublicationReadback.ExcelRows` records
+the sheet, row number, ID and name. IDs occurring in descriptions or the hidden
+index cannot satisfy this check. A wholly empty model can be rejected by the
+installed generator because it contains no visible worksheet; the MCP does not
+inject a synthetic worksheet to turn that failure into success.
+
+The result and verification artifact return `publicationOmissions` with
+`NativePublicationOmission.Code`, `DiagramId`, `ElementId`, `Name` and `Message`.
+`native_excel_empty_pool_sheet_omitted` means no participant sheet was generated;
+that pool's own name, documentation and attributes are not promised in the
+workbook. The original native model retains them. This is an explicit export
+limitation, not silent loss or a waiver for arbitrary missing task names.
+
 Word/PDF image dimensions are checked against the actual native PNG surfaces,
 not merely against the number of cover logos. Duplicate dimensions are matched
 as a multiset. Exact image dimensions are required by default.
@@ -99,3 +129,14 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --nat
 ```
 
 Official context: [Bizagi documentation publication](https://help.bizagi.com/platform/en/generating_documentation.htm).
+
+To exercise the native Excel empty/populated pool contract through MCP:
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native --excel-publication-only
+```
+
+This creates two real native diagrams, exercises both implicit and visible pools,
+reports empty-pool omissions, populates them and verifies their subsequent rows,
+rejects a wholly empty workbook and a missing diagram, and verifies recovery and
+the source revision. See the [execution baseline](validation.md).

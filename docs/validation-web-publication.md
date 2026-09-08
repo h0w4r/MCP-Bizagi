@@ -83,5 +83,10 @@ operator and are not published in this repository.
   diagnostic/coverage gap; the successful older-corpus regression does not erase
   it or accredit all Excel inputs.
 
+The subsequent [Excel pool-projection baseline](validation.md) closes that
+specific empty-pool false failure with actual native mapper/source checks and
+explicit omission records. This historical failed run remains diagnostic evidence;
+the later correction does not change the immutable 0.6 package.
+
 The native [publication contract](native-web-publication.md) takes precedence over
 broader interpretations of build status or the existence of a tool declaration.
