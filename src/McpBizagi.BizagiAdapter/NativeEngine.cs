@@ -257,7 +257,11 @@ public sealed partial class NativeEngine
             {
                 if (request.Action == "align_save") reply.Alignment = Align(model, persistence, request, progress);
                 if (request.Action == "copy_save") reply.SelectionCopy = CopySelection(model, persistence, request, progress);
-                if (request.Action == "reparent_save") Reparent(model, persistence, request.Reparentings, progress);
+                if (request.Action == "reparent_save")
+                {
+                    Reparent(model, persistence, request.Reparentings, progress);
+                    MigrateScenarioParameters(model, request.ScenarioTransfers, request.DiscardScenarioResultDiagrams, progress);
+                }
                 if (request.Action == "extract_save") reply.Extraction = ExtractSubProcess(model, persistence, request.Extraction ?? throw new InvalidDataException("Missing extraction request."), progress);
                 if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
                 if (request.Action == "custom_save") EditCustomArtifacts(model, request.CustomArtifactPatch ?? throw new InvalidDataException("Missing custom artifact patch."), progress);

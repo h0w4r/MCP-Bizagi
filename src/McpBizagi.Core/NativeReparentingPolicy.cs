@@ -118,11 +118,11 @@ public static partial class NativeReparentingPolicy
     }
 
     public static NativeFidelityReport Compare(byte[] beforeBytes, byte[] afterBytes, NativeElement[] before, NativeElement[] after, NativeReparenting[] changes,
-        EngineReply? sourceReply = null, EngineReply? editedReply = null, EngineReply? reopenedReply = null)
+        EngineReply? sourceReply = null, EngineReply? editedReply = null, EngineReply? reopenedReply = null, NativeSimulationMigrationPlan? simulation = null)
     {
         Verify(before, after, changes);
         if (before.Any(e => after.Single(a => a.Id == e.Id).DiagramId != e.DiagramId))
-            return CompareCrossDiagram(beforeBytes, afterBytes, before, after, changes, sourceReply, editedReply, reopenedReply);
+            return CompareCrossDiagram(beforeBytes, afterBytes, before, after, changes, sourceReply, editedReply, reopenedReply, simulation);
         var original = before.ToDictionary(e => e.Id); var expected = Expected(before, changes).ToDictionary(e => e.Id);
         var left = NativeArchive.ReadEntries(beforeBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(afterBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);

@@ -1,0 +1,28 @@
+{
+  "tool": "native_elements_reparent",
+  "arguments": {
+    "path": "<workspace-relative native .bpm or artifact URI>",
+    "expectedRevision": "<SHA-256 returned by native inspection>",
+    "moves": [
+      {
+        "ElementId": "<selected native element GUID>",
+        "ExpectedParentId": "<original process/subprocess GUID>",
+        "TargetParentId": "<destination process/subprocess GUID>",
+        "ExpectedDiagramId": "<original native diagram GUID>",
+        "TargetDiagramId": "<destination native diagram GUID>"
+      }
+    ],
+    "simulationMigration": {
+      "Mappings": [
+        {
+          "SourceDiagramId": "<original native diagram GUID>",
+          "SourceScenarioId": "<existing source scenario ID>",
+          "TargetDiagramId": "<destination native diagram GUID>",
+          "TargetScenarioId": "<existing destination scenario ID>"
+        }
+      ],
+      "CopyMissingDependencies": true,
+      "DiscardSimulationResults": false
+    }
+  }
+}

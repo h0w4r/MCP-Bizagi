@@ -6,26 +6,29 @@ namespace McpBizagi.Core;
 
 public static partial class NativeReparentingPolicy
 {
-    public static void Preflight(byte[] bytes, EngineReply source, NativeReparenting[] changes)
+    public static NativeSimulationMigrationPlan Preflight(byte[] bytes, EngineReply source, NativeReparenting[] changes, NativeSimulationMigration? simulationMigration = null)
     {
         var expected = Expected(source.Elements, changes).ToDictionary(e => e.Id);
         var moved = source.Elements.Where(e => e.DiagramId != expected[e.Id].DiagramId).ToArray();
-        if (moved.Length == 0) return;
+        if (moved.Length == 0)
+        {
+            if (simulationMigration != null) throw new InvalidDataException("Scenario migration requires a cross-diagram move.");
+            return NativeSimulationMigrationPlan.Empty;
+        }
         if (source.Metadata == null || source.Documentation == null || source.DiagramState == null)
             throw new InvalidDataException("Cross-diagram migration requires native metadata, documentation and tab evidence.");
-        var references = moved.SelectMany(e => new[] { e.Id, e.BpmnId }).Where(s => s != "").ToHashSet(StringComparer.Ordinal);
-        foreach (var scenario in source.Metadata.Simulations)
-            if (NativeMetadataPolicy.Read(scenario.Xml).Descendants().Attributes().Any(a => a.Name.LocalName == "elementRef" && references.Contains(a.Value)))
-                throw new NotSupportedException("Cross-diagram migration requires explicit migration of configured element simulation parameters before moving their owners.");
         var entries = NativeArchive.ReadEntries(bytes);
+        var simulation = NativeSimulationMigrationPolicy.Prepare(entries, source, expected.Values.ToArray(), simulationMigration);
         foreach (string diagram in moved.SelectMany(e => new[] { e.DiagramId, expected[e.Id].DiagramId }).Distinct())
             foreach (string name in new[] { "Actions.xml", "BPSimDataResult.xml" })
-                if (entries.TryGetValue(diagram + ".diag!/" + name, out var value) && NativeMetadataPolicy.Read(Encoding.UTF8.GetString(value)).Root?.Elements().Any() == true)
+                if (entries.TryGetValue(diagram + ".diag!/" + name, out var value) && NativeMetadataPolicy.Read(Encoding.UTF8.GetString(value)).Root?.Elements().Any() == true &&
+                    (name != "BPSimDataResult.xml" || !simulation.DiscardResultDiagrams.Contains(diagram)))
                     throw new NotSupportedException("Cross-diagram migration cannot silently retire or invalidate presentation actions or simulation results.");
+        return simulation;
     }
 
     private static NativeFidelityReport CompareCrossDiagram(byte[] beforeBytes, byte[] afterBytes, NativeElement[] before, NativeElement[] after,
-        NativeReparenting[] changes, EngineReply? sourceReply, EngineReply? editedReply, EngineReply? reopenedReply)
+        NativeReparenting[] changes, EngineReply? sourceReply, EngineReply? editedReply, EngineReply? reopenedReply, NativeSimulationMigrationPlan? simulation)
     {
         var original = before.ToDictionary(e => e.Id); var expected = Expected(before, changes).ToDictionary(e => e.Id);
         var moved = before.Where(e => e.DiagramId != expected[e.Id].DiagramId).ToDictionary(e => e.Id, e => (Source: e.DiagramId, Target: expected[e.Id].DiagramId));
@@ -100,6 +103,8 @@ public static partial class NativeReparentingPolicy
             { tab.DiagramId = relocation.Target; tabsChanged = true; }
         if (tabsChanged) NativeDiagramPolicy.ProjectOpenedItems(left, right, opened,
             reopenedReply?.DiagramState ?? throw new InvalidDataException("Missing native tab restart snapshot."), editedReply?.DiagramState);
+        if (simulation is { Transfers.Length: > 0 }) NativeSimulationMigrationPolicy.Project(left, right, simulation,
+            editedReply ?? throw new InvalidDataException("Missing native editor migration evidence."), reopenedReply ?? throw new InvalidDataException("Missing native restart migration evidence."));
         var positions = changes.Where(c => c.Position != null).Select(c => new NativeMutation { Operation = "update", ElementId = c.ElementId,
             Geometry = expected[c.ElementId].Geometry, ExpandedSize = expected[c.ElementId].Geometry!.Expanded && expected[c.ElementId].ExpandedGeometry is { } e ? new() { Width = e.Width, Height = e.Height } : null }).ToArray();
         return positions.Length == 0 ? NativeFidelity.CompareEntries(left, right) : NativeMutationFidelity.CompareEntries(left, right, positions, before.Select(e => { var value = Copy(expected[e.Id]); value.DiagramId = e.DiagramId; return value; }).ToArray());

@@ -99,7 +99,7 @@ public sealed class NativeCrossDiagramReparentingTests
     public void MovedConfiguredSimulationReferencesCannotBeSilentlyAbandoned()
     {
         var reply = new EngineReply { Elements = Graph(), Documentation = new(), DiagramState = new(), Metadata = new() {
-            Simulations = [new() { DiagramId = Id(1), Xml = $"<BPSimData xmlns='http://www.bpsim.org/schemas/1.0'><Scenario><ElementParameters elementRef='{Id(7)}'/></Scenario></BPSimData>" }] } };
+            Simulations = [new() { DiagramId = Id(1), Xml = $"<BPSimData xmlns='http://www.bpsim.org/schemas/1.0'><Scenario id='Configured'><ElementParameters elementRef='{Id(7)}'/></Scenario></BPSimData>" }] } };
         Assert.Throws<NotSupportedException>(() => NativeReparentingPolicy.Preflight(Archive(false), reply, Moves));
     }
 }

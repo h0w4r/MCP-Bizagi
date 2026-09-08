@@ -217,6 +217,12 @@ try
         await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--scenario-migration-only"))
+    {
+        if (!native) throw new ArgumentException("Scenario migration acceptance requires --native.");
+        await NativeScenarioMigrationAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_SCENARIO_MIGRATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--cross-diagram-only"))
     {
         if (!native) throw new ArgumentException("Cross-diagram acceptance requires --native.");

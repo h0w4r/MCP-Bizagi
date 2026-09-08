@@ -80,12 +80,14 @@ The native loader refreshes the definition root's `ModificationDate`; this
 observed audit timestamp is recorded separately from substantive definition
 fidelity. The independent acceptance retains `ModifiedBy` and all other fields.
 
-This initial migration contract **rejects configured simulation parameters that
-reference moved elements**, and rejects nonempty presentation actions or
-simulation results in affected diagrams. It does not erase or implicitly move
-them. Explicit scenario replacement, when requested by an operator, is a separate
-`native_metadata_apply` operation; such replacement is not scenario migration.
-Automatic scenario/action migration remains unfinished.
+Configured parameters require an explicit `simulationMigration` request with
+complete source/target scenario correspondence and matching context. Missing
+resource/calendar dependencies require copy consent; conflicting dependencies
+reject. See the [scenario migration contract](native-scenario-migration.md).
+Presentation actions remain rejected. Saved-result retirement requires explicit
+consent and remains unaccredited for nonempty native result containers. Complete
+scenario replacement via `native_metadata_apply` is a separate operation, not
+migration.
 
 See [the cross-diagram request template](../examples/native-cross-diagram-reparenting.json).
 Its placeholders must be replaced with actual native IDs from the input model.

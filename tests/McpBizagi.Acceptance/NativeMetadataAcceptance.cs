@@ -132,12 +132,19 @@ internal static class NativeMetadataAcceptance
         }
     }
 
-    private static void VerifyTiming(string file, int expectedMinutes, bool resources = false, bool calendar = false)
+    internal static void VerifyTiming(string file, int expectedMinutes, bool resources = false, bool calendar = false, string? processBpmnId = null, string? taskBpmnId = null)
     {
         var xml = XDocument.Load(file);
         // Assert the observed installed-engine schema and quantitative behavior, not just the success envelope.
-        var process = xml.Descendants("process").Single(); var task = xml.Descendants("Task").Single();
+        XElement Select(string kind, string? id) => id == null ? xml.Descendants(kind).Single() :
+            xml.Descendants("element").Single(e => (string?)e.Attribute("name") == id).Element(kind) ?? throw new InvalidDataException("Missing scoped simulation metrics.");
+        var process = Select("process", processBpmnId); var task = Select("Task", taskBpmnId);
         double Metric(XElement e, string name) => double.Parse(e.Attribute(name)?.Value ?? throw new InvalidDataException("Missing simulation metric: " + name), CultureInfo.InvariantCulture);
+        // Native-generated empty participant helpers are observable, not removed
+        // from the evidence. They must not contribute any completed work.
+        if (processBpmnId != null && xml.Descendants("process").Where(e => e != process).Any(e => Metric(e, "numberOfProcessesCompleted") != 0) ||
+            taskBpmnId != null && xml.Descendants("Task").Where(e => e != task).Any(e => Metric(e, "numberOfTokensCompleted") != 0 || Metric(e, "numberOfTokensStarted") != 0))
+            throw new InvalidDataException("Unexpected process or task contributed simulated work.");
         if (Metric(process, "numberOfProcessesCompleted") != 12 || Metric(task, "numberOfTokensCompleted") != 12 ||
             Metric(task, "averageTimeBusy") != expectedMinutes || Metric(task, "totalTimeBusy") != 12 * expectedMinutes)
             throw new InvalidDataException("Configured trigger count or processing time did not affect real simulation results.");

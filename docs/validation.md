@@ -1,5 +1,58 @@
 # Verification baselines
 
+## Explicit scenario migration — source after 0.6, 2026-09-08 UTC
+
+Final official-SDK MCP/native circuit `20260908-202129-e86615` passed **16
+terminal operations: 13 completed and three expected failures**. Installed
+Modeler 4.3.0.008, native persistence, independent workers and the actual
+level-3/level-4 simulator were used. The client calls no production policy classes.
+
+- Forward migration `d765b2446aa94847a895f2fc7c9adc47` and inverse migration
+  `afe4e2df122149259ff4c855a6823c52` each moved five roots. The client checked
+  complete parameter/resource/calendar records, mapped inheritance, untouched
+  third-diagram configuration and the unchanged original revision.
+- Before and after migration, real simulations verified 12 completions, three
+  minutes average processing, 36 minutes total busy time, 84 fixed cost, resource
+  contention and calendar waiting. Auxiliary native process/task records were
+  retained in evidence and required to contribute no completed work.
+- Missing migration, missing copy consent and incomplete inherited correspondence
+  failed for the expected reasons. Valid recovery, native no-op save and inverse
+  migration reusing existing dependencies completed.
+- All **25 workers** and **27 owned-process records** were recorded exited.
+  **181 periodic desktop samples** observed no visible worker window or worker
+  foreground takeover. These are not independent Modeler GUI observations.
+- Locked restore, Release build (zero warnings/errors), **1,199 unit tests**,
+  **18 package-policy cases**, and actual MCP XML run `20260908-202427-472905`
+  (43 tools; native explicitly not run) passed independently. This source
+  milestone does not modify or reaccredit the immutable 0.6 package.
+
+Transcript SHA-256:
+`17e14998e284046093c32267c0a74b36b1e11618683b1982383569fb63d376e1`
+
+Independent scenario receipt SHA-256:
+`c7694f7e24fda370e4c7bd0c85a67b6ae79a0a1e172f4eba59f455e47f07be43`
+
+The existing rich cross-diagram regression also passed on the final build:
+`20260908-202637-5eb6fa`, **28 terminal operations: 26 completed, two expected
+failures**, plus one expected stale-revision protocol rejection. Its six moves
+retained their whole-archive gates. All 53 workers and 59 owned-process records
+exited; 564 periodic desktop samples observed no visible/foreground worker.
+Regression transcript SHA-256:
+`b29805100114fd4e1962ce786abcf4e2cacd85673c3ed1570b38a844d72e2ff4`
+
+Diagnostic run `20260908-200312-be41c7` stopped after forward migration because
+its first result verifier assumed a single process. The installed engine also
+returned auxiliary process records. The verifier now selects actual native
+process/task IDs and rejects unexpected work from other records; timing and cost
+assertions were not weakened. A subsequent preliminary run and the final run
+above passed. Raw diagnostic evidence remains private.
+
+See the [contract and reproduction command](native-scenario-migration.md).
+Inherited-scenario configuration was verified, not inherited execution.
+Nonempty saved-result retirement, presentation actions, arbitrary behavioral
+equivalence, live unsaved sessions, independent GUI compatibility and a newer
+packaged distribution remain separate unfinished work.
+
 ## Explicit cross-diagram reparenting — source after 0.6, 2026-09-08 UTC
 
 Final real MCP/native circuit `20260908-192630-4daae1` passed **28 terminal
