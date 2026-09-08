@@ -1,5 +1,54 @@
 # Verification baselines
 
+## Native XPDL 2.2 interchange — 2026-09-08 UTC
+
+The enriched independent MCP circuit `20260908-032836-a1a99d` passed **13
+terminal native operations**: 11 completed and two expected native failures,
+plus six expected MCP preflight rejections. It uses the installed Unicode file
+exporter and XPDL importer, not an XML-generated stand-in for native behavior.
+
+The two-diagram model was authored through native MCP creation, mutation,
+resource/RACI and documentation tools. It contains Unicode labels, a nested
+subprocess/task, a gateway and connection, two extended definitions, populated
+Unicode values and a verified 34-byte embedded attachment. The run verifies
+all-diagram export, artifact import, native no-op save, selected-diagram export,
+duplicate-document rejection, stale revisions, DTD/version rejection, missing
+native diagram failure and a successful native inspection afterward.
+
+Primary export `bde4a02a933242d6b91808f9580b5c85` and artifact import
+`cd1969fda73648f6becbb8032273783d` completed their independent fresh-process
+graph and metadata/documentation gates. All 27 owned workers exited; 154
+periodic samples observed no visible worker window or foreground ownership.
+Sampling is evidence about those observations, not continuous desktop proof.
+The transcript SHA-256 is
+`9be64494c32a67756ca3f312dbd7acf88439324fed51e7e0c60ec59463268fbb`.
+
+The test explicitly confirms **exchange losses**, not losslessness: the
+attachment byte entry disappears, original extended definitions become new
+`LongText` definitions, and simulation/graphical/text differences are reported.
+Unicode text and the tested four RACI assignment sets survive. The original
+native source revision remains unchanged. Native path strings can be exported
+as plain attribute text; raw artifacts and diagnostics remain private.
+
+The release-source build completed with zero warnings/errors. **896
+unit/component tests** passed separately, including 19 XPDL parser/difference
+tests; unit success is not the native acceptance claim. The prior initial rich
+run `20260908-032136-da9087` also passed. An earlier attempt rejected invalid
+initial diagram labels before any native work; it is retained as diagnostic
+evidence, not counted as an accepted interchange run.
+
+The post-change general circuit `20260908-033155-0fe1f7` also passed with
+`--native --extended --simulation --render --recovery`: 12 completed native
+operations, one expected failure, one cancellation and one deliberate host-death
+interruption. Actual XML MCP, nested/multi-diagram native persistence and edits,
+validation, simulation, SVG, corrupt input, worker recovery, Job Object cleanup
+and state-lease rejection ran successfully. Its transcript SHA-256 is
+`76c87c8260fdd9a5051dfbe1f9513b88f802ac7419702b3291acc1053def2195`.
+
+See [the XPDL contract](native-xpdl.md) for precise fields and remaining format
+boundaries. This source capability is not part of the earlier immutable
+0.4.0-alpha.1 release ZIP and does not close full Modeler automation.
+
 ## Native task/gateway conversion — 2026-09-08 UTC
 
 The final enriched source circuit `20260908-025001-518144` passed **19 terminal

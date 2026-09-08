@@ -160,6 +160,12 @@ try
         await NativeStyleAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_STYLE_LIFECYCLE_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--xpdl-only"))
+    {
+        if (!native) throw new ArgumentException("XPDL acceptance requires --native.");
+        await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--conversions-only"))
     {
         if (!native) throw new ArgumentException("Conversion acceptance requires --native.");

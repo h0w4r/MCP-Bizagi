@@ -1,0 +1,24 @@
+{
+  "description": "Replace sample paths, native diagram IDs and revision placeholders with real inspected values. Poll each operation until completed and review all exchange differences.",
+  "export": {
+    "tool": "native_xpdl_export",
+    "arguments": {
+      "path": "models/reviewed-source.bpm",
+      "expectedRevision": "REPLACE_WITH_SOURCE_SHA256",
+      "diagramIds": ["11111111-1111-4111-8111-111111111111"],
+      "acknowledgeFormatLimits": true
+    }
+  },
+  "import": {
+    "tool": "native_xpdl_import",
+    "arguments": {
+      "inputs": [{
+        "Path": "exchange/reviewed-source.xpdl",
+        "ExpectedRevision": "REPLACE_WITH_XPDL_SHA256"
+      }],
+      "modelName": "Reviewed XPDL import",
+      "acknowledgeFormatLimits": true
+    }
+  },
+  "artifactHandoff": "For MCP-only handoff, replace inputs[0].Path and ExpectedRevision with Result.files[0].artifact and Result.files[0].revision from a completed native_xpdl_export. XPDL may omit native content and expose local path strings; it is not a backup."
+}

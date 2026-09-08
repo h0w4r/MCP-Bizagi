@@ -42,6 +42,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeSubProcessKinds = NativeSubProcessPolicy.Kinds,
             nativeEventPayloadKinds = NativeEventPayloadPolicy.Kinds,
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
+            nativeXpdl = new { version = "2.2", tools = new[] { "native_xpdl_import", "native_xpdl_export" }, maximumDocuments = 100,
+                scope = "explicit_interchange_projection_with_differences_not_native_backup_or_visual_equivalence" },
             nativeConversions = new { tool = "native_elements_convert", taskTypes = NativeConversionPolicy.TaskTypes, gatewayTypes = NativeConversionPolicy.GatewayTypes,
                 maximumBatchSize = 1000, scope = "same_category_explicit_expected_type_and_revision_no_silent_content_retirement" },
             nativeStyles = new { patch = "NativeMutation.Style", fontInventoryTool = "native_fonts_get", fontSize = "whole_native_units_1_to_512_not_css_pixels",
@@ -61,6 +63,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             capabilities = new[] {
                 new { name = "bpmn_xml_inspect_create_rename_validate", status = "implemented", backend = "standards_xml" },
                 new { name = "bpm_native_import_save_reopen_export", status = "experimental_diagnostic", backend = "bizagi_worker" },
+                new { name = "native_xpdl_22_exchange", status = "experimental_installed_unicode_file_route_with_explicit_losses_and_fresh_native_readback_not_native_backup", backend = "bizagi_worker" },
                 new { name = "bpm_native_graph_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_diagram_lifecycle_and_persisted_tabs", status = "experimental_copy_only_native_cloning_and_ordered_preferences_with_fresh_readback_not_live_session_control", backend = "bizagi_worker" },
                 new { name = "native_blank_model_creation", status = "experimental_native_constructor_fresh_readback_and_noop_stability_gate_not_live_desktop", backend = "bizagi_worker" },
@@ -106,6 +109,14 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_probe"), Description("Experimental native service bootstrap. Returns an operation ID, not a claim of full engine support.")]
     public CallToolResult Probe() => Guard(() => native.Probe());
+
+    [McpServerTool(Name = "native_xpdl_import"), Description("Import 1-100 revision-checked XPDL 2.2 files or completed export artifacts through the installed importer, save a new .bpm, reopen and re-export with explicit XML differences. Requires acknowledgeFormatLimits=true; never overwrites sources or promises lossless interchange. Poll operation_get.")]
+    public CallToolResult ImportXpdl(NativeExchangeInput[] inputs, bool acknowledgeFormatLimits, string modelName = "Imported XPDL") =>
+        Guard(() => native.ImportXpdl(inputs, modelName, acknowledgeFormatLimits));
+
+    [McpServerTool(Name = "native_xpdl_export"), Description("Export selected native diagrams as Unicode XPDL 2.2 using installed serializers, then import/save/reopen in fresh workers. Requires source revision and acknowledgeFormatLimits=true. Returns explicit graph/archive differences and reusable XPDL artifacts; original .bpm is untouched. Not a native backup. Poll operation_get.")]
+    public CallToolResult ExportXpdl(string path, string expectedRevision, string[] diagramIds, bool acknowledgeFormatLimits) =>
+        Guard(() => native.ExportXpdl(path, expectedRevision, diagramIds, acknowledgeFormatLimits));
 
     [McpServerTool(Name = "native_roundtrip"), Description("Experimental BPMN -> .bpm -> fresh-worker reload -> BPMN diagnostic. Originals are untouched; outputs are operation artifacts. Poll operation_get.")]
     public CallToolResult Roundtrip(string path, string modelName = "Model", string[]? additionalPaths = null) => Guard(() => native.Roundtrip(path, modelName, additionalPaths));

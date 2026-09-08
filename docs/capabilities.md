@@ -8,6 +8,7 @@ This ledger distinguishes implementation from operational accreditation.
 | XML structural checks | Implemented, bounded | Complete standards validation is separate |
 | Native bootstrap | Experimental diagnostic | Actual native request, not assembly presence |
 | Native import/save/reload/export | Locally verified, experimental | Basic and two-diagram cases; warnings expose normalization |
+| Native XPDL 2.2 interchange | Experimental current source | Installed file serializer/importer, Unicode, multi-diagram selection, native restart and explicit metadata/attachment losses; no lossless or GUI claim; [contract](native-xpdl.md) |
 | Native container preservation | Partial corpus, explicit policy | Unknown-content checks are implemented; broad attributes/attachments/scenario corpora remain pending |
 | Existing `.bpm` inspection | Locally verified, copy-only | Source byte equality and actual native identities |
 | Blank native model creation | Experimental current source | Native constructor/domain defaults, exact durable diagram identities, ordered tabs and no-op stability; [contract](native-models.md) and [execution evidence](validation.md) |

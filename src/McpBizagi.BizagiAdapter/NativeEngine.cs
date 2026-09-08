@@ -153,7 +153,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "import_save", "xpdl_import_save", "xpdl_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -171,6 +171,16 @@ public sealed partial class NativeEngine
             progress("native_persist_created_bpm");
             Call(persistence, "Persist", model);
             if (!File.Exists(request.OutputPath) || new FileInfo(request.OutputPath).Length == 0) throw new IOException("Native creation returned without a persisted model.");
+            reply.Artifacts = new[] { request.OutputPath };
+        }
+        else if (request.Action == "xpdl_import_save")
+        {
+            reply.ExchangeFiles = ImportXpdl(model, request.InputPaths, progress);
+            Set(model, "Path", request.OutputPath);
+            foreach (object diagram in (IEnumerable)Get(model, "Diagrams")) Set(diagram, "HasChanged", true);
+            progress("native_xpdl_persist_bpm");
+            Call(persistence, "Persist", model);
+            if (!File.Exists(request.OutputPath) || new FileInfo(request.OutputPath).Length == 0) throw new IOException("Native XPDL import produced no durable model.");
             reply.Artifacts = new[] { request.OutputPath };
         }
         else if (request.Action == "import_save")
@@ -227,6 +237,11 @@ public sealed partial class NativeEngine
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
             if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
             if (request.Action == "custom_export") reply.Artifacts = new[] { ExportCustomArtifacts(model, request, progress) };
+            if (request.Action == "xpdl_export")
+            {
+                reply.ExchangeFiles = ExportXpdl(model, request, progress);
+                reply.Artifacts = reply.ExchangeFiles.Select(e => e.Path).ToArray();
+            }
             if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
                 if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
@@ -276,8 +291,8 @@ public sealed partial class NativeEngine
         reply.CustomArtifactImports = customArtifactImports.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save") reply.DiagramState = DiagramState(model);
-        if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);
-        if (request.Action is "documentation_read" or "documentation_save") reply.Documentation = Documentation(model);
+        if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read") reply.Metadata = Metadata(model);
+        if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read") reply.Documentation = Documentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)
         {
             var wanted = request.Attachment;

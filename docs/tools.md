@@ -105,6 +105,12 @@ that a BPMN export contains extended attributes and attachments.
 
 ## Results and failure handling
 
+For selected-diagram XPDL 2.2 exchange, use `native_xpdl_export` and
+`native_xpdl_import`, not the BPMN roundtrip tool. Both require explicit format
+loss acknowledgement and source revisions. The [XPDL contract](native-xpdl.md)
+describes reusable exchange artifacts, three-worker readback, complete reported
+differences and the risk of local path strings in exported attributes.
+
 Immediate validation failures return `isError: true`. A submitted native
 operation may fail later; inspect `OperationView.State` and `OperationView.Error`.
 Terminal states are `completed`, `failed`, `cancelled`, and `interrupted`.

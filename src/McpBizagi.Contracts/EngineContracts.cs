@@ -168,6 +168,7 @@ public sealed class EngineReply
     public string EngineVersion { get; set; } = "";
     public string OperationId { get; set; } = "";
     public string[] Artifacts { get; set; } = System.Array.Empty<string>();
+    public NativeExchangeArtifact[] ExchangeFiles { get; set; } = System.Array.Empty<NativeExchangeArtifact>();
     public string[] Diagrams { get; set; } = System.Array.Empty<string>();
     public NativeElement[] Elements { get; set; } = System.Array.Empty<NativeElement>();
     public NativeValidationMessage[] Validation { get; set; } = System.Array.Empty<NativeValidationMessage>();

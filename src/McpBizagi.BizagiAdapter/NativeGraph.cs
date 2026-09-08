@@ -14,6 +14,9 @@ public sealed partial class NativeEngine
     }
     private static object? Optional(object value, string property) => value.GetType().GetProperty(property)?.GetValue(value);
     private static string Text(object value, string property) => Optional(value, property)?.ToString() ?? "";
+    private static readonly string[] GraphCollections = { "Diagrams", "Participants", "MessageFlows", "Artifacts", "DataStore", "ConversationNodes",
+        "FlowElements", "LaneSets", "Lanes", "Milestones", "Resources" };
+    private static readonly string[] GraphChildren = { "Process", "ChildLaneSet" };
 
     private static IEnumerable<GraphEntry> Graph(object model) => Visit(model, "", "", new HashSet<string>(StringComparer.Ordinal));
     private static IEnumerable<GraphEntry> Visit(object value, string parent, string diagramId, HashSet<string> visited)
@@ -29,12 +32,11 @@ public sealed partial class NativeEngine
         // diagrams/resources have no durable native parent ID; never leak that runtime GUID as one.
         string childParent = laneSet || modelRoot ? parent : id;
         // Explicit domain containment, not unrestricted reflection over arbitrary object graphs.
-        foreach (string property in new[] { "Diagrams", "Participants", "MessageFlows", "Artifacts", "DataStore", "ConversationNodes",
-            "FlowElements", "LaneSets", "Lanes", "Milestones", "Resources" })
+        foreach (string property in GraphCollections)
             if (Optional(value, property) is IEnumerable children)
                 foreach (object child in children)
                     foreach (var entry in Visit(child, childParent, diagram, visited)) yield return entry;
-        foreach (string property in new[] { "Process", "ChildLaneSet" })
+        foreach (string property in GraphChildren)
             if (Optional(value, property) is object child)
                 foreach (var entry in Visit(child, childParent, diagram, visited)) yield return entry;
     }
