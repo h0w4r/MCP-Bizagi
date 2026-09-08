@@ -138,7 +138,7 @@ public static class NativeDocumentationPolicy
                 var node = b.Root!.Elements("ElementAttributeValues").Single(e => (string?)e.Attribute("ElementId") == v.ElementId);
                 if (!NativeMetadataPolicy.XmlEquivalent(v.Xml, actual.Xml) || !NativeMetadataPolicy.XmlEquivalent(v.Xml, node.ToString())) throw new InvalidDataException("Extended attribute values did not survive native persistence and readback exactly.");
                 var previous = a.Root!.Elements("ElementAttributeValues").SingleOrDefault(e => (string?)e.Attribute("ElementId") == v.ElementId);
-                if (previous == null) node.Remove(); else node.ReplaceWith(new XElement(previous));
+                if (previous == null) NativeComparisonProjection.RemoveVerifiedNode(node); else node.ReplaceWith(new XElement(previous));
             }
             if (!NativeMetadataPolicy.XmlEquivalent(a.ToString(), b.ToString())) throw new InvalidDataException("Unrequested native attribute values changed.");
             Project(path);

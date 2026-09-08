@@ -1,5 +1,75 @@
 # Verification baselines
 
+## Native task/gateway conversion — 2026-09-08 UTC
+
+The final enriched source circuit `20260908-025001-518144` passed **19 terminal
+native operations**, all completed, plus three expected real MCP preflight
+rejections. Both 99-element conversion batches passed fresh-reader and full
+archive gates: forward `d88cd30b66e34acaafac35de6b3eab31` and reverse
+`ef3bcdf104594bfda576aa2f49c65514`.
+
+This run adds 28 standard and 28 multi-instance task loops, nondefault activity
+quantities, all four RACI assignments, two native extended definitions, Unicode
+text values and a byte-exact embedded file. Specialized native documentation
+and metadata reads independently checked both directions; two native exports
+retained the attachment's 42 original bytes. Native save updates definition
+audit timestamps: acceptance validates those timestamps and compares all other
+definition content, rather than demanding byte-identical audit metadata or
+ignoring unknown fields. Nineteen operation receipts and the raw transcript
+remain private. Release compilation had zero warnings/errors and **877
+unit/component tests** passed separately.
+
+All 31 workers exited. Their 204 periodic desktop samples observed no visible
+worker window or worker foreground ownership. The transcript SHA-256 is
+`ac6c10e90ca041a70f1b4ae0446762e1a4b67a10285ef3c1771c82429068943a`.
+
+The documentation regression `20260908-025441-f40a72` also passed: 15 completed
+native operations and three expected worker failures, covering all 12 native
+attribute kinds, table rows, file/image attachments, exact extraction, rename,
+no-op persistence, reference guards and deletion. All 29 workers exited;
+184 periodic samples observed no worker-visible window or foreground ownership.
+Its transcript SHA-256 is
+`67d906b767953274204a9841db4eb05a6e7c124f8d0ba8cff84c0fe6ee02c7c8`.
+
+The extended general regression `20260908-025806-c3a48a` passed actual XML MCP,
+BPMN/native roundtrip, multi-diagram/nested editing, no-op comparison, vendor
+validation, native simulation results and offscreen rendering. Its 15 terminal
+operations comprise 12 completed, one expected worker failure, one active
+cancellation and one deliberate host-death interruption. Recovery verified
+Job Object child cleanup, journal restart, a subsequent successful native call
+and rejection of a competing host sharing the state directory. The transcript
+SHA-256 is `4cd2e4cdc5fcf76fe42fb59bfbe125738eea904d40535fdbd344f50dc7acd68d`.
+
+The independent official SDK circuit `20260908-022443-45e5c7` passed seven
+terminal native operations, including a batch of **99 directed conversions**
+and the 99 reverse conversions. The matrix contains all 56 directed task pairs,
+all 42 directed gateway pairs and one task inside an embedded subprocess.
+Unicode descriptions, native label bounds/styles, an incident flow, fresh
+readers, native no-op save, nested rendering and original-file revision checks
+were included. Three additional MCP preflight checks rejected stale revisions,
+stale expected types and cross-category requests. Discovery observed 35 tools;
+875 unit/component tests passed separately at that baseline.
+
+Fifteen workers exited, with 501 periodic desktop samples and no observed
+worker-visible window or worker foreground ownership. These are periodic
+observations, not continuous instrumentation or independent desktop GUI proof.
+The retained transcript SHA-256 is
+`19706e0b2f109d774d2a7ae009a14c3496e308d1d07b15744c27dc9c3439ffc8`.
+
+Initial runs exposed exact native factory selector/default differences and
+comparison-copy indentation; those were corrected without rewriting archive
+XML or exempting arbitrary unknown content. A richer follow-up also exposed
+a native loader failure when attachment extraction exceeded the old Windows
+path boundary. The process-local worker manifest/configuration now opt into
+long paths; the same native route extracted an actual 262-character attachment
+path with all 42 source bytes intact. This is not a promise that every native
+exporter supports arbitrary path lengths.
+
+See the [conversion contract](native-conversions.md) for type-specific
+retirement restrictions and the distinction between persistence, behavioral
+equivalence and visual compatibility. This source milestone does not update
+the old immutable release archive or complete full Modeler automation.
+
 ## Native typography, colors and label bounds — 2026-09-08 UTC
 
 The final source circuit `20260908-005617-3388f3` passed **16 terminal native

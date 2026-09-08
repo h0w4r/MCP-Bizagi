@@ -40,6 +40,7 @@ submission returns an `OperationView`, **not** the completed engine result.
 | `native_apply_changes` | `path`, `expectedRevision`, `changes` | Native name batch to a new copy, then fresh-reader verification |
 | `native_mutate` | `path`, `expectedRevision`, `mutations` | Ordered native create/update/delete/reconnect batch, fresh-reader and whole-container gates; [element contract](native-editing.md), [containers and expanded sizes](native-containers.md), [event definition payloads](native-event-payloads.md) |
 | `native_save_copy` | `path`, `expectedRevision` | No-op native load/save/reopen with whole-container fidelity gate |
+| `native_elements_convert` | `path`, `expectedRevision`, `changes` | Explicit `ElementId`, `ExpectedType`, `TargetType` pairs within the native task or gateway category; installed command, fresh-reader and whole-archive fidelity; [contract](native-conversions.md) |
 | `native_compare` | `path`, `otherPath`; optional `expectedNames` | Immediate whole-container comparison; returns `NativeFidelityReport`, not an operation ID |
 | `native_validate` | `path` | Actual vendor validation messages with severity and native identities |
 | `native_simulate` | `path`, `diagramId`; optional `scenarioId`, `simulationLevel` | Actual simulation, real progress, input/results XML and structured `SimulationReports` |

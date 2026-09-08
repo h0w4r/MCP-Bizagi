@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Add explicit, revision-checked task/gateway type conversion through the
+  installed native command, preserving identities, collection order, common
+  graphics and remaining archive content across three separate workers.
+  Reject nondefault implementation content instead of silently retiring it.
+- Preserve comparison correctness when projecting the first native attribute
+  values or a type-owned default out of an otherwise empty XML wrapper;
+  comments, unknown content and explicit whitespace remain protected.
+- Opt the isolated worker into long Windows paths without changing system or
+  vendor configuration, and retain bounded original path-length diagnostics
+  when a native backward-format fallback obscures the initial failure.
+
 - Add installed-font inventory and sparse native typography, colors and label
   rectangles with independent restart, clone and whole-container fidelity.
   Reject unpersisted pool/connector fields and implicit font substitution;

@@ -12,6 +12,7 @@ public sealed class EngineRequest
     public string ModelName { get; set; } = "Model";
     public NativeNameChange[] Changes { get; set; } = System.Array.Empty<NativeNameChange>();
     public NativeMutation[] Mutations { get; set; } = System.Array.Empty<NativeMutation>();
+    public NativeTypeConversion[] Conversions { get; set; } = System.Array.Empty<NativeTypeConversion>();
     public string DiagramId { get; set; } = "";
     public string SubProcessId { get; set; } = "";
     public string ImageElementId { get; set; } = "";

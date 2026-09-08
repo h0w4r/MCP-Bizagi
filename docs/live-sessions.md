@@ -14,7 +14,7 @@ Read-only inspection identified these distinct routes:
 | --- | --- | --- |
 | `OpenInstancesFinder` and `InstanceManager` | Locate an existing process associated with a model and activate its window | Activation is not document inspection, mutation or synchronization |
 | `InstanceItem` | Records `ProcessId` and `ModelLoaded` | Contains no graph, unsaved change set or revision |
-| `MemoryInstancesReader.Read` | Reads instance records and can remove stale entries by writing the registry | Not a side-effect-free discovery API and not a document channel |
+| `MemoryInstancesReader.Read` | Reads instance records and can remove stale entries by rewriting the instance-store file | Not a side-effect-free discovery API and not a document channel |
 | `FrmModeler.DiagramModel` | Exposes the model to code already inside that application instance | An in-process property is not an external automation endpoint |
 | `/webPublish` command-line route | Loads a model from a file | Does not obtain the open editor's unsaved model |
 

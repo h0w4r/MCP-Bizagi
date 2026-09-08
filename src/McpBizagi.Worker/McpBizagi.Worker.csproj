@@ -4,6 +4,7 @@
     <!-- The native settings provider uses this executable metadata; keep its namespace separate from Modeler. -->
     <Company>h0w4r</Company><Product>McpBizagi.Worker</Product>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects><GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../McpBizagi.BizagiAdapter/McpBizagi.BizagiAdapter.csproj" />

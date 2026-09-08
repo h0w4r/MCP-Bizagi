@@ -26,6 +26,19 @@ internal static class Program
         Environment.SetEnvironmentVariable("TEMP", args[1]);
         Environment.SetEnvironmentVariable("TMP", args[1]);
         File.WriteAllText(Path.Combine(args[1], "worker-temp-path.txt"), Path.GetFullPath(Path.GetTempPath()));
+        // Keep the original long-path error when a native compatibility fallback replaces it
+        // with an unrelated old-format/empty-document exception. Diagnostics stay local.
+        int pathFailures = 0;
+        AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
+        {
+            if (e.Exception is not PathTooLongException || Interlocked.Increment(ref pathFailures) > 16) return;
+            try { File.WriteAllText(Path.Combine(args[1], "native-path-length-" + pathFailures + ".txt"), e.Exception.ToString()); }
+            catch (IOException) { /* Preserve the original exception if diagnostic storage also fails. */ }
+            catch (UnauthorizedAccessException) { /* Diagnostics must not replace the engine error. */ }
+        };
+        AppContext.TryGetSwitch("Switch.System.IO.UseLegacyPathHandling", out bool legacyPaths);
+        AppContext.TryGetSwitch("Switch.System.IO.BlockLongPaths", out bool blockLongPaths);
+        File.WriteAllText(Path.Combine(args[1], "worker-path-policy.json"), JsonConvert.SerializeObject(new { legacyPaths, blockLongPaths, target = AppContext.TargetFrameworkName }));
         var service = new EngineService(args[0], args[1]);
         if (args[2] == "--probe")
         {

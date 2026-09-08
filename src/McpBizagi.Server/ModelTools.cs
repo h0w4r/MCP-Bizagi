@@ -42,6 +42,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeSubProcessKinds = NativeSubProcessPolicy.Kinds,
             nativeEventPayloadKinds = NativeEventPayloadPolicy.Kinds,
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
+            nativeConversions = new { tool = "native_elements_convert", taskTypes = NativeConversionPolicy.TaskTypes, gatewayTypes = NativeConversionPolicy.GatewayTypes,
+                maximumBatchSize = 1000, scope = "same_category_explicit_expected_type_and_revision_no_silent_content_retirement" },
             nativeStyles = new { patch = "NativeMutation.Style", fontInventoryTool = "native_fonts_get", fontSize = "whole_native_units_1_to_512_not_css_pixels",
                 alignments = NativeStylePolicy.Alignments, directions = NativeStylePolicy.Directions,
                 labels = "whole_nonnegative_native_bounds_or_four_zeroes_to_clear_not_universal_rendered_geometry",
@@ -64,6 +66,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_blank_model_creation", status = "experimental_native_constructor_fresh_readback_and_noop_stability_gate_not_live_desktop", backend = "bizagi_worker" },
                 new { name = "native_workspace_commit_and_reconciliation", status = "experimental_byte_exact_adoption_durable_intent_backup_and_fresh_native_readback_no_blind_replay", backend = "bizagi_worker" },
                 new { name = "native_structural_geometry_documentation_batches", status = "experimental_palette_connections_and_explicit_pool_lane_milestone_subprocess_lifecycle_not_full_editor", backend = "bizagi_worker" },
+                new { name = "native_task_gateway_type_conversion", status = "experimental_installed_command_three_process_readback_and_whole_archive_gate_not_event_conversion_subprocess_refactoring_or_live_sessions", backend = "bizagi_worker" },
                 new { name = "native_event_boundary_lifecycle", status = "experimental_explicit_modes_interruption_activity_references_and_clone_remapping_not_simulation_accreditation", backend = "bizagi_worker" },
                 new { name = "native_event_definition_payloads", status = "experimental_unique_existing_kind_text_timer_and_compensation_patches_not_definition_collection_editing_or_execution_validation", backend = "bizagi_worker" },
                 new { name = "native_data_and_activity_io", status = "experimental_native_data_properties_store_references_and_derived_activity_and_event_bindings_with_fresh_readback_not_full_io_editor_or_visual_accreditation", backend = "bizagi_worker" },
@@ -143,6 +146,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_fonts_get"), Description("Observe installed Windows/GDI+ font families and native face availability through the isolated worker. Does not install fonts, modify settings or establish glyph-level rendering compatibility. Use the returned family names in native_mutate Style.FontName. Poll operation_get.")]
     public CallToolResult GetNativeFonts() => Guard(() => native.Fonts());
+
+    [McpServerTool(Name = "native_elements_convert"), Description("Convert existing task types or gateway types within the same category using the installed native command. Each change requires ElementId, ExpectedType and TargetType, plus the source revision. Preserves identities, common properties, relations, styling and unknown archive content; rejects nondefault type-specific content that would be lost. Writes a new artifact and verifies it in an independent reader. Not event conversion, subprocess refactoring or live-session editing. Poll operation_get.")]
+    public CallToolResult ConvertNativeElements(string path, string expectedRevision, NativeTypeConversion[] changes) => Guard(() => native.ConvertElements(path, expectedRevision, changes));
 
     [McpServerTool(Name = "native_custom_artifacts_apply"), Description("Create, update or delete model-owned custom artifact definitions in a revision-checked native copy. Inspect CustomArtifacts first. Changes require explicit Operation and Id; creation requires Name and Image. Image uses the same revision-checked raster/frame input as native images. AllowNativeRasterization explicitly permits the installed custom-type serializer's pixel conversion; unstable repeated serialization fails. Referenced definitions cannot be deleted. Never modifies the global user palette. Poll operation_get.")]
     public CallToolResult ApplyNativeCustomArtifacts(string path, string expectedRevision, NativeCustomArtifactPatch patch) => Guard(() => native.ApplyCustomArtifacts(path, expectedRevision, patch));

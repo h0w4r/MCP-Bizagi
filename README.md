@@ -76,6 +76,7 @@ every operation into a BPMN XML export.
 | Native image artifacts | Experimental current source | Revision-checked raster inputs, explicit frame selection, decoded-pixel/native-file fidelity, clone, extraction and deletion; [contract](docs/native-images.md) |
 | Native custom artifacts | Experimental current source | Model-owned definitions and instances, explicit native pixel conversion, root/nested clone and rendering, native `.bca` import/export and fresh-reader fidelity; [contract](docs/native-custom-artifacts.md) |
 | Native typography, colors and label bounds | Experimental current source | Installed-font inventory, sparse native styles, fresh-reader/clone fidelity and measured SVG subsets; internal/external labels and pool persistence have distinct limits; [contract](docs/native-styles.md) |
+| Native task/gateway type conversion | Experimental current source | Installed command, explicit source/target types, durable identities and whole-archive protection; 99-pair native matrix and reverse path; [contract](docs/native-conversions.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

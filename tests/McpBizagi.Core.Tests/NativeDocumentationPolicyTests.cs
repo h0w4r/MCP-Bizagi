@@ -105,6 +105,17 @@ public sealed class NativeDocumentationPolicyTests
         Assert.Throws<InvalidDataException>(() => NativeDocumentationPolicy.Compare(Archive(values: Values() + neighbor), Archive(values: replacement + neighbor.Replace("retain", "lost")), patch, snapshot));
     }
 
+    [Fact]
+    public void FirstElementValuesDoNotTurnSerializerIndentationIntoUserContent()
+    {
+        string values = Values();
+        var patch = new NativeDocumentationPatch { Values = [new() { DiagramId = D, ElementId = E, Xml = values }] };
+        var snapshot = new NativeDocumentationSnapshot { Values = patch.Values };
+        Assert.True(NativeDocumentationPolicy.Compare(Archive(values: ""), Archive(values: "\n  " + values + "\n"), patch, snapshot).Preserved);
+        foreach (string unknown in new[] { "<!--retain-->", "meaningful text", "<Unknown/>" })
+            Assert.Throws<InvalidDataException>(() => NativeDocumentationPolicy.Compare(Archive(values: ""), Archive(values: "\n" + values + unknown + "\n"), patch, snapshot));
+    }
+
     [Theory]
     [InlineData("file.xml")][InlineData("file.diag")][InlineData("file.bpm")][InlineData("file.txt")]
     public void EmbeddedAttachmentNamesDoNotChangeOpaqueByteTreatment(string name)

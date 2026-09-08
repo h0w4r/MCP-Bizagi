@@ -46,3 +46,19 @@ XML. Native archive preflight also limits entry count, expanded size, nesting,
 unsafe paths, and DTD usage. Encrypted native containers are not supported.
 Native model/diagram export labels must be valid Windows file names of at most
 120 characters; ambiguous labels are rejected rather than silently renamed.
+
+## Native worker path handling
+
+The worker executable opts into long Windows paths through its manifest and
+explicit .NET Framework path switches. Native extraction adds model, diagram
+and attachment-owner GUIDs beneath each operation directory, so even a modest
+file name can exceed the old 260-character boundary. This is process-local
+configuration: the server never changes the Windows registry or Bizagi files.
+See Microsoft's [long-path guidance](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation)
+and [.NET Framework compatibility notes](https://github.com/microsoft/dotnet/blob/main/Documentation/compatibility/long-path-support.md).
+
+The private `worker-path-policy.json` records actual framework switches.
+Bounded `native-path-length-*.txt` diagnostics retain the original exception
+when an internal native loader obscures it with an old-format fallback error.
+This does not waive path confinement, per-component file-name limits or OS
+requirements, nor establish long-path support for every third-party exporter.

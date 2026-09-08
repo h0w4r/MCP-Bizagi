@@ -153,7 +153,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -227,8 +227,9 @@ public sealed partial class NativeEngine
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
             if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
             if (request.Action == "custom_export") reply.Artifacts = new[] { ExportCustomArtifacts(model, request, progress) };
-            if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
+            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
+                if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
                 if (request.Action == "custom_save") EditCustomArtifacts(model, request.CustomArtifactPatch ?? throw new InvalidDataException("Missing custom artifact patch."), progress);
                 if (request.Action == "custom_import") ImportCustomArtifacts(model, request, progress);
                 if (request.Action == "diagrams_save") reply.DiagramClones = EditDiagrams(model, persistence, request.DiagramPatch ?? throw new InvalidDataException("Missing diagram patch."), progress);
