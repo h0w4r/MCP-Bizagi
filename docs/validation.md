@@ -1,5 +1,84 @@
 # Verification baselines
 
+## Same-role native event conversion — source after 0.6, 2026-09-08 UTC
+
+Final real MCP/native circuit `20260908-183108-989082` passed **19 terminal
+operations: 17 completed and two expected native context failures**, plus three
+expected protocol-level rejections. It used the official SDK stdio client,
+installed Modeler 4.3.0.008 command and independent native readers.
+
+- Forward `fd0d7157b7ca43a99507a76fb54b471c` and reverse
+  `31a1db56df524457a31090ecceef8357` each verified **339 event conversions** with
+  whole-archive fidelity. This covers all 336 directed pairs within Start (10
+  types), End (9), Catch (7), Throw (7) and Boundary (10), plus an additional root
+  start, nested catch and noninterrupting boundary. Roles did not change.
+- Event-subprocess and transaction contexts, interruption, boundary aliases,
+  incident sequence flow, native catch-output/throw-input data ports, Unicode
+  documentation, label geometry and styles survived. Scoped event-owned embedded
+  content was checked through independent attribute reads and byte-exact native
+  attachment exports. Native no-op save, nested SVG generation and original-file
+  revision verification also completed.
+- A noninterrupting boundary converted to an incompatible error kind failed in
+  the real worker (`dfac042e1dc04ba9b6cf7ca0ace19169`). An exception start requested
+  outside an event subprocess failed separately
+  (`0f2721ccca9c4427a3102fd927f61a87`). The client checked the actual error causes;
+  subsequent valid conversions succeeded without reusing an uncertain write.
+- Protocol-level rejections covered stale revision, missing explicit event role
+  and a configured timer payload. Explicitly clearing that timer through native
+  mutation enabled the subsequent valid batch; no source archive was fabricated
+  or rewritten by the client.
+- **33 workers and 38 owned-process records exited.** Across **235 periodic
+  read-only desktop samples**, no owned visible window or foreground process was
+  observed. Sampling is not continuous proof or independent Modeler GUI testing.
+- Transcript SHA-256:
+  `4dcf254fa77090fb486373e2bbe7c60704d88a0ed60c51190cf98874a0b275a2`.
+  Operation receipt SHA-256:
+  `8527e366087929c613af1a7de6cf8315bd0d246663d925381d70fff09b6aff96`.
+
+The earlier enriched circuit `20260908-182153-a530c9` passed 17 completed
+operations and both 339-change directions before the two native rejection cases
+were added. Its 29 workers/37 owned records exited; 484 periodic samples observed
+no owned visible/foreground process. Transcript SHA-256:
+`974446ee5b121cae083ac9722db238ad984316e19eddd5a94e532004d8f10702`.
+
+Diagnostic runs were retained rather than relabeled as successes:
+`20260908-181516-83c118` exposed the distinct native-memory versus XPDL order of
+multiple end-event definitions. `20260908-181722-deb41f` passed the graph check
+but failed whole-archive comparison on type-owned runtime defaults. The final
+policy checks those exact observed baselines; nondefault cost/priority and
+unknown runtime fields remain protected, not globally ignored.
+
+Locked restore and Release build passed with zero warnings/errors. **1,154
+unit/component tests** passed without skips. XML-only MCP circuit
+`20260908-183207-169ca3` passed the current tool/discovery contract and XML
+workflows; native execution was explicitly not run in that circuit. Policy
+fixtures are separate from native accreditation and cover configured payloads,
+unknown XML, shared message identities and narrow runtime-default rules.
+
+Same-category regression `20260908-183640-5c3310` passed **19 completed native
+operations** and three expected protocol rejections, including the 99 forward
+and 99 reverse task/gateway conversions with rich-content readback. All 31
+workers and 36 owned-process records exited; 202 periodic desktop samples
+observed no owned visible/foreground process. Transcript SHA-256:
+`7e43778b10ced0e1c10ccb38cb8290f2154400e5aa2669653773fcaa87d5cdf2`.
+
+Task/call regression `20260908-183959-47bfdf` passed **29 completed native
+operations** and five expected protocol rejections: nine task-to-call and eleven
+call-to-task changes, rich-content/native-I/O preservation, binding/unlinking,
+native no-op and nested rendering. All 45 workers and 50 owned-process records
+exited; 284 periodic samples observed no owned visible/foreground process.
+Transcript SHA-256:
+`371aa3086a2fd5e138e6e9a1c3dce009b127d385658b1292b59f325602bb5f70`.
+Both native regressions ran sequentially after the event circuit. All 18 package
+integrity policy fixtures also passed; they are not extracted-package native
+accreditation of these new source changes.
+
+See [the event conversion contract](native-conversions.md#events-preserve-the-role-replace-neutral-definitions).
+This is not event-role conversion, configured payload migration, simulator
+equivalence or independent desktop compatibility. It is a source addition, not
+an alteration of the immutable 0.6 package, and does not complete full Modeler
+automation.
+
 ## Bidirectional task / unbound-call conversion — source after 0.6, 2026-09-08 UTC
 
 Final circuit `20260908-174732-45dbd8` passed **29 completed native operations**

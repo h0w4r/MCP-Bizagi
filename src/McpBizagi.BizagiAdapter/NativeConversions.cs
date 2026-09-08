@@ -26,7 +26,8 @@ public sealed partial class NativeEngine
             {
                 bool toCall = tasks.Contains(change.ExpectedType) && change.TargetType == "CallActivity";
                 bool fromCall = change.ExpectedType == "CallActivity" && tasks.Contains(change.TargetType);
-                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType) || toCall || fromCall) || change.ExpectedType == change.TargetType)
+                bool eventChange = change.ExpectedEventMode is "Start" or "End" or "Catch" or "Throw" or "Boundary";
+                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType) || toCall || fromCall || eventChange) || change.ExpectedType == change.TargetType)
                     throw new NotSupportedException("Explicit conversions require different task/gateway types in the same category, or task/unbound-call conversion.");
                 var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
                 if (!graph.TryGetValue(change.ElementId, out var entry) || ConversionType(entry.Value) != change.ExpectedType)
@@ -38,6 +39,8 @@ public sealed partial class NativeEngine
                 if (index < 0) throw new InvalidDataException("Conversion source is absent from its native owner.");
                 var links = RequiredDataLinks(graph.Values);
                 object graphics = Get(old, "GraphicalProperties");
+                if (eventChange && DescribeEvent(old)?.Mode != change.ExpectedEventMode)
+                    throw new InvalidDataException("Native event mode differs from the explicit conversion expectation.");
                 if (fromCall)
                 {
                     // Enforce the explicit boundary again inside the worker, not
@@ -73,6 +76,8 @@ public sealed partial class NativeEngine
                 {
                     object descriptor = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementDescriptor"),
                         Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.TargetType));
+                    if (eventChange && change.TargetType.EndsWith("Intermediate", StringComparison.Ordinal))
+                        Set(descriptor, "Options", Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementTypeOptions"), "IntermediateEvent" + change.ExpectedEventMode));
                     object args = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.EventArgs.GraphicalElementEventArgs"), "ChangeElementType", Guid.Parse(entry.DiagramId));
                     Set(args, "GraphicalElement", old); Set(args, "ElementType", descriptor);
                     if (IsNativeSubProcess(parent)) Set(args, "SubProcessId", Guid.Parse(entry.ParentId));
@@ -83,6 +88,17 @@ public sealed partial class NativeEngine
                 }
                 if (Text(converted, "Id") != change.ElementId || ConversionType(converted) != change.TargetType)
                     throw new InvalidDataException("Native conversion did not preserve identity or produce the requested type.");
+                if (eventChange)
+                {
+                    var oldInfo = DescribeEvent(old)!;
+                    if (DescribeEvent(converted)?.Mode != change.ExpectedEventMode) throw new InvalidDataException("Native conversion changed event role.");
+                    // Preserve interruption/attachment through native setters; a target
+                    // kind that cannot represent these settings must reject the batch.
+                    if (oldInfo.Mode is "Start" or "Boundary")
+                        ApplyEventProperties(converted, new NativeEventProperties { IsInterrupting = oldInfo.IsInterrupting,
+                            AttachedToActivityId = oldInfo.Mode == "Boundary" ? oldInfo.AttachedToActivityId : null },
+                            Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal));
+                }
                 // The native command appends the replacement and CopyValues omits label geometry.
                 // Restore only the original ordinal and actual graphics properties, never rewrite archive XML.
                 collection.Remove(converted); collection.Insert(index, converted);
@@ -92,6 +108,7 @@ public sealed partial class NativeEngine
                 SynchronizeDataLinks(model, links);
                 ResolveCompensationReferences(model);
             }
+            ValidateSubProcessContexts(model, changes.Where(c => c.ExpectedEventMode != null).Select(c => new NativeMutation { Operation = "create", ElementId = c.ElementId }).ToArray());
         }
         finally { if (manager is IDisposable disposable) disposable.Dispose(); }
     }

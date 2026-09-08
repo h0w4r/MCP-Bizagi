@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add explicit same-role native event kind conversion through the installed
+  command, with `ExpectedEventMode`, neutral-definition checks, preserved I/O,
+  interruption and attachments, protected message references and strict runtime
+  defaults. Configured/unknown payloads, event-role changes and implicit context
+  migration remain excluded. Independent native acceptance covers all directed
+  role-specific palette pairs and rich root/nested cases; see validation records.
+
 - Extend native conversion to unbound-call-to-task through the installed type-change
   command. Require explicit unlinking before conversion and protect nondefault
   expanded layout/runtime content. Preserve common graph/archive data; never

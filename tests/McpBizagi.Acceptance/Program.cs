@@ -144,6 +144,10 @@ try
         var subprocesses = advertised.GetProperty("nativeSubProcessKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var payloads = advertised.GetProperty("nativeEventPayloadKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var taskToCall = advertised.GetProperty("nativeConversions").GetProperty("taskToUnboundCall");
+        var eventConversions = advertised.GetProperty("nativeConversions").GetProperty("events");
+        if (eventConversions.GetProperty("requiredField").GetString() != "ExpectedEventMode" || !eventConversions.GetProperty("preservesRole").GetBoolean() ||
+            !eventConversions.GetProperty("neutralDefinitionsOnly").GetBoolean() || eventConversions.GetProperty("typesByMode").EnumerateObject().Count() != 5)
+            throw new InvalidDataException("Missing guarded event conversion discovery.");
         if (taskToCall.GetProperty("targetType").GetString() != "CallActivity" || taskToCall.GetProperty("createsDiagram").GetBoolean() ||
             taskToCall.GetProperty("selectsTarget").GetBoolean() || !taskToCall.GetProperty("reverseSupported").GetBoolean() ||
             !taskToCall.GetProperty("reverseRequiresUnbound").GetBoolean() || taskToCall.GetProperty("reverseInlinesProcess").GetBoolean() ||
@@ -256,6 +260,12 @@ try
         }
         else await NativeRefactoringAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_REFACTORING_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--event-conversions-only"))
+    {
+        if (!native) throw new ArgumentException("Event conversion acceptance requires --native.");
+        await NativeEventConversionAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_EVENT_CONVERSION_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--conversions-only") || args.Contains("--task-to-call-only"))
     {

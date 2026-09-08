@@ -29,7 +29,8 @@ public static class NativeConversionPolicy
         {
             if (!Guid.TryParseExact(c.ElementId, "D", out var id) || id == Guid.Empty || id.ToString() != c.ElementId || !ids.Add(c.ElementId))
                 throw new InvalidDataException("Conversion identities must be distinct canonical native GUIDs.");
-            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType) || IsTaskToCall(c) || IsCallToTask(c)))
+            NativeEventConversionPolicy.Validate(c);
+            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType) || IsTaskToCall(c) || IsCallToTask(c) || c.ExpectedEventMode != null))
                 throw new NotSupportedException("Conversion requires different task/gateway types within one category, or task/unbound-CallActivity conversion.");
         }
     }
@@ -48,10 +49,11 @@ public static class NativeConversionPolicy
             if (requested.TryGetValue(id, out var c))
             {
                 if (TypeOf(source[id]) != c.ExpectedType || TypeOf(target[id]) != c.TargetType ||
-                    source[id].Kind != KindFor(c.ExpectedType) || target[id].Kind != KindFor(c.TargetType))
+                    source[id].Kind != KindFor(c.ExpectedType, c.ExpectedEventMode) || target[id].Kind != KindFor(c.TargetType, c.ExpectedEventMode))
                     throw new InvalidDataException("Conversion type readback differs from requested intent.");
                 // Category selectors may change. Every common field, relationship and style stays compared.
                 foreach (string field in new[] { "Kind", "ElementType" }) { a.Remove(field); b.Remove(field); }
+                if (c.ExpectedEventMode != null) NativeEventConversionPolicy.Verify(source[id], target[id], c, a, b);
                 if (IsTaskToCall(c))
                 {
                     a["CallReference"] = JsonSerializer.SerializeToNode(new NativeCallReference());
@@ -86,7 +88,7 @@ public static class NativeConversionPolicy
     }
 
     // Native concrete class names differ from the palette for abstract tasks and event gateways.
-    private static string KindFor(string type) => type == "AbstractTask" ? "Task" : type.StartsWith("EventBasedGateway", StringComparison.Ordinal) ? "EventBasedGateway" : type;
+    private static string KindFor(string type, string? mode) => mode != null ? mode switch { "Start" => "StartEvent", "End" => "EndEvent", "Catch" => "IntermediateCatchEvent", "Throw" => "IntermediateThrowEvent", "Boundary" => "BoundaryEvent", _ => "" } : type == "AbstractTask" ? "Task" : type.StartsWith("EventBasedGateway", StringComparison.Ordinal) ? "EventBasedGateway" : type;
 
     public static void Preflight(byte[] source, NativeTypeConversion[] changes)
     {
@@ -105,6 +107,7 @@ public static class NativeConversionPolicy
     {
         if (!result) VerifyAttributeScopes(entries, changes);
         var projected = new Dictionary<string, byte[]>(entries, StringComparer.OrdinalIgnoreCase); var found = new HashSet<string>();
+        var eventIdentities = changes.Any(c => c.ExpectedEventMode != null) ? NativeEventConversionPolicy.CountIdentities(entries) : null;
         foreach (var pair in entries.Where(p => p.Key.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)))
         {
             using var stream = new MemoryStream(pair.Value, false);
@@ -116,7 +119,8 @@ public static class NativeConversionPolicy
                 if (owners.Length == 0) continue;
                 if (owners.Length != 1 || !found.Add(c.ElementId)) throw new InvalidDataException("Ambiguous native conversion identity.");
                 string type = result ? c.TargetType : c.ExpectedType;
-                if (!result && IsCallToTask(c))
+                if (c.ExpectedEventMode != null) NativeEventConversionPolicy.Project(owners[0], type, c.ExpectedEventMode, eventIdentities!);
+                else if (!result && IsCallToTask(c))
                 {
                     ProjectUnboundCall(owners[0]);
                     foreach (var graphics in owners[0].Elements(Ns + "NodeGraphicsInfos").Elements(Ns + "NodeGraphicsInfo"))

@@ -229,7 +229,7 @@ internal static class NativeConversionAcceptance
         var untouched = await Op("native_inspect", new() { ["path"] = original });
         if (S(untouched, "sourceRevision") != originalRevision) throw new InvalidDataException("Conversion changed the original model.");
     }
-    private static bool DocumentationEquivalent(JsonElement before, JsonElement after)
+    internal static bool DocumentationEquivalent(JsonElement before, JsonElement after)
     {
         // Native persistence updates definition audit timestamps even when values are unchanged.
         // Verify real timestamps, then compare every other snapshot field without a production policy call.

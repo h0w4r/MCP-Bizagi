@@ -1,4 +1,4 @@
-# Native task, gateway and unbound-call conversion
+# Native task, gateway, event and unbound-call conversion
 
 `native_elements_convert` changes existing elements through the installed
 Modeler 4.3.0.008 `ChangeElementTypeCommand` for same-category edits, or
@@ -7,7 +7,7 @@ diagram through BPMN import, rewrite native archive XML or control desktop UI.
 The source file is retained; a successful operation returns a new native artifact.
 
 This is an **experimental file-based capability**, not full Modeler automation.
-Same-category conversion is included in the 0.6 package. Task/call conversion
+Task/gateway conversion is included in the 0.6 package. Task/call and event conversion
 and destination attribute-scope checks are newer source additions, not changes
 to the immutable 0.6.0-alpha.1 release ZIP.
 
@@ -22,6 +22,7 @@ Submit `path`, `expectedRevision` and a `changes` array. Each
 | `ElementId` | Existing nonzero canonical native GUID; not an imported BPMN identifier |
 | `ExpectedType` | Exact current palette type, checked before the command executes; `CallActivity` requires an explicitly unbound source for conversion to a task |
 | `TargetType` | Different allowed type within the same category, `CallActivity` for a task source, or a task type for an unbound call |
+| `ExpectedEventMode` | Required only for events: `Start`, `End`, `Catch`, `Throw` or `Boundary`; conversion preserves this role |
 
 A batch contains 1–1,000 distinct identities. Duplicate identities, an unchanged
 type, a stale source revision, an absent source identity and other cross-category
@@ -36,6 +37,7 @@ Its sample path, revision and identity must be replaced with inspected values.
 - Gateways: `ExclusiveGateway`, `InclusiveGateway`, `ParallelGateway`,
   `ComplexGateway`, `EventBasedGateway`, `EventBasedGatewayExclusive`,
   `EventBasedGatewayParallel`.
+- Events: same-role kind changes with explicit `ExpectedEventMode`; see below.
 
 The three event-based gateway selectors distinguish the native instantiation
 and exclusive/parallel settings. They are not interchangeable aliases.
@@ -43,9 +45,63 @@ The native class for `AbstractTask` is `Task`; the three event gateway selectors
 share the `EventBasedGateway` class. Both class and palette selector are checked.
 
 Tasks in native processes and embedded subprocesses use the same contract.
-Event conversion, task-to-embedded-subprocess conversion, conditional/bot task
-options and live unsaved documents are not included.
+Event-role conversion, task-to-embedded-subprocess conversion, conditional/bot
+task options and live unsaved documents are not included.
 Embedded-subprocess extraction has its own [refactoring contract](native-refactoring.md).
+
+### Events: preserve the role, replace neutral definitions
+
+Events additionally require `NativeTypeConversion.ExpectedEventMode`, even for
+start and end events. The actual native class is checked; an intermediate palette
+name alone cannot distinguish a catch, throw or boundary event. Omitting the
+field or attempting a different role is rejected. Discovery exposes the complete
+palette under `nativeConversions.events.typesByMode`.
+
+| Mode | Allowed kind prefixes (append `Start`, `End` or `Intermediate`) |
+| --- | --- |
+| Start | None, Message, Timer, Conditional, Signal, Multiple, ParallelMultiple, Error, Escalation, Compensation |
+| End | None, Message, Terminate, Escalation, Error, Compensation, Signal, Multiple, Cancel |
+| Catch | Message, Timer, Conditional, Link, Signal, Multiple, ParallelMultiple |
+| Throw | None, Message, Escalation, Link, Compensation, Signal, Multiple |
+| Boundary | Message, Timer, Escalation, Conditional, Error, Compensation, Signal, Multiple, ParallelMultiple, Cancel |
+
+The installed command creates the destination definitions. It retains the event's
+identity, role, common properties, label/style, connections, I/O, interruption
+and boundary attachment. Special contexts still apply: exception starts require
+an event subprocess; cancel ends require a transaction, and cancel boundaries
+must attach to one. A noninterrupting event cannot become an exception kind that
+does not support its flag. Conversion does not implicitly change its container,
+detach it, or change interruption to make the request fit.
+
+**Only neutral definition payloads may be replaced.** A configured timer, message
+name, condition, error/escalation code, compensation target, unknown child or
+unknown attribute is not silently retired. Explicitly reconfigure it using
+`native_mutate.EventPayloads` first where that property has a supported editor.
+This is not automatic payload migration, arbitrary definition collection editing
+or a promise to restore historic payloads when reversing the type change.
+
+Multiple-event defaults are checked against the installed factory, not guessed
+from the BPMN specification. Native in-memory and XPDL collection order have
+separate baselines. Empty, generated message identities may be replaced only
+when the native archive reference scan does not find another occurrence; a
+shared/referenced identity rejects the operation. Unknown runtime properties
+remain protected. Only observed type-specific neutral cost/priority defaults
+are projected in comparison copies, never in persisted native XML.
+
+See [the event request example](../examples/native-event-conversion.json). Its
+boundary timer must have an empty timer definition. Verify the actual source
+revision, identity and role before using it; the GUID is a placeholder.
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build --no-restore -- . --native --event-conversions-only
+```
+
+The independent client covers every directed pair within the five roles plus
+root/nested and noninterrupting cases. Event data ports, incident flow, Unicode
+documentation, label geometry, scoped event-owned attachment bytes and native
+restart are checked separately from the conversion host's own fidelity gate.
+See the [execution record](validation.md) for actual outcomes. Palette coverage
+does not establish simulator equivalence or independent desktop compatibility.
 
 ### Task to an unbound call
 
