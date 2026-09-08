@@ -45,7 +45,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeXpdl = new { version = "2.2", tools = new[] { "native_xpdl_import", "native_xpdl_export" }, maximumDocuments = 100,
                 scope = "explicit_interchange_projection_with_differences_not_native_backup_or_visual_equivalence" },
             nativeVisio = new { format = "vdx", tools = new[] { "native_visio_import", "native_visio_export" }, maximumPages = 100,
-                scope = "lossy_installed_mapper_with_explicit_empty_subprocess_page_and_kind_label_loss_reports_not_nested_content_preservation_or_visual_equivalence" },
+                scope = "lossy_installed_mapper_with_separate_subprocess_body_pages_and_source_page_receipts_not_hierarchy_behavior_or_visual_equivalence" },
             nativeRefactoring = new { tool = "native_subprocess_extract", operation = "embedded_to_reusable", sourceKind = "ordinary_SubProcess",
                 scope = "native_command_descendant_relocation_current_user_tab_remap_and_whole_container_gate_not_behavioral_equivalence_or_arbitrary_selection_refactoring" },
             nativeReparenting = new { tool = "native_elements_reparent", maximumBatchSize = 1000,
@@ -141,7 +141,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     public CallToolResult ImportVisio(NativeExchangeInput input, bool acknowledgeFormatLimits, string modelName = "Imported Visio") =>
         Guard(() => native.ImportVisio(input, modelName, acknowledgeFormatLimits));
 
-    [McpServerTool(Name = "native_visio_export"), Description("Experimental selected native diagrams to Visio .vdx through the installed manager, with import/save/fresh-readback verification. Requires expectedRevision and acknowledgeFormatLimits=true. Returns reusable VDX, page inventory, explicit graph/metadata/archive losses and native verification model. Original untouched; not VSDX or a native backup. Poll operation_get.")]
+    [McpServerTool(Name = "native_visio_export"), Description("Experimental selected native diagrams to Visio .vdx through the installed manager, with import/save/fresh-readback verification. Requires expectedRevision and acknowledgeFormatLimits=true. Returns reusable VDX, source-to-page receipts, separate populated subprocess body pages, explicit graph/metadata/archive losses and native verification model. At most 100 root plus body pages; negative subprocess coordinates fail. Imported pages are separate diagrams, not reconstructed hierarchy. Original untouched; not VSDX or a native backup. Poll operation_get.")]
     public CallToolResult ExportVisio(string path, string expectedRevision, string[] diagramIds, bool acknowledgeFormatLimits) =>
         Guard(() => native.ExportVisio(path, expectedRevision, diagramIds, acknowledgeFormatLimits));
 

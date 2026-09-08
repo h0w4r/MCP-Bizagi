@@ -1,6 +1,68 @@
 # Verification baselines
 
-## Native Visio VDX through MCP — 2026-09-08 UTC
+## Native Visio nested-body pages through MCP — 2026-09-08 UTC
+
+Real client run `20260908-131355-dc5593` verified the new one-manager-call
+subprocess canvas projection against installed Modeler 4.3.0.008. It supersedes
+the blank-body export limitation in the historical baseline below, **not** the
+remaining limits on hierarchy reconstruction, behavioral fidelity or GUI compatibility.
+The immutable 0.5.0-alpha.1 package is unchanged.
+
+- **10 completed operations:** native creation/mutation, four Visio exports,
+  two Visio imports, native inspection and BPMN-to-native roundtrip setup.
+- **2 expected native failures:** nonexistent selected diagram and actual
+  unsupported stencil names in a generated VDX; no partial output was published.
+- **1 active-registration cancellation** followed by successful export recovery.
+  Actual MCP tools also rejected stale revisions, duplicate selection and missing
+  acknowledgement of interchange losses.
+- First corpus: two root diagrams plus two nested-body pages; all four tested
+  flow endpoint pairs survive export verification and both artifact/local-Unicode
+  VDX import routes. No output page is empty; three redundant native reservations
+  are removed with actual source-page receipts checked against their source IDs.
+- Second corpus: `examples/collaboration-nested.bpmn`, with pools, lanes, gateway,
+  events and two expanded nesting levels. All **11 source sequence-flow endpoint
+  pairs** survive import, persistence, strict native no-op and independent final
+  readback across three nonempty pages. The imported pages are separate
+  collaborations, not reconstructed BPMN subprocess ownership.
+- Strict whole-archive fidelity, graph and metadata equality pass for every
+  imported verification model after first-import initialization. Original native
+  and local VDX source hashes remain unchanged.
+- **39 worker-start receipts / 47 owned-process exit records**, all exited.
+  **272 periodic desktop samples** saw no owned visible or foreground window.
+  Sampling is not continuous observation or independent Modeler GUI validation.
+
+Transcript SHA-256: `93563388c682f276f0198331e46b3252e7edf4e8c8b75c8be952cd724a825257`.
+Final own-runtime fingerprints:
+
+| Own runtime | SHA-256 |
+| --- | --- |
+| `McpBizagi.Server.dll` | `c5d5af7985bc864adb890385506ebc16505b0cb89612c53ed49e7558649307e2` |
+| `McpBizagi.Core.dll` | `eabcf2561a900e5ea91cf4ddbeab403b276498a86c208e81da59bee40a3eeda7` |
+| `McpBizagi.BizagiAdapter.dll` | `e930352cf01edf368bc6c54d364de453eb71bbd2376dc271648b9a8712a0488e` |
+
+Release build: zero warnings/errors; **1,054 unit/component tests passed**.
+Independent real MCP XML regression: `20260908-131457-d51c66` passed; 43 tools
+were enumerated, not 43 universal operational accreditations. The four inspected
+installed components were re-fingerprinted unchanged. Private diagnostic inputs,
+native-generated files and vendor research are not redistributed.
+
+Two failed promotion attempts remain documented rather than counted as passes:
+
+1. A negative enclosing-pool margin caused the native restart loader to remove
+   pools and their body contents. The adapter now uses a nonnegative wrapper
+   origin, derives its size from actual child coordinates/vertices and explicitly
+   rejects negative source body coordinates rather than silently translating them.
+2. The natural corpus exposed a one-pixel pool-height change (634 to 633) on
+   restart: the loader derives pool height from its contiguous lanes. New foreign
+   imports now initialize that domain invariant before their **first** persistence,
+   recording the actual adjustment. Gapped/overlapping or invalid lane partitions
+   reject instead of being silently repacked. The global archive fidelity policy
+   was not relaxed, and no existing native model is normalized by this path.
+
+The [Visio contract](native-visio.md) documents source-page receipts, strict empty
+reservation removal, initial normalization and remaining interchange boundaries.
+
+## Historical native Visio VDX baseline — 2026-09-08 UTC
 
 Real client run `20260908-122112-9fe939` used the stdio host, supervised net48 workers,
 and installed Modeler 4.3.0.008 Aspose-backed Visio manager. This is source newer

@@ -10,11 +10,11 @@ public sealed record VisioPage(string Id, string Name, VisioShape[] Shapes);
 public sealed record VisioProjectionDifference(string Kind, string Name, int SourceCount, int ImportedCount);
 
 /// <summary>Bounded VDX preflight and observable page inventory, not a replacement Visio engine.</summary>
-public static class VisioDocument
+public static partial class VisioDocument
 {
     public static readonly XNamespace Namespace = "http://schemas.microsoft.com/visio/2003/core";
 
-    public static VisioPage[] Inspect(byte[] bytes)
+    private static XDocument ReadXml(byte[] bytes)
     {
         if (bytes.LongLength > BpmnDocument.MaxXmlCharacters * 4) throw new InvalidDataException("VDX exceeds the byte bound.");
         using var stream = new MemoryStream(bytes, writable: false);
@@ -29,7 +29,13 @@ public static class VisioDocument
         if (document.DescendantNodes().OfType<XProcessingInstruction>().Any() || document.Descendants().Any(e =>
             e.Name.NamespaceName == "http://www.w3.org/2001/XInclude" || e.Attribute(XNamespace.Xml + "base") != null))
             throw new InvalidDataException("VDX processing instructions, XInclude and external base contexts are unsupported.");
-        var pages = document.Root.Elements(Namespace + "Pages").ToArray();
+        return document;
+    }
+
+    public static VisioPage[] Inspect(byte[] bytes)
+    {
+        var document = ReadXml(bytes);
+        var pages = document.Root!.Elements(Namespace + "Pages").ToArray();
         if (pages.Length != 1) throw new InvalidDataException("VDX requires one Pages collection.");
         var result = pages[0].Elements(Namespace + "Page").Select(page =>
         {

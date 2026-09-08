@@ -124,6 +124,7 @@ public sealed partial class NativeEngine
         imageImports.Clear();
         renderedImages.Clear();
         customArtifactImports.Clear();
+        visioPages.Clear();
         if (request.ProtocolVersion != 1) throw new NotSupportedException("Unsupported worker protocol version.");
         RequireExportLabel(request.ModelName);
         Initialize(progress);
@@ -303,6 +304,7 @@ public sealed partial class NativeEngine
         reply.RenderedImages = renderedImages.ToArray();
         reply.CustomArtifacts = DescribeCustomArtifacts(model);
         reply.CustomArtifactImports = customArtifactImports.ToArray();
+        reply.VisioPages = visioPages.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "exchange_read") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);

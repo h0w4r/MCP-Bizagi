@@ -7,7 +7,7 @@ namespace McpBizagi.Server;
 
 public sealed partial class NativeWorkflows
 {
-    private const string VisioWarning = "Visio VDX is a lossy interchange projection, not a native backup. The installed mapper can reserve empty subprocess pages and omit nested contents, change identities, kinds, labels, styles, geometry and connections, and omit unsupported shapes, metadata, attachments and simulation. Inspect the complete page inventory and native graph/archive differences. Import initialization normalizations are recorded separately from strict native restart verification. Original inputs are never overwritten. No desktop visual or behavioral equivalence is claimed. Review exported content for private information before sharing.";
+    private const string VisioWarning = "Visio VDX is a lossy interchange projection, not a native backup. Populated subprocess bodies are exported as separate native canvas pages, not reconstructed hierarchy. The installed mapper can change identities, kinds, labels, styles, geometry and connections, and omit unsupported shapes, metadata, attachments and simulation. Negative subprocess coordinates are rejected rather than silently translated. Inspect the complete page inventory and native graph/archive differences. Import initialization normalizations are recorded separately from strict native restart verification. Original inputs are never overwritten. No desktop visual or behavioral equivalence is claimed. Review exported content for private information before sharing.";
 
     private static void RequireVisioAcknowledgement(bool acknowledged)
     {
@@ -95,10 +95,17 @@ public sealed partial class NativeWorkflows
             await File.WriteAllBytesAsync(source, input.Bytes, token);
             var exported = await Execute(new EngineRequest { OperationId = id, Action = "visio_export", InputPath = source, OutputPath = output, SelectedDiagramIds = selected },
                 RunDirectory(id, "exporter"), progress, token);
-            byte[] vdx = File.ReadAllBytes(output); var pages = VisioDocument.Inspect(vdx);
+            byte[] nativeOutput = File.ReadAllBytes(output);
+            // Retain the native manager's full output as evidence, then remove only verified empty
+            // reservations. Every populated source surface must have a separately checked page receipt.
+            File.WriteAllBytes(Path.Combine(directory, "native-generated.vdx"), nativeOutput);
+            var prepared = VisioDocument.PrepareExport(nativeOutput, exported.Elements, selected, exported.VisioPages);
+            await File.WriteAllBytesAsync(output, prepared.Bytes, token);
+            byte[] vdx = prepared.Bytes; var pages = VisioDocument.Inspect(vdx);
             var verification = await VerifyVisioImport(id, output, directory, "Visio readback", progress, token);
             if (BpmnDocument.Revision(File.ReadAllBytes(source)) != input.Revision) throw new InvalidDataException("Native Visio export modified its staged source.");
             var result = new { exported, verification, selectedDiagramIds = selected, pages,
+                sourcePages = exported.VisioPages, removedEmptyReservedPages = prepared.RemovedReservedPages,
                 emptyPages = pages.Where(p => p.Shapes.Length == 0).Select(p => p.Id).ToArray(),
                 projectionDifferences = VisioDocument.CompareProjection(exported.Elements.Where(e => selected.Contains(e.DiagramId)).ToArray(), verification.Verified.Elements),
                 graphDifferences = XpdlDocument.CompareGraph(exported.Elements, verification.Verified.Elements),

@@ -175,6 +175,7 @@ public sealed class EngineReply
     public string OperationId { get; set; } = "";
     public string[] Artifacts { get; set; } = System.Array.Empty<string>();
     public NativeExchangeArtifact[] ExchangeFiles { get; set; } = System.Array.Empty<NativeExchangeArtifact>();
+    public NativeVisioPageReceipt[] VisioPages { get; set; } = System.Array.Empty<NativeVisioPageReceipt>();
     public NativeExtractionReceipt? Extraction { get; set; }
     public NativeAlignmentReceipt? Alignment { get; set; }
     public NativeSelectionCopyReceipt? SelectionCopy { get; set; }

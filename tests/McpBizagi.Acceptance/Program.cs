@@ -198,7 +198,7 @@ try
     if (args.Contains("--visio-only"))
     {
         if (!native) throw new ArgumentException("Visio acceptance requires --native.");
-        await NativeVisioAcceptance.Run(run, stateRoot, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        await NativeVisioAcceptance.Run(repo, run, stateRoot, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_VISIO_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--xpdl-only"))

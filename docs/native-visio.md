@@ -16,9 +16,13 @@ The real local corpus exposed important native limitations:
 
 - Root task Unicode labels survive the tested export/import route.
 - The tested `UserTask` becomes a generic native `Task` after Visio import.
-- The exporter reserves an extra page for a populated embedded subprocess,
-  but leaves that page empty. The nested task does **not** survive exchange.
-  A page-count match alone would incorrectly accredit this case.
+- The raw manager reserves blank pages for subprocess bodies. The adapter now
+  supplies each populated body as a separate native process canvas in the same
+  manager call. Actual source-to-page receipts identify those pages; only strictly
+  recognized redundant empty reservations are removed from that one document.
+- The two-level corpus checks task labels and internal flow endpoints after import,
+  persistence and fresh readback. Imported body pages become **independent
+  collaborations**: this is not automatic reconstruction of BPMN nesting.
 - Initial import can normalize graphics, styles and serialized reference caches.
 - Native identities are regenerated. Original and imported graphs are not
   compared as if those identities were preserved.
@@ -31,9 +35,10 @@ These losses are exposed in `pages`, `emptyPages`, `projectionDifferences`,
 mapping or a proof of geometry, connection, execution or visual equivalence**.
 An empty multiset difference would not imply a lossless conversion.
 
-There is no claim of nested-content preservation, arbitrary stencil support,
-Microsoft Visio visual compatibility, or Full Modeler Automation. The native
-exporter's blank-subprocess-page behavior remains an explicit unresolved route.
+There is no claim of lossless nested semantics, arbitrary stencil support,
+Microsoft Visio visual compatibility, or Full Modeler Automation. The tested
+subprocess body pages preserve their observed tasks/connections, not every possible
+BPMN element, behavior, type or extension.
 Review exported files and evidence for private text/metadata before sharing.
 
 ## Export
@@ -45,10 +50,23 @@ Then call `native_visio_export`:
 | --- | --- |
 | `path` | Workspace `.bpm` or completed native artifact reference |
 | `expectedRevision` | SHA-256 of the exact source bytes |
-| `diagramIds` | 1–100 distinct existing native collaboration GUIDs |
+| `diagramIds` | 1–100 distinct existing native collaboration GUIDs; roots plus populated subprocess bodies must total at most 100 pages |
 | `acknowledgeFormatLimits` | Required explicit `true` |
 
-The installed exporter produces `export.vdx`. A separate native importer creates
+The adapter uses fresh native canvas containers for populated subprocess bodies,
+without reparenting, saving or editing the original native model. Actual geometry
+and connector vertices determine each enclosing pool size. Negative source body
+coordinates are currently rejected, rather than silently moving objects; a negative
+pool margin caused the native restart loader to discard the pool in an early
+promotion attempt. Finite coordinates and the page bound are checked explicitly.
+
+The installed manager produces one document retained as `native-generated.vdx` in
+private operation evidence. `export.vdx` retains its requested pages, masters,
+styles and other content, removing only the structurally verified empty trailing
+reservations. Unknown reservation payloads or background references reject the
+operation; pages from independently serialized documents are never merged.
+
+A separate native importer creates
 a verification `.bpm`; fresh workers read, save without requested changes and
 read it again. The native no-op must pass the existing whole-archive fidelity
 policy as well as graph and metadata equality. A completed export returns:
@@ -57,6 +75,9 @@ policy as well as graph and metadata equality. A completed export returns:
 - `outputRevision`: exact VDX SHA-256
 - `verificationModel`: `artifact:<operationId>:model.bpm`
 - `verificationRevision`: exact verification model SHA-256
+- `sourcePages`: actual `SourceDiagramId`, `SourceSubProcessId` (empty for root),
+  `PageId` and `PageName` receipts, not per-element identity mappings.
+- `removedEmptyReservedPages`: actual redundant page IDs removed after inspection.
 - `selectedDiagramIds`, page/shape inventory, explicit loss reports and native
   import/no-op/restart evidence.
 
@@ -90,6 +111,10 @@ Import initialization is deliberately separate from preservation:
 1. Native import constructs a new model. The worker records its transient graph.
 2. Missing native empty attribute collections and invisible-pool default sizes
    are initialized before its first persistence, using installed domain defaults.
+   For an already contiguous positive lane partition, the pool height is initialized
+   from those native lane heights, matching the installed loader's invariant.
+   The before/after height is recorded; gaps/overlaps or invalid heights reject
+   instead of silently repacking the imported lanes.
 3. A fresh native read is compared with the imported graph. Only the explicitly
    observed graphics/style and derived-reference normalization fields are allowed;
    changes to identities, kinds, labels, containment or semantic properties fail.
@@ -105,8 +130,8 @@ its exact `outputRevision`. Failed outputs remain quarantined in local evidence.
 
 Poll `operation_get`; use `operation_cancel` for cancellation. Native progress
 events are forwarded as reported by the vendor. In particular, an export progress
-maximum that includes reserved subprocess pages is not proof those pages contain
-content. There is no fabricated completion percentage or total-operation timeout.
+maximum that includes redundant reserved subprocess pages is not proof those pages
+contain content; source-page receipts and fresh native contents are checked separately. There is no fabricated completion percentage or total-operation timeout.
 
 Diagnostics retain `visio-import-conflicts.json`, `visio-transient-graph.json`,
 `visio-import-normalizations.json`, `visio-native-restart.json` and the final
