@@ -1,5 +1,59 @@
 # Verification baselines
 
+## Native Visio VDX through MCP — 2026-09-08 UTC
+
+Real client run `20260908-122112-9fe939` used the stdio host, supervised net48 workers,
+and installed Modeler 4.3.0.008 Aspose-backed Visio manager. This is source newer
+than 0.5.0-alpha.1, not a replacement release or Full Modeler Automation.
+
+- **8 completed operations:** native creation and mutation, three Visio exports,
+  two Visio imports (completed artifact and local Unicode path), and final native
+  source inspection. This count includes setup/inspection, not eight distinct
+  newly accredited capabilities.
+- **2 expected native failures:** absent selected diagram and genuinely unmapped
+  stencil names in a real exported VDX. Neither partial result was published.
+- **1 active-registration cancellation**, followed by a successful new export;
+  stale native/VDX revisions, duplicate selection and missing loss acknowledgement
+  were also rejected by the actual MCP tools.
+- 32 worker-start receipts; 33 owned-process exit records, all exited.
+  187 periodic desktop samples observed no owned visible/foreground window.
+  These samples are not continuous capture or Modeler GUI compatibility evidence.
+- Root task Unicode labels, the observed source/target flow relationship, selected
+  page labels/order, single-diagram subset selection and local source SHA-256
+  preservation were independently checked by the real client.
+- All imported verification models passed strict whole-archive native no-op
+  fidelity and subsequent graph/metadata equality from independent readers.
+- **Explicit loss control:** the populated subprocess reserves a blank extra page;
+  its nested task is omitted. A UserTask becomes Task. These are recorded native
+  limitations, not successful nested-content/type-preservation gates. Page counts
+  alone are never used to claim preserved content.
+
+Transcript SHA-256: `72dc874e774d6794ae34a363df9a4bbb7d631bc72840e44e829ec06d27e19d97`.
+The final runtime fingerprints retained with the run include:
+
+| Own runtime | SHA-256 |
+| --- | --- |
+| `McpBizagi.Server.dll` | `c7aa68fae73ba48cc2da6dd52be5748dd3f22a9c0c5e2b4e05537d70d9004bec` |
+| `McpBizagi.Core.dll` | `a9765b091dfe511e34911ea47f300f98718c816cd330e361d905fda2d04feaf0` |
+| `McpBizagi.BizagiAdapter.dll` | `29e9ce58c8b19f8f6692e78d9a74c737c977c21f65e547aa8c6c48fba911f37a` |
+
+The four inspected installed components were fingerprinted again unchanged.
+No proprietary code, fixtures, dumps or local operation evidence is published.
+Release build: zero warnings/errors; **1,029 unit/component tests passed**.
+Independent XML MCP regression: `20260908-122230-2cf99e` passed. Its 43 enumerated
+tools are schema inventory, not 43 operational accreditations.
+
+The first promotion attempt rejected uninitialized invisible-pool dimensions
+and missing empty attribute containers during no-op preservation. Initialization
+now uses installed domain defaults before first persistence; the global native
+fidelity verifier was not relaxed. An attempted malformed-numeric negative
+control was tolerated by the vendor parser and is **not** counted as a native
+failure; the final unsupported-stencil test records an actual native rejection.
+
+See [the Visio contract](native-visio.md) and [request examples](../examples/native-visio.json).
+VSD/VSDX, arbitrary stencils, nested-content preservation and independent visual
+compatibility remain open. The existing package remains immutable.
+
 ## Native selection copying through MCP — 2026-09-08 UTC
 
 Seven installed-engine copy corpora passed the official stdio MCP client,

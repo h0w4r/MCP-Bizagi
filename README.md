@@ -62,6 +62,7 @@ every operation into a BPMN XML export.
 | Native engine bootstrap | Opt-in diagnostic | Internal interfaces, not a supported vendor API |
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
 | Native XPDL 2.2 import/export | Experimental current source | Installed Unicode serializer/importer, selected diagrams, fresh native readback and explicit XML/graph/archive losses; not a native backup; [contract](docs/native-xpdl.md) |
+| Native Visio VDX interchange | Experimental source after 0.5 | Installed mapper, explicit page/kind/label loss reports and strict native no-op/readback; nested contents can be omitted into blank pages; not complete Visio support or a native backup; [contract](docs/native-visio.md) |
 | Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
 | Create a blank native `.bpm` | Experimental current source | Native model constructor, one or more named diagrams, ordered tabs, fresh-reader and no-op stability gates; [contract](docs/native-models.md) |
 | Adopt/save-as/replace native `.bpm` | Experimental current source | Byte-exact publication, separate source/target revisions, recoverable backups and intent reconciliation after host death; [contract](docs/native-commit.md) |

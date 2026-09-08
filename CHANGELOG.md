@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add installed Visio VDX import/export tools with revision capture, reusable
+  artifacts, source page inventories, explicit projection losses, native domain
+  initialization and independent no-op/restart fidelity. Expose the native
+  exporter's blank nested-subprocess pages rather than treating page counts as
+  preserved content. VSD/VSDX, arbitrary stencils and visual equivalence remain
+  unaccredited. No Bizagi or Office components are redistributed or modified.
+
 - Add typed native selection copying through MCP, a separately loaded native
   snapshot, actual inserted-object identity maps and three-worker persistence
   verification. Preserve full event definitions, exact images/attachments and

@@ -38,7 +38,7 @@ public sealed partial class NativeEngine
         if (string.IsNullOrEmpty(id)) return;
         if (visited.TryGetValue(id, out object previous))
         {
-            if (!ReferenceEquals(previous, value)) throw new InvalidDataException("Imported XPDL has ambiguous native identities: " + id);
+            if (!ReferenceEquals(previous, value)) throw new InvalidDataException("Imported interchange has ambiguous native identities: " + id);
             return;
         }
         visited.Add(id, value);

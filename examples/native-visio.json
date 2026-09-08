@@ -1,0 +1,34 @@
+{
+  "note": "Replace placeholder GUIDs, operation IDs and SHA-256 revisions with actual MCP inspection/export results. VDX is lossy; inspect projection differences and blank subprocess pages before reuse.",
+  "export": {
+    "tool": "native_visio_export",
+    "arguments": {
+      "path": "models/process.bpm",
+      "expectedRevision": "<source SHA-256>",
+      "diagramIds": ["<native collaboration GUID>"],
+      "acknowledgeFormatLimits": true
+    }
+  },
+  "importExportedArtifact": {
+    "tool": "native_visio_import",
+    "arguments": {
+      "input": {
+        "Path": "artifact:<completed export operation ID>:export.vdx",
+        "ExpectedRevision": "<VDX SHA-256>"
+      },
+      "modelName": "Imported process",
+      "acknowledgeFormatLimits": true
+    }
+  },
+  "importLocalFile": {
+    "tool": "native_visio_import",
+    "arguments": {
+      "input": { "Path": "models/process.vdx", "ExpectedRevision": "<VDX SHA-256>" },
+      "acknowledgeFormatLimits": true
+    }
+  },
+  "poll": {
+    "tool": "operation_get",
+    "arguments": { "operationId": "<returned operation ID>" }
+  }
+}

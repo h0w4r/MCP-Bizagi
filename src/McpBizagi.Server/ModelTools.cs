@@ -44,6 +44,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
             nativeXpdl = new { version = "2.2", tools = new[] { "native_xpdl_import", "native_xpdl_export" }, maximumDocuments = 100,
                 scope = "explicit_interchange_projection_with_differences_not_native_backup_or_visual_equivalence" },
+            nativeVisio = new { format = "vdx", tools = new[] { "native_visio_import", "native_visio_export" }, maximumPages = 100,
+                scope = "lossy_installed_mapper_with_explicit_empty_subprocess_page_and_kind_label_loss_reports_not_nested_content_preservation_or_visual_equivalence" },
             nativeRefactoring = new { tool = "native_subprocess_extract", operation = "embedded_to_reusable", sourceKind = "ordinary_SubProcess",
                 scope = "native_command_descendant_relocation_current_user_tab_remap_and_whole_container_gate_not_behavioral_equivalence_or_arbitrary_selection_refactoring" },
             nativeReparenting = new { tool = "native_elements_reparent", maximumBatchSize = 1000,
@@ -72,6 +74,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "bpmn_xml_inspect_create_rename_validate", status = "implemented", backend = "standards_xml" },
                 new { name = "bpm_native_import_save_reopen_export", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_xpdl_22_exchange", status = "experimental_installed_unicode_file_route_with_explicit_losses_and_fresh_native_readback_not_native_backup", backend = "bizagi_worker" },
+                new { name = "native_visio_vdx_exchange", status = "experimental_lossy_installed_mapper_with_strict_native_noop_readback_not_complete_visio_or_nested_content_support", backend = "bizagi_worker" },
                 new { name = "bpm_native_graph_inspect_and_copy_only_name_edits", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_diagram_lifecycle_and_persisted_tabs", status = "experimental_copy_only_native_cloning_and_ordered_preferences_with_fresh_readback_not_live_session_control", backend = "bizagi_worker" },
                 new { name = "native_blank_model_creation", status = "experimental_native_constructor_fresh_readback_and_noop_stability_gate_not_live_desktop", backend = "bizagi_worker" },
@@ -133,6 +136,14 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     [McpServerTool(Name = "native_elements_reparent"), Description("Experimental explicit native reparenting between processes and embedded subprocesses in the same diagram. Preserve identities, subtree content and original file; require complete connector/boundary closure. Optional Position changes only the selected node's coordinates. Three workers verify native persistence and remaining archive content. Poll operation_get; this is not clipboard or automatic layout.")]
     public CallToolResult ReparentNative(string path, string expectedRevision, NativeReparenting[] moves) =>
         Guard(() => native.Reparent(path, expectedRevision, moves));
+
+    [McpServerTool(Name = "native_visio_import"), Description("Experimental installed Visio VDX import to a new native model. Requires a revision-checked .vdx input and acknowledgeFormatLimits=true. Return page inventory, import normalizations, strict native no-op/restart evidence and a .bpm artifact. Unmapped-page conflicts fail explicitly; no lossless or desktop visual claim. Poll operation_get.")]
+    public CallToolResult ImportVisio(NativeExchangeInput input, bool acknowledgeFormatLimits, string modelName = "Imported Visio") =>
+        Guard(() => native.ImportVisio(input, modelName, acknowledgeFormatLimits));
+
+    [McpServerTool(Name = "native_visio_export"), Description("Experimental selected native diagrams to Visio .vdx through the installed manager, with import/save/fresh-readback verification. Requires expectedRevision and acknowledgeFormatLimits=true. Returns reusable VDX, page inventory, explicit graph/metadata/archive losses and native verification model. Original untouched; not VSDX or a native backup. Poll operation_get.")]
+    public CallToolResult ExportVisio(string path, string expectedRevision, string[] diagramIds, bool acknowledgeFormatLimits) =>
+        Guard(() => native.ExportVisio(path, expectedRevision, diagramIds, acknowledgeFormatLimits));
 
     [McpServerTool(Name = "native_xpdl_import"), Description("Import 1-100 revision-checked XPDL 2.2 files or completed export artifacts through the installed importer, save a new .bpm, reopen and re-export with explicit XML differences. Requires acknowledgeFormatLimits=true; never overwrites sources or promises lossless interchange. Poll operation_get.")]
     public CallToolResult ImportXpdl(NativeExchangeInput[] inputs, bool acknowledgeFormatLimits, string modelName = "Imported XPDL") =>

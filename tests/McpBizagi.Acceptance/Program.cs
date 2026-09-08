@@ -195,6 +195,12 @@ try
         await NativeStyleAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_STYLE_LIFECYCLE_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--visio-only"))
+    {
+        if (!native) throw new ArgumentException("Visio acceptance requires --native.");
+        await NativeVisioAcceptance.Run(run, stateRoot, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_VISIO_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--xpdl-only"))
     {
         if (!native) throw new ArgumentException("XPDL acceptance requires --native.");
