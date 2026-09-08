@@ -9,7 +9,7 @@ used. Bizagi remains installed locally and is not included in the package.
 | Argument | Meaning |
 | --- | --- |
 | `path` | Workspace `.bpm` or completed native artifact reference |
-| `format` | `excel`, `word` or `pdf` |
+| `format` | `excel`, `word`, `pdf`; current source adds [`web`](native-web-publication.md) |
 | `diagramIds` | Optional distinct native collaboration GUIDs; omission selects all |
 | `title` | Word/PDF publication title; defaults to `Process documentation` |
 | `allowImageResampling` | Defaults to false; explicit acceptance of bounded native PDF downsampling |
@@ -74,7 +74,8 @@ and rerun through MCP with fresh readback, SVG geometry checks and independent
 PDF raster review. Existing `.bpm` files retain their actual saved expanded sizes,
 including oversized values from an earlier import. The native template can leave
 a diagram heading on a separate sparse page; universal document layout is not
-accredited. Web, SharePoint, Wiki, custom templates, all selection/filter options,
+accredited. Web has its [own source contract and evidence](native-web-publication.md).
+SharePoint, Wiki, custom templates, all selection/filter options,
 comments, rich attachment workflows and every possible extended-attribute type
 remain separate gates. Full Modeler automation is not implied by three working
 publication formats. Resource strings follow the installed runtime language.

@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Add experimental native Web publication through the installed generator,
+  portable relative images and default logo, independently checked page/search
+  inventories, native PNG hashes and selected content. Reuse native search DTOs
+  for emitted subprocess pages without modifying installed viewer code.
+- Verify actual MCP creation, embedded file publication, selected/all diagrams,
+  rejection, active cancellation and recovery. Preserve separate browser-quality
+  failures and scope limits; [execution record](docs/validation-web-publication.md).
+- Bound the independent site reader, reject links/duplicate JSON keys and match
+  source renders by exact directory rather than unrelated viewer icon folders.
+  This addition is not present in the immutable 0.6.0-alpha.1 archive.
+
 ## 0.6.0-alpha.1 — 2026-09-08
 
 The clean extracted package passed **20 independent MCP/native circuits**:

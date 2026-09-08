@@ -238,6 +238,33 @@ public sealed class NativePublicationReadback
     public int PagesOrSheets { get; set; }
     public int Images { get; set; }
     public NativeImageSize[] ImageSizes { get; set; } = System.Array.Empty<NativeImageSize>();
+    public NativeWebPublication? Web { get; set; }
+}
+
+/// <summary>Independent Web directory readback; never evaluates generated JavaScript.</summary>
+public sealed class NativeWebPublication
+{
+    public string ModelName { get; set; } = "";
+    public string[] RootPageIds { get; set; } = System.Array.Empty<string>();
+    public string[] SearchContainerIds { get; set; } = System.Array.Empty<string>();
+    public NativeWebPage[] Pages { get; set; } = System.Array.Empty<NativeWebPage>();
+    public NativeWebAsset[] Assets { get; set; } = System.Array.Empty<NativeWebAsset>();
+}
+
+public sealed class NativeWebPage
+{
+    public string Id { get; set; } = "";
+    public string ParentId { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string ImagePath { get; set; } = "";
+    public string ImageSha256 { get; set; } = "";
+}
+
+public sealed class NativeWebAsset
+{
+    public string Path { get; set; } = "";
+    public long Length { get; set; }
+    public string Sha256 { get; set; } = "";
 }
 
 public sealed class NativeImageSize

@@ -24,7 +24,8 @@ It does not imply that every combination or unsaved GUI workflow is verified.
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |
 | Host death and state ownership | Locally verified | Actual host termination, Job Object worker cleanup, interrupted journal, restart, competing-host rejection |
 | Native validator | Real invocation locally verified | Exhaustive invalid-model categories still pending |
-| Native documentation | Excel/Word/PDF locally verified on tested inputs | Installed generators, separate reader, actual text and image evidence; Web/other formats, custom templates and rich attachments remain open |
+| Native documentation | Excel/Word/PDF locally verified on tested inputs | Installed generators, separate reader, actual text and image evidence; custom templates, other formats and broad attachment corpus remain open |
+| Native Web publication | Experimental source after 0.6; tested MCP/native circuit verified | Selected/all root and nested pages, native search projection, PNG/attachment bytes and cancellation recovery; desktop functional journey verified, accessibility/mobile gate not accredited; [contract](native-web-publication.md) |
 | Native simulation | Defaults and configured levels 2–4 locally verified | Quantitative timing, cost, resource and calendar checks; four what-if replications; broader distribution/behavioral corpus remains open |
 | Native resources and activity RACI | Locally verified, copy-only | Role/Entity catalog edits, assignment replacement and clearing; referenced deletion rejected; global catalogs and process-level assignment editing remain open |
 | Native scenario configuration | Locally verified, copy-only | Complete diagram BPSim replacement, fresh-worker readback, explicit result discard; [details](native-simulation.md) |

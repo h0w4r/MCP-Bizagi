@@ -1,5 +1,14 @@
 # Verification baselines
 
+## Native Web publication — source after 0.6, 2026-09-08 UTC
+
+The [Web execution record](validation-web-publication.md) retains 10 terminal
+operations through real MCP/native workers, exact selected/nested page and image
+checks, an actual embedded file, rejection/cancellation recovery and unchanged
+source revision. Excel/Word/PDF passed the previous nested-corpus regression.
+Desktop functional browser traversal passed; the broader accessibility/mobile
+quality gate did not. This is not part of the immutable 0.6 package below.
+
 ## Consolidated 0.6.0-alpha.1 Windows package — 2026-09-08 UTC
 
 The [exact extracted-package record](validation-package-0.6.md) reports twenty

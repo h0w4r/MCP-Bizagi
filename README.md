@@ -94,6 +94,7 @@ every operation into a BPMN XML export.
 | Native simulation and what-if | Experimental | Defaults and configured levels 2–4, costs, resource contention, shift calendars and replications verified on the documented corpus |
 | Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
+| Native Web publication | Experimental source after 0.6 | Selected root/subprocess pages, native search, byte-verified PNGs and tested embedded file; browser quality remains partial; [contract](docs/native-web-publication.md) |
 | Extended attributes and embedded files | Experimental current source | Explicit native XML, complete element values, tables and byte transactions; [contract](docs/native-attributes.md) |
 | Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
 
@@ -180,7 +181,7 @@ and transparent PNG using the installed offscreen renderer—never desktop click
 See [rendering boundaries](docs/rendering.md) and [native fidelity](docs/native-fidelity.md).
 
 Use `native_mutate` for explicit structural/geometry/documentation batches, and
-`native_publish` for Excel, Word or PDF. Both return operation IDs and retain
+`native_publish` for Excel, Word, PDF or Web (Web requires source after 0.6). Both return operation IDs and retain
 original files. PDF image downsampling is rejected unless explicitly accepted;
 accepted resampling is reported, not hidden. Subprocess surfaces can be rendered
 with `native_render_svg` and its optional `subProcessId`.

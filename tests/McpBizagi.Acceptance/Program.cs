@@ -461,6 +461,13 @@ try
         Console.WriteLine("NATIVE_PALETTE_CREATE_DELETE_PASS types=" + types.Length + " evidence=" + run);
         return 0;
     }
+    if (args.Contains("--web-publication-only"))
+    {
+        if (!native) throw new ArgumentException("Web publication acceptance requires --native.");
+        await NativeWebPublicationAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_WEB_PUBLICATION_SELECTED_NESTED_ATTACHMENT_RECOVERY_PASS evidence=" + run);
+        return 0;
+    }
     if (args.Contains("--publication-only"))
     {
         int inputArgument = Array.IndexOf(args, "--input");

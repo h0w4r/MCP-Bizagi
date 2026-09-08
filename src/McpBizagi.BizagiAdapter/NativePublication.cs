@@ -18,11 +18,16 @@ public sealed partial class NativeEngine
             "excel" => ".xlsx",
             "word" => ".docx",
             "pdf" => ".pdf",
-            _ => throw new NotSupportedException("Supported local publication formats: excel, word, pdf.")
+            "web" => "",
+            _ => throw new NotSupportedException("Supported local publication formats: excel, word, pdf, web.")
         };
-        string nativeFormat = request.PublicationFormat == "pdf" ? "PDF" : request.PublicationFormat == "word" ? "Word" : "Excel";
+        bool web = request.PublicationFormat == "web";
+        string nativeFormat = web ? "Html" : request.PublicationFormat == "pdf" ? "PDF" : request.PublicationFormat == "word" ? "Word" : "Excel";
         Directory.CreateDirectory(request.OutputPath);
         string output = Path.Combine(request.OutputPath, "documentation" + extension);
+        // The native Web generator deletes target subfolders. It may only receive a
+        // new operation-owned directory, never an existing user publication tree.
+        if (web && (Directory.Exists(output) || File.Exists(output))) throw new IOException("Web publication requires a fresh output directory.");
         // A v5 archive does not persist the file-level display title. Publication receives it explicitly.
         Set(model, "Name", request.PublicationTitle);
         object settings = Get(model, "DocumentationSettings");
@@ -76,6 +81,23 @@ public sealed partial class NativeEngine
         Set(parameters, "Model", model); Set(parameters, "ExportPath", output); Set(parameters, "Orientation", "Landscape");
         object format = Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.DocumentationGenerationType"), nativeFormat);
         Set(parameters, "DocumentType", format);
+        if (web)
+        {
+            // The mapper serializes PageImages verbatim. Stage actual native PNGs
+            // under the generator's temporal tree and supply portable site-relative paths.
+            string temporalImages = Path.Combine(workRoot, "publication", "files", "diagrams");
+            Directory.CreateDirectory(temporalImages);
+            foreach (string id in images.Keys.ToArray())
+            {
+                string fileName = id + ".png";
+                File.Copy(images[id], Path.Combine(temporalImages, fileName), false);
+                images[id] = "files/diagrams/" + fileName;
+            }
+            object loader = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.Cloud.CompanyLogo.ICompanyLogoLoader");
+            object logo = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.Documentation.DocumentationLogoManager"), loader);
+            Set(logo, "DocLogoType", Enum.Parse(logo.GetType().GetProperty("DocLogoType")!.PropertyType, "Default"));
+            Set(parameters, "LogoManager", logo);
+        }
         object environment = New(Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Documentation.Application.DocumentationEnvironment"),
             parameters, Path.Combine(workRoot, "attachments"), Path.Combine(workRoot, "publication"), bounds, images);
         Directory.CreateDirectory(Path.Combine(workRoot, "attachments")); Directory.CreateDirectory(Path.Combine(workRoot, "publication"));
@@ -98,15 +120,36 @@ public sealed partial class NativeEngine
             var tracker = new PublicationProgress(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.Interfaces.IProgressTracker"), progress);
             Set(generator, "ProgressTracker", tracker.GetTransparentProxy());
             Call(generator, "GenerateDocumentation", parameters);
+            if (web)
+            {
+                // Modeler 4.3 filters its search map to root pages even though it
+                // emits subprocess pages. Reuse its actual native search mapper,
+                // restricted to the selected rendered surfaces; do not invent an index
+                // or alter installed viewer code. Retain the original data as diagnostics.
+                string configuration = Path.Combine(output, "libs", "js", "json", "configuration.json.js");
+                File.Copy(configuration, Path.Combine(workRoot, "native-web-original-configuration.json.js"), false);
+                var webModel = NativeWebPublicationReader.ReadConfiguration(output);
+                var search = ((IEnumerable)Call(generator, "CreateSearchMap", model)!).Cast<object>()
+                    .Where(item => images.ContainsKey(Text(item, "ContainerId"))).ToArray();
+                // Native DTO attributes belong to the installed JSON assembly, not
+                // necessarily our pinned JSON version. Let its serializer honor them.
+                var nativeSerializer = Type("Newtonsoft.Json.dll", "Newtonsoft.Json.JsonConvert").GetMethod("SerializeObject", new[] { typeof(object) })!;
+                string nativeSearchJson = (string)nativeSerializer.Invoke(null, new object[] { search })!;
+                webModel["searchMap"] = Newtonsoft.Json.Linq.JArray.Parse(nativeSearchJson);
+                File.WriteAllText(configuration, "Bizagi.AppModel = " + webModel.ToString(Newtonsoft.Json.Formatting.None));
+                progress("native_web_search_index_selected_surfaces:" + search.Length);
+            }
         }
-        if (!File.Exists(output) || new FileInfo(output).Length == 0) throw new IOException("Native publication did not produce a durable document.");
+        string entry = web ? Path.Combine(output, "index.html") : output;
+        if (!File.Exists(entry) || new FileInfo(entry).Length == 0) throw new IOException("Native publication did not produce a durable document.");
         progress("native_publication_persisted");
-        return new[] { output }.Concat(Directory.GetFiles(request.OutputPath, "*", SearchOption.AllDirectories).Where(p => p != output)).ToArray();
+        return new[] { entry }.Concat(Directory.GetFiles(request.OutputPath, "*", SearchOption.AllDirectories).Where(p => p != entry)).ToArray();
     }
 
     private NativePublicationReadback ReadPublication(EngineRequest request, Action<string> progress)
     {
         progress("native_publication_readback:" + request.PublicationFormat);
+        if (request.PublicationFormat == "web") return NativeWebPublicationReader.Read(request.InputPath);
         // Use the installed application's normal component initialization; no license material is copied or exported.
         PublicationService("Generators.WordGeneration.Settings.IWordPublicationEnvironment");
         var result = new NativePublicationReadback { Format = request.PublicationFormat };

@@ -3,6 +3,9 @@
   <ItemGroup>
     <!-- Test the same BCL-only observer source used by the net48 adapter, without loading vendor assemblies. -->
     <Compile Include="../../src/McpBizagi.BizagiAdapter/TransientFileSnapshot.cs" Link="AdapterIo/TransientFileSnapshot.cs" />
+    <!-- Link only our non-vendor, non-executing Web directory reader for policy tests. -->
+    <Compile Include="../../src/McpBizagi.BizagiAdapter/NativeWebPublicationReader.cs" Link="AdapterIo/NativeWebPublicationReader.cs" />
+    <PackageReference Include="Newtonsoft.Json" />
     <ProjectReference Include="../../src/McpBizagi.Core/McpBizagi.Core.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />

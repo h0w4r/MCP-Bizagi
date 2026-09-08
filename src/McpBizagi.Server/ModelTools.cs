@@ -96,7 +96,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_simulation_configuration", status = "experimental_full_diagram_bpsim_replacement_with_fidelity_gate", backend = "bizagi_worker" },
                 new { name = "native_simulation_and_what_if", status = "experimental_levels_one_to_four_and_replications_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_offscreen_svg_png", status = "experimental_basic_diagram_locally_verified_rich_visual_fidelity_pending", backend = "bizagi_worker" },
-                new { name = "native_documentation", status = "experimental_excel_word_pdf_verified_on_tested_inputs_not_all_publication_formats", backend = "bizagi_worker" }
+                new { name = "native_documentation", status = "experimental_excel_word_pdf_verified_on_tested_inputs_not_all_publication_formats", backend = "bizagi_worker" },
+                new { name = "native_web_publication", status = "experimental_selected_nested_pages_search_attachment_native_readback_verified_browser_quality_partial", backend = "bizagi_worker" }
             },
             operationalEvidence = "Run acceptance in this environment; a declaration never overrides an actual failure.",
             foregroundAutomation = false
@@ -230,7 +231,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     [McpServerTool(Name = "native_render_svg"), Description("Experimental native offscreen SVG rendering of one diagram, using the installed renderer without clicks or foreground control. Produces a private operation artifact; failures remain explicit.")]
     public CallToolResult RenderNative(string path, string diagramId, string subProcessId = "") => Guard(() => native.Analyze(path, "render_svg", diagramId, subProcessId: subProcessId));
 
-    [McpServerTool(Name = "native_publish"), Description("Publish local native model documentation to excel, word or pdf using installed generators, without opening a desktop application. Select native diagram IDs or omit for all. Fresh-worker text/image readback; source unchanged. Poll operation_get.")]
+    [McpServerTool(Name = "native_publish"), Description("Publish local native model documentation to excel, word, pdf or an experimental web directory using installed generators, without opening a desktop application. Select native diagram IDs or omit for all. Fresh-worker text/image readback; source unchanged. Poll operation_get.")]
     public CallToolResult PublishNative(string path, string format, string[]? diagramIds = null, string title = "Process documentation", bool allowImageResampling = false) =>
         Guard(() => native.Publish(path, format, diagramIds, title, allowImageResampling));
 

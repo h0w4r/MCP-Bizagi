@@ -143,7 +143,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
 
     public OperationView Publish(string path, string format, string[]? diagramIds, string title, bool allowImageResampling)
     {
-        if (format is not "excel" and not "word" and not "pdf") throw new NotSupportedException("Supported formats: excel, word, pdf.");
+        if (format is not "excel" and not "word" and not "pdf" and not "web") throw new NotSupportedException("Supported formats: excel, word, pdf, web.");
         if (string.IsNullOrWhiteSpace(title) || title.Length > 1000) throw new InvalidDataException("Supply a publication title of 1-1000 characters.");
         string[] selected = diagramIds ?? [];
         if (selected.Length > 1000 || selected.Distinct().Count() != selected.Length || selected.Any(id => !Guid.TryParseExact(id, "D", out _)))
@@ -171,11 +171,24 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 PublicationFormat = format
             }, RunDirectory(id, "publication-reader"), progress, token);
             var readback = reopened.Publication ?? throw new InvalidDataException("Missing publication readback.");
+            File.WriteAllText(Path.Combine(directory, "publication-readback.json"), JsonSerializer.Serialize(new { published, reopened }));
+            // Web templates also contain directories named "images". Only direct
+            // operation render outputs are evidence for selected native diagram surfaces.
+            string renderDirectory = Path.Combine(directory, "publication", "images");
+            var renderedImages = published.Artifacts.Where(p => string.Equals(Path.GetDirectoryName(p), renderDirectory, StringComparison.OrdinalIgnoreCase) &&
+                p.EndsWith(".png", StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (format == "web")
+            {
+                var web = readback.Web ?? throw new InvalidDataException("Missing independent Web readback.");
+                var renders = renderedImages
+                    .ToDictionary(p => Path.GetFileNameWithoutExtension(p)!, p => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(p))));
+                NativeWebPublicationPolicy.Verify(published.Elements, web, selected, title, renders);
+            }
             var names = published.Elements.Where(e => (selected.Length == 0 || selected.Contains(e.DiagramId)) &&
                 (((e.Kind.EndsWith("Task", StringComparison.Ordinal) || format != "excel" && e.Kind == "CallActivity") && (format == "excel" || !string.IsNullOrWhiteSpace(e.Documentation))) ||
                     e.Kind == (format == "excel" ? "Participant" : "Collaboration")) && !string.IsNullOrWhiteSpace(e.Name)).Select(e => e.Name).Distinct().ToArray();
             // Logos alone must not satisfy the diagram-image gate. Match the actual rendered PNG dimensions as a multiset.
-            var expectedImages = published.Artifacts.Where(p => Path.GetFileName(Path.GetDirectoryName(p)) == "images" && p.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            var expectedImages = renderedImages
                 .Select(p =>
                 {
                     byte[] png = File.ReadAllBytes(p); return new NativeImageSize
@@ -215,7 +228,9 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 verifiedNames = names.Length,
                 verifiedImages = readback.Images,
                 imageMatches,
-                warning = "Local publication using the installed template. Fresh-worker content readback is not an independent document-layout review. Embedded document metadata can identify the local operator."
+                warning = format == "web"
+                    ? "Local native HTML publication with the installed native search map retained for all emitted selected root/subprocess surfaces. Viewer code is unchanged. File-based search/readback is not desktop Modeler compatibility or complete browser/accessibility accreditation. Published metadata can identify the local operator."
+                    : "Local publication using the installed template. Fresh-worker content readback is not an independent document-layout review. Embedded document metadata can identify the local operator."
             };
         });
     }
