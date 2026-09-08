@@ -9,6 +9,7 @@
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
 [![Source version](https://img.shields.io/badge/source-0.6.0--alpha.1-orange)](Directory.Build.props)
+[![Verified package](https://img.shields.io/badge/package-0.6.0--alpha.1-blue)](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -27,15 +28,12 @@ foreground-window automation, or redistributing Bizagi binaries.
 > **Real execution, explicit boundaries.** Native persistence, structural edits,
 > documentation, configured simulation, offscreen rendering and recovery have
 > their own [acceptance records](docs/validation.md), not a blanket fidelity claim.
-> The consolidated package passed [174 terminal native operations across ten circuits](docs/validation-consolidated-package.md).
+> The 0.6 package passed [274 terminal native operations across twenty circuits](docs/validation-package-0.6.md).
 >
-> **Source candidate: 0.6.0-alpha.1.** New extracted-package acceptance is pending;
-> the published 0.5 archive is not replaced by a source version change.
->
-> **Packaged milestone: [0.5.0-alpha.1](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1).**
-> The newer native families are now consolidated in a verified Windows ZIP.
-> Subsequent source additions, such as explicit element reparenting, are
-> identified separately and are not retroactively included in that archive.
+> **Packaged milestone: [0.6.0-alpha.1](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1).**
+> Reparenting, selection copying, native alignment and nested-body VDX exchange
+> join the consolidated Windows ZIP. All 392 manifest entries remained unchanged
+> through real MCP/native acceptance, including failure and recovery cases.
 > Earlier archives remain immutable. Check each contract and the
 > [capability ledger](docs/capabilities.md) before relying on a feature;
 > package acceptance is not full automation or GUI compatibility.
@@ -65,7 +63,7 @@ every operation into a BPMN XML export.
 | Native engine bootstrap | Opt-in diagnostic | Internal interfaces, not a supported vendor API |
 | BPMN → `.bpm` → fresh-worker reload → BPMN | Opt-in diagnostic | No broad fidelity or visual accreditation claimed |
 | Native XPDL 2.2 import/export | Experimental current source | Installed Unicode serializer/importer, selected diagrams, fresh native readback and explicit XML/graph/archive losses; not a native backup; [contract](docs/native-xpdl.md) |
-| Native Visio VDX interchange | Experimental source after 0.5 | Installed mapper, explicit page/kind/label loss reports and strict native no-op/readback; separate nested-body pages with source-page receipts and tested internal flows; not reconstructed hierarchy, complete Visio support or a native backup; [contract](docs/native-visio.md) |
+| Native Visio VDX interchange | Experimental; 0.6 package verified | Installed mapper, explicit page/kind/label loss reports and strict native no-op/readback; separate nested-body pages with source-page receipts and tested internal flows; not reconstructed hierarchy, complete Visio support or a native backup; [contract](docs/native-visio.md) |
 | Inspect existing `.bpm` | Opt-in, copy-only | Native graph, containment, geometry, descriptions, scenarios and revision |
 | Create a blank native `.bpm` | Experimental current source | Native model constructor, one or more named diagrams, ordered tabs, fresh-reader and no-op stability gates; [contract](docs/native-models.md) |
 | Adopt/save-as/replace native `.bpm` | Experimental current source | Byte-exact publication, separate source/target revisions, recoverable backups and intent reconciliation after host death; [contract](docs/native-commit.md) |
@@ -86,9 +84,9 @@ every operation into a BPMN XML export.
 | Native typography, colors and label bounds | Experimental current source | Installed-font inventory, sparse native styles, fresh-reader/clone fidelity and measured SVG subsets; internal/external labels and pool persistence have distinct limits; [contract](docs/native-styles.md) |
 | Native task/gateway type conversion | Experimental current source | Installed command, explicit source/target types, durable identities and whole-archive protection; 99-pair native matrix and reverse path; [contract](docs/native-conversions.md) |
 | Extract embedded subprocess into a reusable process | Experimental current source | Installed refactoring command, root/nested content relocation, attachments/images and persisted-tab remapping; no behavioral equivalence or arbitrary-selection claim; [contract](docs/native-refactoring.md) |
-| Move native elements between containers | Experimental source after 0.5 | Explicit same-diagram process/subprocess ownership, subtree IDs, reference closure and optional position; not cross-diagram migration or auto-layout; [contract](docs/native-reparenting.md) |
-| Align/distribute selected native shapes | Experimental source after 0.5 | Eight installed-editor modes, typed MCP request, native callback acknowledgment, durable readback and archive fidelity; not whole-diagram auto-layout; [contract](docs/native-layout.md) |
-| Copy closed native selections | Experimental source after 0.5 | Explicit source/destination, native clone identity maps, original/archive and fresh-reader fidelity, exact attachments/images; no OS clipboard or live-unsaved editing; [contract](docs/native-selection-copy.md) |
+| Move native elements between containers | Experimental; 0.6 package verified | Explicit same-diagram process/subprocess ownership, subtree IDs, reference closure and optional position; not cross-diagram migration or auto-layout; [contract](docs/native-reparenting.md) |
+| Align/distribute selected native shapes | Experimental; 0.6 package verified | Eight installed-editor modes, typed MCP request, native callback acknowledgment, durable readback and archive fidelity; not whole-diagram auto-layout; [contract](docs/native-layout.md) |
+| Copy closed native selections | Experimental; 0.6 package verified | Explicit source/destination, native clone identity maps, original/archive and fresh-reader fidelity, exact attachments/images; no OS clipboard or live-unsaved editing; [contract](docs/native-selection-copy.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |
@@ -117,7 +115,7 @@ integration evidence before native writes are enabled. Bizagi is not bundled.
 ## Quick start
 
 **Use a package:** download the ZIP and checksum from the
-[experimental release](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1),
+[experimental release](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1),
 verify SHA-256, then follow [packaged configuration](docs/packaging.md#verify-the-packaged-server).
 The package requires the .NET 10 runtime but not the SDK.
 

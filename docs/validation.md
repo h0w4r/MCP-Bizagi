@@ -1,5 +1,18 @@
 # Verification baselines
 
+## Consolidated 0.6.0-alpha.1 Windows package — 2026-09-08 UTC
+
+The [exact extracted-package record](validation-package-0.6.md) reports twenty
+real MCP/native circuits against clean source commit
+`27e59ae7df098ec76a496f166708a5a901f516ca`. All clients passed; 274 native
+operations reached expected terminal outcomes and all 499 recorded workers
+exited. All 392 manifest entries remained unchanged before and after testing.
+
+This packages the documented reparenting, selection-copying, alignment and
+nested-body VDX capabilities alongside earlier native families. The 0.5 archive
+is unchanged. The chronological source baselines below retain their original
+scope and do not establish independent Modeler GUI or live-unsaved compatibility.
+
 ## Native Visio nested-body pages through MCP — 2026-09-08 UTC
 
 Real client run `20260908-131355-dc5593` verified the new one-manager-call

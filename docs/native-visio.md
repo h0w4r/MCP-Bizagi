@@ -3,8 +3,10 @@
 `native_visio_export` and `native_visio_import` use the installed Modeler
 4.3.0.008 `IVisioManager` and its Aspose-backed implementation. They do not
 generate Visio shapes by hand, automate the desktop, activate Visio through COM,
-or redistribute the installed libraries. This is an **experimental source
-capability**, newer than the immutable 0.5.0-alpha.1 package.
+or redistribute the installed libraries. This remains an **experimental
+capability**, with nested-body VDX exchange included in the
+[0.6.0-alpha.1 package acceptance](validation-package-0.6.md).
+The immutable 0.5.0-alpha.1 archive predates these tools.
 
 ## Format boundary: explicitly lossy
 

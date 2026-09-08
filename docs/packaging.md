@@ -4,8 +4,8 @@ The initial distribution is framework-dependent. Operators need the x64 .NET 10
 runtime, .NET Framework 4.8, and their own installation of Modeler for native
 operations. Building requires the SDK pinned in `global.json` and PowerShell 7.2+.
 
-The [0.5.0-alpha.1 prerelease](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1)
-has a [clean extracted-package verification record](validation-consolidated-package.md).
+The [0.6.0-alpha.1 prerelease](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1)
+has a [twenty-circuit extracted-package verification record](validation-package-0.6.md).
 Its ZIP and checksum are immutable; building a newer checkout creates a different
 candidate that requires its own evidence.
 
@@ -52,9 +52,10 @@ development candidates only, never a clean-release acceptance claim. Re-run the
 verifier after each operational acceptance circuit. It does not replace native
 MCP tests, validate diagrams or certify visual/behavioral equivalence.
 
-The 0.6 source candidate adds reparenting, alignment, selection copying and nested
-VDX exchange to the package workstream. Its operational package acceptance is
-pending until an exact clean candidate and its extracted files pass the circuits.
+The 0.6 package adds reparenting, alignment, selection copying and nested-body
+VDX exchange. Its exact clean candidate passed all twenty documented circuits,
+with all 392 manifest entries unchanged. This is a scoped native acceptance
+record, not a claim about all models, open documents or future vendor versions.
 
 ## Verify the packaged server
 

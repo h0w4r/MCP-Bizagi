@@ -4,7 +4,9 @@
 `native_elements_copy` invokes the installed native paste/clone command against
 an independently loaded model snapshot. It does not use the OS clipboard,
 simulated input, foreground focus or an operator-owned open document. The
-immutable `0.5.0-alpha.1` package does not contain this subsequent source change.
+immutable `0.5.0-alpha.1` package predates this change. The
+[0.6.0-alpha.1 package circuit](validation-package-0.6.md) verifies its documented
+selection corpus, not every selectable native element or combination.
 
 ## Explicit operator contract
 

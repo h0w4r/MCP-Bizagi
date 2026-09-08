@@ -5,7 +5,9 @@
 persistence in an isolated worker. Independent source and result readers verify
 the complete archive. This is selected-shape alignment/distribution, not global
 auto-layout, live unsaved editing or full Modeler automation. The immutable
-`0.5.0-alpha.1` package does not contain this subsequent source addition.
+`0.5.0-alpha.1` package predates this addition. The
+[0.6.0-alpha.1 package acceptance](validation-package-0.6.md) includes separate
+root/nested alignment and rich-preservation/cancellation circuits.
 
 ## Operator contract
 

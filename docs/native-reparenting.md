@@ -3,8 +3,9 @@
 `native_elements_reparent` changes explicit containment in a private native
 `.bpm` copy. It uses actual installed domain objects and collections, not the
 clipboard, generated replacement XML, simulated input or a foreground window.
-This is experimental **source after 0.5.0-alpha.1**; that immutable released
-ZIP does not contain the new tool. Full Modeler automation remains open.
+This remains experimental, with a real reparenting circuit in the
+[0.6.0-alpha.1 package acceptance](validation-package-0.6.md).
+The immutable 0.5 ZIP predates the tool. Full Modeler automation remains open.
 
 ## Request
 

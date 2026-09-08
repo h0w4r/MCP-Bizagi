@@ -1,11 +1,24 @@
 # Changelog
 
-## Unreleased — 0.6.0-alpha.1 source candidate
+## 0.6.0-alpha.1 — 2026-09-08
+
+The clean extracted package passed **20 independent MCP/native circuits**:
+274 terminal operations (230 completed, 37 expected failures, five cancellations
+and two deliberate host-death interruptions), 499 exited workers and 392
+unchanged manifest entries. See the [exact package evidence](docs/validation-package-0.6.md).
+The 0.5 archive remains immutable. Full automation and independent desktop
+compatibility remain open; packaged acceptance does not remove per-field limits.
 
 - Publish the net48 worker from the SDK-resolved dependency graph instead of
   copying every file in `bin`; exclude residual probe binaries and debug symbols.
-  Add read-only extracted-package manifest/provenance verification. This source
-  version change does not itself accredit or replace a published distribution.
+  Add read-only extracted-package manifest/provenance verification and 18 separate
+  filesystem policy tests. Verify actual dependency bytes against 60 NuGet archives;
+  no vendor components or private models are distributed.
+
+- Add eight native selected-shape alignment/distribution modes using the installed
+  editor's real callbacks and commands. Verify root/nested persistence, rich
+  attachments and manual labels, active-renderer cancellation and recovery.
+  This is not whole-diagram automatic layout or open-document synchronization.
 
 - Add installed Visio VDX import/export tools with revision capture, reusable
   artifacts, source page inventories, explicit projection losses, native domain
