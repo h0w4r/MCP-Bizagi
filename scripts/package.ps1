@@ -28,18 +28,22 @@ try {
     if ($LASTEXITCODE) { throw 'Locked restore failed.' }
     & dotnet publish src/McpBizagi.Server -c Release --no-restore -p:UseAppHost=false -p:CopyOutputSymbolsToPublishDirectory=false -o $output
     if ($LASTEXITCODE) { throw 'Host publish failed.' }
-    & dotnet build src/McpBizagi.Worker -c Release --no-restore
-    if ($LASTEXITCODE) { throw 'Worker build failed.' }
     $worker = Join-Path $output 'worker'
-    New-Item -ItemType Directory -Path $worker | Out-Null
-    Get-ChildItem 'src/McpBizagi.Worker/bin/Release/net48' -File |
-        Where-Object { $_.Extension -in '.dll', '.exe', '.config', '.json' } |
-        Copy-Item -Destination $worker
+    # Publish only the SDK's resolved output/dependency graph into a fresh folder.
+    # Enumerating bin would also distribute unrelated stale DLLs left by local probes.
+    & dotnet publish src/McpBizagi.Worker -c Release --no-restore -p:CopyOutputSymbolsToPublishDirectory=false -o $worker
+    if ($LASTEXITCODE) { throw 'Worker publish failed.' }
+    # Project-reference PDBs can still be copy-local under net48. Remove only symbol
+    # files from this newly created package; never clean the source build directory.
+    Get-ChildItem -LiteralPath $output -Filter '*.pdb' -File -Recurse |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName }
     foreach ($name in 'README.md', 'CHANGELOG.md', 'LICENSE', 'ATTRIBUTION.md', 'THIRD-PARTY-NOTICES.md', 'SECURITY.md', 'CONTRIBUTING.md') {
         Copy-Item -LiteralPath (Join-Path $repo $name) -Destination $output
     }
     Copy-Item -LiteralPath (Join-Path $repo 'docs') -Destination $output -Recurse
     Copy-Item -LiteralPath (Join-Path $repo 'examples') -Destination $output -Recurse
+    New-Item -ItemType Directory -Path (Join-Path $output 'scripts') | Out-Null
+    Copy-Item -LiteralPath (Join-Path $repo 'scripts/verify-package.ps1') -Destination (Join-Path $output 'scripts')
 
     $licenses = Join-Path $output 'licenses'
     New-Item -ItemType Directory -Path $licenses | Out-Null
@@ -113,7 +117,7 @@ try {
     }
     $inventory | Sort-Object { $_.package } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $output 'dependencies.json') -Encoding utf8
     # Defense in depth against accidentally copying locally loaded engine/renderer components from a build folder.
-    $vendor = Get-ChildItem -LiteralPath $output -File -Recurse | Where-Object { $_.Name -match '^(Bizagi|CefSharp\.|libcef\.|Lanner\.)' -or $_.Extension -eq '.bpm' }
+    $vendor = Get-ChildItem -LiteralPath $output -File -Recurse | Where-Object { $_.Name -match '^(Bizagi|Aspose\.|CefSharp\.|libcef\.|Lanner\.)' -or $_.Extension -in '.bpm', '.bca' }
     if ($vendor) { throw 'Unexpected vendor component or native operator model in package.' }
     $head = & git rev-parse HEAD
     $dirty = [bool](& git status --porcelain)

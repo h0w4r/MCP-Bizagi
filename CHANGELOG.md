@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## Unreleased — 0.6.0-alpha.1 source candidate
+
+- Publish the net48 worker from the SDK-resolved dependency graph instead of
+  copying every file in `bin`; exclude residual probe binaries and debug symbols.
+  Add read-only extracted-package manifest/provenance verification. This source
+  version change does not itself accredit or replace a published distribution.
 
 - Add installed Visio VDX import/export tools with revision capture, reusable
   artifacts, source page inventories, explicit projection losses, native domain

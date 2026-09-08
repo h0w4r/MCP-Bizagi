@@ -8,7 +8,7 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.5.0--alpha.1-orange)](Directory.Build.props)
+[![Source version](https://img.shields.io/badge/source-0.6.0--alpha.1-orange)](Directory.Build.props)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -28,6 +28,9 @@ foreground-window automation, or redistributing Bizagi binaries.
 > documentation, configured simulation, offscreen rendering and recovery have
 > their own [acceptance records](docs/validation.md), not a blanket fidelity claim.
 > The consolidated package passed [174 terminal native operations across ten circuits](docs/validation-consolidated-package.md).
+>
+> **Source candidate: 0.6.0-alpha.1.** New extracted-package acceptance is pending;
+> the published 0.5 archive is not replaced by a source version change.
 >
 > **Packaged milestone: [0.5.0-alpha.1](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1).**
 > The newer native families are now consolidated in a verified Windows ZIP.

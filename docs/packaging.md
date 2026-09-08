@@ -12,10 +12,13 @@ candidate that requires its own evidence.
 ## Build and inspect
 
 Run `scripts/package.ps1` from a reviewed checkout. The script uses locked restore,
-publishes the host, builds the worker, collects redistributable dependency
+publishes the host and net48 worker into fresh folders using the SDK-resolved
+dependency graphs, collects redistributable dependency
 licenses, and creates a ZIP under ignored `artifacts/` storage. No Bizagi
 installation is accessed by this script. It never overwrites an existing output
-directory or automatically uploads a release.
+directory or automatically uploads a release. Unrelated stale files from `bin`
+are not copied, and project-reference debug symbols are removed from the newly
+created package only.
 
 The package contains:
 
@@ -26,10 +29,32 @@ The package contains:
 - `dependencies.json` with package identities, hashes, and license sources.
 - `package.json` with version, source commit, dirty-checkout indicator, and build time.
 - `manifest.sha256.json` with hashes of the packaged files (excluding itself).
+- `scripts/verify-package.ps1`, the read-only manifest/provenance verifier.
 
 Dependency licenses absent from NuGet are fetched from pinned upstream commits.
 Network access is required for this step. Missing licenses stop packaging; do not
 remove this check to produce a distributable ZIP.
+
+## Verify extracted bytes and provenance
+
+Compare the downloaded ZIP SHA-256 against its trusted release checksum, then
+extract it into a fresh directory. A manifest inside an untrusted ZIP is not an
+authenticity guarantee. Run the read-only verifier before executing packaged code:
+
+```powershell
+./scripts/verify-package.ps1 -PackageDirectory C:/Packages/MCP-Bizagi -ExpectedCommit <source-commit-from-release>
+```
+
+The verifier checks the exact file set (no missing or extra files), SHA-256 values,
+portable confined paths, absence of links/vendor models/debug symbols, required
+runtime files and clean source provenance. `-AllowDirtyCheckout` is for local
+development candidates only, never a clean-release acceptance claim. Re-run the
+verifier after each operational acceptance circuit. It does not replace native
+MCP tests, validate diagrams or certify visual/behavioral equivalence.
+
+The 0.6 source candidate adds reparenting, alignment, selection copying and nested
+VDX exchange to the package workstream. Its operational package acceptance is
+pending until an exact clean candidate and its extracted files pass the circuits.
 
 ## Verify the packaged server
 
@@ -72,13 +97,19 @@ the server; it does not change saved user or machine environment settings.
 
 ## Additional native acceptance families
 
-The `0.5.0-alpha.1` source candidate consolidates the newer native families.
-Use a newly extracted candidate, not the immutable `0.4.0-alpha.1` ZIP, for
-the following additional focused circuits. Execute them sequentially against
+The focused clients below cover the named native families. Use the extracted
+0.6 candidate for the newer editor/Visio circuits, not an older immutable ZIP.
+Check the exact package acceptance record before treating a circuit as verified. Execute them sequentially against
 the same package directory; retain each transcript and recheck the package
 manifest afterward. A package's presence is not acceptance of these routes.
 
 ```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --reparenting-only --discover-worker
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --selection-copy-only --discover-worker
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --alignment-only --discover-worker
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --alignment-rich-only --discover-worker
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --visio-only --discover-worker
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --data-only --discover-worker
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --refactoring-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --xpdl-only
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --package C:/Packages/MCP-Bizagi --native --conversions-only
