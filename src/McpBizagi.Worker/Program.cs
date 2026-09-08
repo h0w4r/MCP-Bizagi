@@ -90,7 +90,7 @@ public sealed class EngineService
                     }).ToArray();
                 File.WriteAllText(Path.Combine(root, "loaded-engine-modules.json"), JsonConvert.SerializeObject(new
                 { architecture = IntPtr.Size == 8 ? "x64" : "x86", clr = Environment.Version.ToString(), apartment = Thread.CurrentThread.GetApartmentState().ToString(), modules }, Formatting.Indented));
-                if (request.Action == "render_svg" || (request.Action == "publish" && request.PublicationFormat != "excel"))
+                if (request.Action is "render_svg" or "align_save" || (request.Action == "publish" && request.PublicationFormat != "excel"))
                 {
                     // Inventory the installed renderer assets separately from actually loaded managed modules.
                     var assets = Directory.GetFiles(Path.Combine(installation, "ModelerProcessEditor", "output"))

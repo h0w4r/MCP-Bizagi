@@ -89,11 +89,36 @@ void VerifyWorkerExit(string operationId)
             throw new InvalidDataException("Worker exit evidence is missing.");
         var desktop = JsonDocument.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(file)!, "desktop-observation.json"))).RootElement;
         // Check the actual native provider paths recorded inside the separate worker, not host assumptions.
-        string[] settings = File.ReadAllLines(Path.Combine(Path.GetDirectoryName(file)!, "native-settings-paths.txt"));
+        string settingsFile = Path.Combine(Path.GetDirectoryName(file)!, "native-settings-paths.txt");
         string[] expectedSettings = [Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "h0w4r", "McpBizagi.Worker"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "h0w4r", "McpBizagi.Worker")];
-        if (!settings.SequenceEqual(expectedSettings, StringComparer.OrdinalIgnoreCase))
-            throw new InvalidDataException("Native settings application namespace was not isolated from Modeler.");
+        if (File.Exists(settingsFile))
+        {
+            if (!File.ReadAllLines(settingsFile).SequenceEqual(expectedSettings, StringComparer.OrdinalIgnoreCase))
+                throw new InvalidDataException("Native settings application namespace was not isolated from Modeler.");
+        }
+        else
+        {
+            // A cancellation may win the pipe handshake before native initialization.
+            // Require actual no-dispatch evidence; absence is never native success.
+            string connectionFile = Path.Combine(Path.GetDirectoryName(file)!, "worker-connection-error.json");
+            var connection = JsonDocument.Parse(File.ReadAllText(connectionFile)).RootElement;
+            var operation = JsonDocument.Parse(File.ReadAllText(Path.Combine(stateRoot, "operations", operationId + ".json"))).RootElement;
+            if (connection.GetProperty("requestDispatched").GetBoolean() || !connection.GetProperty("operationCancellationRequested").GetBoolean() || operation.GetProperty("State").GetString() != "cancelled")
+                throw new InvalidDataException("Missing native settings evidence without a proven pre-dispatch cancellation.");
+        }
+        // Verify every observed CEF descendant, not only the main worker's exit code.
+        foreach (var member in JsonDocument.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(file)!, "owned-processes.json"))).RootElement.EnumerateArray())
+        {
+            if (!member.GetProperty("exited").GetBoolean()) throw new InvalidDataException("Owned process exit evidence is incomplete.");
+            try
+            {
+                using var child = Process.GetProcessById(member.GetProperty("pid").GetInt32());
+                if (!child.HasExited && child.StartTime.ToUniversalTime() == member.GetProperty("startedAt").GetDateTime())
+                    throw new InvalidDataException("An owned native descendant survived operation cleanup.");
+            }
+            catch (ArgumentException) { /* Absent owned identities are the expected state. */ }
+        }
         if (desktop.GetProperty("visibleWindowObserved").GetBoolean() || desktop.GetProperty("workerForegroundObserved").GetBoolean())
             throw new InvalidDataException("Worker desktop independence observation failed.");
         try
@@ -181,6 +206,18 @@ try
         if (!native) throw new ArgumentException("Reparenting acceptance requires --native.");
         await NativeReparentingAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_REPARENTING_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--alignment-rich-only"))
+    {
+        if (!native) throw new ArgumentException("Rich alignment acceptance requires --native.");
+        await NativeAlignmentRichAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_ALIGNMENT_RICH_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--alignment-only"))
+    {
+        if (!native) throw new ArgumentException("Alignment acceptance requires --native.");
+        await NativeAlignmentAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_ALIGNMENT_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--refactoring-only"))
     {

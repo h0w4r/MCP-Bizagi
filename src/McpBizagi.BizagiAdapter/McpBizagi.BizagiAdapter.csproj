@@ -1,9 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net48</TargetFramework></PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="NativeAlignmentBridge.js" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <ProjectReference Include="../McpBizagi.Contracts/McpBizagi.Contracts.csproj" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
+    <!-- Reuse the same pinned JSON runtime already used by the RPC worker. -->
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 </Project>

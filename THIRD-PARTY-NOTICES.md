@@ -8,6 +8,7 @@ in each project's `packages.lock.json`.
 | --- | --- | --- |
 | MCP C# SDK | https://github.com/modelcontextprotocol/csharp-sdk | Apache-2.0 |
 | StreamJsonRpc | https://github.com/microsoft/vs-streamjsonrpc | MIT |
+| Json.NET | https://github.com/JamesNK/Newtonsoft.Json | MIT |
 | Microsoft.Extensions.Hosting | https://github.com/dotnet/runtime | MIT |
 | .NET reference assemblies | https://github.com/microsoft/dotnet | MIT |
 | xUnit.net | https://github.com/xunit/xunit | Apache-2.0 |

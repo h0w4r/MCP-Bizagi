@@ -1,5 +1,39 @@
 # Verification baselines
 
+## Native selection alignment through MCP — 2026-09-08 UTC
+
+The final source build passed the actual official stdio client, isolated worker,
+installed **4.3.0.008** editor/native commands, durable native persistence and
+fresh-process readback. See the [alignment contract](native-layout.md) for
+fingerprints, native integration details, retained development failures and limits.
+
+| Corpus | Terminal native operations | Observed result |
+| --- | --- | --- |
+| `20260908-081959-a690d6` | 13 completed, one expected participant-containment failure | Eight modes, automatic no-op, stale revision/invalid mode rejection, flow-insertion prevention and failure recovery |
+| `20260908-081644-6316c6` | Eight completed, one cancelled | Two-level embedded selection, exported byte-identical attachment, explicit manual-label offset/size, live offscreen cancellation and recovery |
+
+Across the two runs, 60 workers and 137 observed process identities exited.
+The 904 periodic read-only desktop samples observed no owned visible window
+or foreground takeover; this is not continuous observation or desktop visual
+compatibility. The cancelled alignment's editor job contained six observed
+process identities, all exited. No cancelled native operation is counted as a
+successful edit.
+
+Separately, **970 unit/component tests** passed, and the independent MCP XML
+circuit `20260908-082511-64e081` passed with 40 tools enumerated. Enumeration is
+not operational accreditation. The build reported zero warnings/errors.
+The immutable `0.5.0-alpha.1` archive predates this feature; no new package or
+full-automation claim follows from these source records.
+
+The shared worker changes also passed the general real MCP regression
+`20260908-082545-0eba5a`: 12 completed native operations, one expected failure,
+one cancellation and one intentional host-death interruption. BPMN/native
+roundtrip, batch edits, stale revision, no-op comparison, nested/multidiagram
+preservation, native validation, basic simulation results, offscreen SVG,
+corrupt-input diagnostics, recovery, Job Object cleanup, journal restart and
+state ownership all passed their existing acceptance checks. Its transcript
+SHA-256 is `b73770c8c9ac4657a50f8d2a027600962220a32c447b533675a1f28672764058`.
+
 ## Native same-diagram reparenting — 2026-09-08 UTC
 
 Independent MCP run `20260908-055324-7533b8` passed the full self-authored

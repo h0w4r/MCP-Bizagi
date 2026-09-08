@@ -47,7 +47,7 @@ It does not imply that every combination or unsaved GUI workflow is verified.
 | Diagram lifecycle and persisted tabs | Experimental source after 0.4 | Creation, name/derived-header change, native cloning with checked ID maps, deletion and ordered/selected diagram/subprocess tabs; [contract and remaining corpus](native-diagrams.md) |
 | Extended attributes/attachments editing | Experimental source acceptance after 0.4 | 12 definition/value kinds, two-row table, embedded file/image, lifecycle, rich no-op and unrelated edit; [contract and remaining corpus](native-attributes.md) |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
-| Native alignment, distribution and automatic layout | Isolated native diagnostics; MCP integration pending | Eight selected-task modes passed real CEF callbacks, native commands, separate-process reload and archive fidelity on a bounded corpus. No public layout tool or global auto-layout claim; [evidence and remaining gates](native-layout.md) |
+| Native selection alignment and distribution | Experimental source after 0.5; real root/nested MCP corpora verified | Eight modes, actual CEF Promise acknowledgment, independent readback, archive fidelity, no-op, nested attachment/manual-label preservation, active-CEF cancellation and recovery. Broader combinations and package gates remain separate; not global auto-layout; [contract](native-layout.md) |
 | Live open/unsaved desktop documents | Not implemented | Inspected instance lookup and file CLI are not editing channels; [observed boundary and acceptance](live-sessions.md) |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |
 

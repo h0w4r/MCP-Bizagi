@@ -1,11 +1,109 @@
-# Native layout integration research
+# Native alignment and distribution
 
-**Isolated native diagnostics verified; public MCP layout integration remains
-unimplemented.** Explicit geometry edits and same-diagram reparenting do not
-establish automatic layout. The installed editor has now produced real native
-alignment/distribution callbacks, durable files and independent readback in a
-bounded diagnostic corpus. This is not full Modeler automation, a released MCP
-layout tool, or general whole-diagram layout accreditation.
+**Experimental source integration; eight modes verified through actual MCP.**
+`native_elements_align` executes the installed editor, native commands and native
+persistence in an isolated worker. Independent source and result readers verify
+the complete archive. This is selected-shape alignment/distribution, not global
+auto-layout, live unsaved editing or full Modeler automation. The immutable
+`0.5.0-alpha.1` package does not contain this subsequent source addition.
+
+## Operator contract
+
+Supply `path`, its SHA-256 `expectedRevision`, and `alignment`:
+
+| Field | Meaning |
+| --- | --- |
+| `DiagramId` | Actual native diagram ID returned by inspection |
+| `SubProcessId` | Optional embedded editing surface; not the outer diagram ID |
+| `ElementIds` | 2–1,000 distinct native IDs with one direct process/subprocess owner |
+| `Mode` | One of the eight modes below; distribution requires at least three shapes |
+
+Poll `operation_get` using the returned operation ID; use `operation_cancel` to
+cancel only owned work. A successful result contains the immutable source/result
+observations, fidelity report, native callback receipt, editor-policy evidence,
+output artifact and revision. It never replaces the supplied original. Save-as
+or replacement is a separate explicit guarded commit operation.
+
+An independently established no-op still invokes the native editor and performs
+native persistence/readback, but does not invent a mutation callback. Semantic
+endpoint changes, participant reassignment, unsupported selection shapes and
+unrepresented archive losses fail the transaction rather than reduce its scope.
+
+## Production MCP evidence
+
+Run `20260908-075431-883ad3` completed **13 native operations** and one expected
+semantic-containment failure through the official stdio MCP client. It covered
+all eight modes, a repeated Bottom no-op, stale-revision and unsupported-mode
+rejections, and a successful operation after the native failure. The client
+authored two diagrams, three differently sized Unicode tasks and a connection.
+Its retained transcript SHA-256 is
+`c7a26994216dccb0e7f998f121e1d5ac6daa2d84b4f13d8a7fdeda64f7921775`.
+
+The final source rerun `20260908-081959-a690d6`, after nested-label and shared
+cancellation hardening, passed the same 13 completed operations and one expected
+failure. All 39 workers and 94 observed owned-process identities exited. Its
+602 read-only desktop samples observed no owned visible window or foreground
+ownership. Transcript SHA-256:
+`7ace5a3dfeb9fe22fbd9e5a229cd2a8edb7d8ecbf597e44e844ebdbcb077b2c3`.
+
+The same overlapping distribution fixture initially caused the editor to insert
+a task into a flow, creating a connection and changing an endpoint. The adapter
+now uses the installed command event bus to suppress that optional insertion
+intent *before* native movement/routing executes. Suppressions are recorded;
+callbacks are not filtered to conceal semantic changes. The vendor bundle and
+its alignment/distribution algorithms are unchanged.
+
+CEF Task return support is enabled before the first browser. Three async binding
+challenges, one synchronous challenge and the actual mutation Promise's
+fulfillment establish the transport boundary. Completing a .NET Task alone is
+not treated as JavaScript acknowledgment. The earlier isolated diagnostics did
+not establish this stronger acknowledgment gate.
+
+Reproduce from a built source checkout on the supported Windows installation:
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native --alignment-only
+```
+
+The separate `--alignment-rich-only` corpus exercises nested surfaces, embedded
+content, manual labels and active-CEF cancellation; its results must be recorded
+separately from the root-level eight-mode baseline above.
+
+### Nested surface, manual label and cancellation record
+
+Run `20260908-081644-6316c6` passed **eight completed native operations and one
+cancelled operation**. The client authored two diagrams, a two-level embedded
+subprocess hierarchy, connected tasks and an actual file attribute. Bottom
+alignment inside the inner subprocess passed whole-archive checks (716 atoms),
+and subsequent attachment export matched the original bytes. A selected manual
+label retained its size and node-relative offset across native commands and a
+fresh reader: `(35,40,80,40)` became `(35,100,80,40)` after a 60-unit vertical
+node movement. That trajectory checked 720 archive atoms.
+
+The client observed the actual offscreen-render phase through MCP before
+requesting cancellation, verified owned-process exits, then aligned again
+successfully. Across this corpus, 21 workers and 43 observed process identities
+exited; 302 read-only desktop samples recorded no visible owned window or
+foreground ownership. Sampling is not continuous GUI observation.
+
+- Transcript SHA-256: `a9f68eaea9bbdca56d45cc447bfb216c9acb87d24182e5000e5f53a35b085741`.
+- Exported attachment SHA-256: `5846b01b6f762f57ca7be911075066de6a6ad462938329c85b8339b247bc2984`.
+
+The version adapter records the native editor's transient participant aliases
+before editing embedded surfaces. Its command hooks retain native ownership and
+the existing flow target when the move helper proposes root-canvas docking.
+Routing still executes in the installed editor; endpoint and archive checks are
+not relaxed. Selected manual label translation is explicit host-derived intent
+applied by the existing native styling adapter, not acceptance of arbitrary text
+changes. Fractional, nonrepresentable manual bounds are rejected without rounding.
+Manual connector-label routing and every nested diagram combination remain
+separate from this selected-node label corpus.
+
+A development cancellation exposed a later reader stopped before native settings
+initialization. Cleanup acceptance now requires explicit no-dispatch/cancellation
+evidence for that case, rather than inventing settings evidence. Normal completed
+workers still require actual isolated settings paths. Common worker launch,
+dispatch and result-return boundaries also check cancellation.
 
 ## Installed 4.3.0.008 responsibility map
 
@@ -190,15 +288,15 @@ explicit deltas are projected by `NativeMutationFidelity`; the remaining XML
 and binary content stays subject to the complete native comparison. Raw
 no-change comparison reports are retained separately and still show the edits.
 
-### Still required before a public layout capability
+### Remaining broader acceptance
 
-- Typed MCP contracts and a production host-to-worker-to-editor path, including
-  revision capture, durable operation evidence and normal artifact publication.
+- The typed production MCP path above supersedes the private diagnostic-only
+  interface; future binaries still need their own extracted-package acceptance.
 - Broader multidiagram/subprocess, manual-label and boundary-editing cases. The
   root-level rich preservation trajectory above does not establish editing of
   those surrounding structures or all their combinations.
-- No-op selection handling, cancellation, missing-binding failure, recovery,
-  and rejection of unsupported or nonrepresentable native changes.
+- Broader cancellation and missing-binding failures beyond the recorded real
+  no-op and semantic-failure/recovery baseline.
 - Separate validation of subtree placement, cross-container editing and
   independently observed compatibility in desktop Modeler.
 - A new packaged distribution containing the eventual production integration;
@@ -213,8 +311,10 @@ The inspected local installation contained these unchanged assets:
 | `modeler-bpmn-editor.min.js` | 2,535,766 | `eec7db9e1474632e0e712c5df29ddc5b93aecb765cd8bc93422a1007ad8de1a9` |
 | `modeler-bpmn-viewer.min.js` | 1,710,978 | `d10aabeb9c38acf34df3f7fc7c2577dfc19a6ce0b538b32efee339009959ec94` |
 
-These are inspection fingerprints, not an operational compatibility allowlist.
+The production alignment adapter pins the investigated editor fingerprint and
+rejects changes until version-specific validation. Other assets retain their
+separate worker inventory and rendering checks.
 Proprietary source, bundles and decompilation dumps are not redistributed.
-The isolated native writes described above are bounded diagnostics, not a
-public MCP layout feature or live-document synchronization. No vendor bundle
+The historical isolated runs above are distinct from the later production MCP
+baseline. Neither establishes live-document synchronization. No vendor bundle
 or decompiled source is redistributed.

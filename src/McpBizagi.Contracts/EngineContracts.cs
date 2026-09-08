@@ -15,6 +15,9 @@ public sealed class EngineRequest
     public NativeTypeConversion[] Conversions { get; set; } = System.Array.Empty<NativeTypeConversion>();
     public NativeSubProcessExtraction? Extraction { get; set; }
     public NativeReparenting[] Reparentings { get; set; } = System.Array.Empty<NativeReparenting>();
+    public NativeAlignmentRequest? Alignment { get; set; }
+    /// <summary>Host-derived independent bounds, never supplied as an arbitrary script or user coordinate override.</summary>
+    public NativeMutation[] AlignmentExpected { get; set; } = System.Array.Empty<NativeMutation>();
     public string DiagramId { get; set; } = "";
     public string SubProcessId { get; set; } = "";
     public string ImageElementId { get; set; } = "";
@@ -172,6 +175,7 @@ public sealed class EngineReply
     public string[] Artifacts { get; set; } = System.Array.Empty<string>();
     public NativeExchangeArtifact[] ExchangeFiles { get; set; } = System.Array.Empty<NativeExchangeArtifact>();
     public NativeExtractionReceipt? Extraction { get; set; }
+    public NativeAlignmentReceipt? Alignment { get; set; }
     public string[] Diagrams { get; set; } = System.Array.Empty<string>();
     public NativeElement[] Elements { get; set; } = System.Array.Empty<NativeElement>();
     public NativeValidationMessage[] Validation { get; set; } = System.Array.Empty<NativeValidationMessage>();

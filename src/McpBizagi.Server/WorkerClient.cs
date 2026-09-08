@@ -26,6 +26,7 @@ public sealed class WorkerClient(ServerOptions options)
 
     private async Task<EngineReply> ExecuteCore(EngineRequest request, string directory, Action<string> report, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         if (!options.ExperimentalNative) throw new InvalidOperationException("Experimental native operations are disabled. Enable MCP_BIZAGI_EXPERIMENTAL_NATIVE explicitly.");
         if (options.Installation == null) throw new FileNotFoundException("Bizagi Modeler installation not found.");
         if (!File.Exists(options.Worker)) throw new FileNotFoundException("Worker not found; set MCP_BIZAGI_WORKER or use a release package.");
@@ -39,6 +40,8 @@ public sealed class WorkerClient(ServerOptions options)
         start.ArgumentList.Add(Path.GetFullPath(options.Installation)); start.ArgumentList.Add(directory); start.ArgumentList.Add(pipeName);
         start.Environment["TEMP"] = directory; start.Environment["TMP"] = directory;
         using var job = new WorkerJob();
+        // Cancellation can arrive between acquiring the serial lease and process launch.
+        token.ThrowIfCancellationRequested();
         using var process = Process.Start(start) ?? throw new IOException("Worker could not start.");
         var errors = new StringBuilder();
         var stdout = new StringBuilder();
@@ -93,6 +96,7 @@ public sealed class WorkerClient(ServerOptions options)
             rpc.AddLocalRpcTarget(notifications); rpc.StartListening();
             request.AtomicStepSeconds = options.AtomicStepSeconds;
             request.InactivitySeconds = options.InactivitySeconds;
+            token.ThrowIfCancellationRequested();
             var invocation = rpc.InvokeAsync<EngineReply>("Execute", request);
             var previousActivity = job.Activity();
             int previousLogLength = 0;
@@ -112,7 +116,10 @@ public sealed class WorkerClient(ServerOptions options)
                 if (Stopwatch.GetElapsedTime(Interlocked.Read(ref lastActivity)).TotalSeconds > options.InactivitySeconds)
                     throw new TimeoutException("Native worker inactivity window exceeded with no owned-job CPU, I/O, phase or diagnostic-log activity.");
             }
-            return await invocation;
+            var result = await invocation;
+            // Do not publish a late result or launch the next workflow stage after cancellation.
+            token.ThrowIfCancellationRequested();
+            return result;
         }
         finally
         {

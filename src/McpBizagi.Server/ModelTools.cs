@@ -48,6 +48,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 scope = "native_command_descendant_relocation_current_user_tab_remap_and_whole_container_gate_not_behavioral_equivalence_or_arbitrary_selection_refactoring" },
             nativeReparenting = new { tool = "native_elements_reparent", maximumBatchSize = 1000,
                 scope = "same_diagram_explicit_process_or_embedded_subprocess_ownership_complete_reference_closure_and_optional_node_position_not_cross_diagram_migration_or_automatic_layout" },
+            nativeAlignment = new { tool = "native_elements_align", modes = NativeAlignmentPolicy.Modes, maximumSelection = 1000,
+                scope = "experimental_native_editor_selected_shape_alignment_with_revision_callback_and_archive_gates_not_global_layout_or_visual_accreditation" },
             nativeConversions = new { tool = "native_elements_convert", taskTypes = NativeConversionPolicy.TaskTypes, gatewayTypes = NativeConversionPolicy.GatewayTypes,
                 maximumBatchSize = 1000, scope = "same_category_explicit_expected_type_and_revision_no_silent_content_retirement" },
             nativeStyles = new { patch = "NativeMutation.Style", fontInventoryTool = "native_fonts_get", fontSize = "whole_native_units_1_to_512_not_css_pixels",
@@ -115,6 +117,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_probe"), Description("Experimental native service bootstrap. Returns an operation ID, not a claim of full engine support.")]
     public CallToolResult Probe() => Guard(() => native.Probe());
+
+    [McpServerTool(Name = "native_elements_align"), Description("Experimental native selected-shape alignment or distribution using the installed editor's programmatic engine, not simulated input. Supply native diagram, optional embedded subprocess, 2-1000 distinct element IDs and one of Top, Bottom, Left, Right, Horizontal, Vertical, HorizontalEvenly, VerticalEvenly. Distribution needs at least three nodes. Revision checked; original retained. Three workers and whole-archive fidelity gate the output. Cross-owner/semantic changes and unrepresentable results are rejected. Poll operation_get; availability is not universal operational accreditation.")]
+    public CallToolResult AlignNative(string path, string expectedRevision, NativeAlignmentRequest alignment) => Guard(() => native.Align(path, expectedRevision, alignment));
 
     [McpServerTool(Name = "native_subprocess_extract"), Description("Experimental native embedded-to-reusable subprocess extraction on a private copy. Explicit source ID, target diagram name and revision; original retained. Fresh-reader and whole-container gates quarantine unaccredited changes. Poll operation_get; tool availability is not operational accreditation.")]
     public CallToolResult ExtractSubProcess(string path, string expectedRevision, NativeSubProcessExtraction extraction) =>
