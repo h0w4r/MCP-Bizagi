@@ -42,6 +42,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeSubProcessKinds = NativeSubProcessPolicy.Kinds,
             nativeEventPayloadKinds = NativeEventPayloadPolicy.Kinds,
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
+            nativeCustomArtifacts = new { ownership = "model_not_global_palette", operations = new[] { "create", "update", "delete", "native_bca_import", "native_bca_export" },
+                references = "ArtifactProperties.CustomArtifactTypeId", pixelConversion = "explicit_native_rasterization_acknowledgement_with_stable_serialization_and_restart_verification" },
             nativeImageInput = new { source = "confined_path_or_completed_native_image_export", revision = "sha256", frames = "explicit_when_multiple", sourceByteBound = NativeImagePolicy.MaxSourceBytes, decodedPixelBound = 64L * 1024 * 1024,
                 encoding = "explicitly_acknowledged_selected_frame_8bit_rgba_png_without_source_container_metadata_profiles_or_other_frames" },
             nativeDataKinds = new[] { "DataObject", "DataStore", "DataStoreReference" },
@@ -63,6 +65,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 new { name = "native_data_and_activity_io", status = "experimental_native_data_properties_store_references_and_derived_activity_and_event_bindings_with_fresh_readback_not_full_io_editor_or_visual_accreditation", backend = "bizagi_worker" },
                 new { name = "native_content_artifacts", status = "experimental_native_annotation_formatted_text_group_and_header_lifecycle_with_fresh_readback_not_all_artifacts_or_visual_accreditation", backend = "bizagi_worker" },
                 new { name = "native_image_artifacts", status = "experimental_revision_checked_raster_import_exact_pixel_and_file_readback_clone_export_and_deletion_not_vector_or_color_managed_editor", backend = "bizagi_worker" },
+                new { name = "native_custom_artifacts", status = "experimental_model_owned_definitions_instances_native_bca_exchange_explicit_pixel_conversion_and_restart_fidelity_not_global_palette_or_desktop_gui_accreditation", backend = "bizagi_worker" },
                 new { name = "native_container_fidelity_and_noop_save", status = "experimental_verified_on_tested_inputs", backend = "bizagi_worker" },
                 new { name = "native_model_validation", status = "experimental_diagnostic", backend = "bizagi_worker" },
                 new { name = "native_metadata_resources_activity_raci", status = "experimental_copy_only_verified_on_tested_inputs", backend = "bizagi_worker" },
@@ -133,6 +136,15 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_image_export"), Description("Export one actual ImageArtifact payload without re-encoding. Verify exact bytes against the native archive. Returns original file name, decoded pixel fingerprint, SHA-256 and a typed reusable image artifact reference; this is not an extended-attribute attachment.")]
     public CallToolResult ExportNativeImage(string path, string diagramId, string elementId) => Guard(() => native.ExportImage(path, diagramId, elementId));
+
+    [McpServerTool(Name = "native_custom_artifacts_apply"), Description("Create, update or delete model-owned custom artifact definitions in a revision-checked native copy. Inspect CustomArtifacts first. Changes require explicit Operation and Id; creation requires Name and Image. Image uses the same revision-checked raster/frame input as native images. AllowNativeRasterization explicitly permits the installed custom-type serializer's pixel conversion; unstable repeated serialization fails. Referenced definitions cannot be deleted. Never modifies the global user palette. Poll operation_get.")]
+    public CallToolResult ApplyNativeCustomArtifacts(string path, string expectedRevision, NativeCustomArtifactPatch patch) => Guard(() => native.ApplyCustomArtifacts(path, expectedRevision, patch));
+
+    [McpServerTool(Name = "native_custom_artifacts_export"), Description("Export selected model-owned custom definitions through the installed .bca exporter, re-import in another native worker, persist and independently reopen. Returns a verified reusable .bca artifact, not a hand-built archive.")]
+    public CallToolResult ExportNativeCustomArtifacts(string path, string[] definitionIds) => Guard(() => native.ExportCustomArtifacts(path, definitionIds));
+
+    [McpServerTool(Name = "native_custom_artifacts_import"), Description("Import a revision-checked confined .bca file or completed native_custom_artifacts_export reference into a native model copy. Uses strict archive preflight and the installed importer. Existing identities require replaceExisting; pixel conversion requires allowNativeRasterization. Unknown fields, conflicting image representations and unexplained archive changes fail. Never modifies the global palette.")]
+    public CallToolResult ImportNativeCustomArtifacts(string path, string expectedRevision, string archivePath, string archiveRevision, bool replaceExisting = false, bool allowNativeRasterization = false) => Guard(() => native.ImportCustomArtifacts(path, expectedRevision, archivePath, archiveRevision, replaceExisting, allowNativeRasterization));
 
     [McpServerTool(Name = "native_metadata_apply"), Description("Edit local resources, replace complete activity RACI sets and explicitly replace complete per-diagram BPSim configurations in a native copy. Requires revision, validates native readback and all non-targeted archive content. Never silently discards saved simulation results.")]
     public CallToolResult ApplyNativeMetadata(string path, string expectedRevision, NativeMetadataPatch patch) => Guard(() => native.ApplyMetadata(path, expectedRevision, patch));

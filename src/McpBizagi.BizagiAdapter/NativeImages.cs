@@ -108,11 +108,12 @@ public sealed partial class NativeEngine
         return new NativeImageFile { DiagramId = e.DiagramId, ElementId = id, FileName = Path.GetFileName(matches[0]), Length = bytes.LongLength, Sha256 = ImageHash(bytes) };
     }
 
-    private void ApplyImage(object model, GraphEntry entry, NativeImageImport import)
+    private static Bitmap DecodeImageImport(NativeImageImport import, out NativeImageImportReceipt receipt)
+        => DecodeImageImport(import, File.ReadAllBytes(import.SourcePath), out receipt);
+
+    private static Bitmap DecodeImageImport(NativeImageImport import, byte[] bytes, out NativeImageImportReceipt receipt)
     {
-        if (entry.Value.GetType().Name != "ImageArtifact") throw new InvalidDataException("Image input requires an actual native ImageArtifact.");
         if (!import.AllowPngReencoding) throw new InvalidDataException("Native PNG re-encoding requires explicit acknowledgement.");
-        byte[] bytes = File.ReadAllBytes(import.SourcePath);
         if (bytes.LongLength is <= 0 or > 32L * 1024 * 1024 || ImageHash(bytes) != import.ExpectedRevision) throw new InvalidDataException("Staged image length or SHA-256 differs from the captured input.");
         using var stream = new MemoryStream(bytes, writable: false);
         using var decoded = Image.FromStream(stream, useEmbeddedColorManagement: false, validateImageData: true);
@@ -126,7 +127,21 @@ public sealed partial class NativeEngine
         if (count > 1 && !import.FrameIndex.HasValue || frame < 0 || frame >= count) throw new InvalidDataException("An explicit in-range frame index is required for a multi-frame image (frames=" + count + ").");
         bitmap.SelectActiveFrame(dimension, frame);
         var expected = DescribePicture(bitmap);
-        Bitmap? independent = IndependentPicture(bitmap);
+        receipt = new NativeImageImportReceipt
+        {
+            SourceSha256 = import.ExpectedRevision,
+            SourceFormat = new[] { ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Gif, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Icon }.FirstOrDefault(f => f.Guid == bitmap.RawFormat.Guid)?.ToString() ?? bitmap.RawFormat.Guid.ToString(),
+            DecodedPixelFormat = bitmap.PixelFormat.ToString(), FrameDimension = Dimension(selected[0]),
+            FrameCount = count, FrameIndex = frame, SourceMetadataIds = bitmap.PropertyIdList, Image = expected
+        };
+        return IndependentPicture(bitmap);
+    }
+
+    private void ApplyImage(object model, GraphEntry entry, NativeImageImport import)
+    {
+        if (entry.Value.GetType().Name != "ImageArtifact") throw new InvalidDataException("Image input requires an actual native ImageArtifact.");
+        Bitmap? independent = DecodeImageImport(import, out var receipt);
+        var expected = receipt.Image;
         try
         {
             string elementId = Text(entry.Value, "Id"), folder = ImageFolder(model, entry.DiagramId);
@@ -145,15 +160,9 @@ public sealed partial class NativeEngine
             var previous = Optional(entry.Value, "Picture") as Bitmap;
             Set(entry.Value, "Picture", independent); independent = null; previous?.Dispose();
             byte[] persisted = File.ReadAllBytes(output);
-            imageImports.Add(new NativeImageImportReceipt
-            {
-                ElementId = elementId, SourceSha256 = import.ExpectedRevision,
-                SourceFormat = new[] { ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Gif, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Icon }.FirstOrDefault(f => f.Guid == bitmap.RawFormat.Guid)?.ToString() ?? bitmap.RawFormat.Guid.ToString(),
-                DecodedPixelFormat = bitmap.PixelFormat.ToString(),
-                FrameDimension = Dimension(selected[0]), FrameCount = count, FrameIndex = frame, SourceMetadataIds = bitmap.PropertyIdList,
-                PngReencoded = true, PayloadEncoder = "System.Drawing.PNG.straight-alpha", Image = expected,
-                File = new NativeImageFile { DiagramId = entry.DiagramId, ElementId = elementId, FileName = Path.GetFileName(output), Length = persisted.LongLength, Sha256 = ImageHash(persisted) }
-            });
+            receipt.ElementId = elementId; receipt.PngReencoded = true; receipt.PayloadEncoder = "System.Drawing.PNG.straight-alpha";
+            receipt.File = new NativeImageFile { DiagramId = entry.DiagramId, ElementId = elementId, FileName = Path.GetFileName(output), Length = persisted.LongLength, Sha256 = ImageHash(persisted) };
+            imageImports.Add(receipt);
             }
         finally { independent?.Dispose(); }
     }
@@ -197,7 +206,7 @@ public sealed partial class NativeEngine
         using (var input = new StringReader(svg))
         using (var reader = System.Xml.XmlReader.Create(input, new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Prohibit,
             XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 })) xml.Load(reader);
-        foreach (var entry in expected.Where(e => e.Value.GetType().Name == "ImageArtifact"))
+        foreach (var entry in expected.Where(e => e.Value.GetType().Name is "ImageArtifact" or "CustomArtifact"))
         {
             string id = Text(entry.Value, "Id");
             var shapes = xml.SelectNodes("//*[@data-element-id]")!.Cast<System.Xml.XmlElement>().Where(e => e.GetAttribute("data-element-id") == id).ToArray();
@@ -210,7 +219,8 @@ public sealed partial class NativeEngine
             if (!match.Success) throw new InvalidDataException("Native SVG image is not an embedded raster payload.");
             byte[] bytes = Convert.FromBase64String(match.Groups[2].Value);
             using var stream = new MemoryStream(bytes, false); using var bitmap = (Bitmap)Image.FromStream(stream, false, true);
-            var actual = DescribePicture(bitmap); var wanted = DescribePicture((Bitmap)Get(entry.Value, "Picture"));
+            var actual = DescribePicture(bitmap);
+            var wanted = DescribePicture((Bitmap)(entry.Value.GetType().Name == "CustomArtifact" ? Get(Get(entry.Value, "CustomArtifactType"), "Image") : Get(entry.Value, "Picture")));
             if (actual.Width != wanted.Width || actual.Height != wanted.Height || actual.PixelSha256 != wanted.PixelSha256)
                 throw new InvalidDataException("Native SVG image pixels differ from the model picture.");
             renderedImages.Add(new NativeRenderedImage { SurfaceId = surface, ElementId = id, DeclaredMimeType = match.Groups[1].Value,

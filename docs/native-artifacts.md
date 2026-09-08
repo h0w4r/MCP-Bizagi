@@ -5,6 +5,10 @@ The source adapter exposes explicit native artifact content through
 independent worker readback and whole-archive fidelity. This is not an arbitrary
 property setter or a conversion of `.bpm` contents into a reconstructed XML file.
 
+[Custom artifacts](native-custom-artifacts.md) have a separate model-owned
+definition lifecycle and native `.bca` exchange; instances use
+`ArtifactProperties.CustomArtifactTypeId`, not the image-artifact payload field.
+
 ## Typed fields and ownership
 
 | Native kind | Durable content | Parent | Important constraint |

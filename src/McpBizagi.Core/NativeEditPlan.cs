@@ -8,7 +8,7 @@ public static class NativeEditPlan
     public static readonly string[] CreatableTypes = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask",
         "NoneStart", "MessageStart", "TimerStart", "NoneEnd", "MessageEnd", "TerminateEnd", "NoneIntermediate", "MessageIntermediate", "TimerIntermediate",
         "ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "EventBasedGateway", "ComplexGateway", "SubProcess", "CallActivity", "Participant", "Lane", "Milestone",
-        "SequenceFlow", "MessageFlow", "Association", "DataStore", "TextAnnotation", "Group", "FormattedTextArtifact", "HeaderArtifact", "ImageArtifact", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
+        "SequenceFlow", "MessageFlow", "Association", "DataStore", "TextAnnotation", "Group", "FormattedTextArtifact", "HeaderArtifact", "ImageArtifact", "CustomArtifact", "DataObject", "DataStoreReference", .. NativeEventPolicy.AdditionalTypes];
 
     public static void Validate(NativeMutation[] changes)
     {

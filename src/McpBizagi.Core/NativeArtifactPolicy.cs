@@ -15,7 +15,12 @@ public static class NativeArtifactPolicy
     {
         if (change.ArtifactProperties is { } patch)
         {
-            if ((patch.Text == null) == (patch.Image == null)) throw new InvalidDataException("Supply exactly one artifact Text or Image value.");
+            if (new[] { patch.Text != null, patch.Image != null, patch.CustomArtifactTypeId != null }.Count(v => v) != 1) throw new InvalidDataException("Supply exactly one artifact Text, Image or CustomArtifactTypeId value.");
+            if (patch.CustomArtifactTypeId != null)
+            {
+                NativeMetadataPolicy.RequireId(patch.CustomArtifactTypeId);
+                if (change.Operation == "create" && change.ElementType != "CustomArtifact") throw new InvalidDataException("Custom definition references require a custom artifact instance.");
+            }
             if (patch.Image != null) NativeImagePolicy.Validate(patch.Image);
             if (patch.Text != null)
             {
@@ -29,6 +34,8 @@ public static class NativeArtifactPolicy
         }
         if (change.Operation == "create" && change.ElementType == "ImageArtifact" && change.ArtifactProperties?.Image == null)
             throw new InvalidDataException("Image creation requires an explicit revision-checked raster source.");
+        if (change.Operation == "create" && change.ElementType == "CustomArtifact" && change.ArtifactProperties?.CustomArtifactTypeId == null)
+            throw new InvalidDataException("Custom artifact creation requires a model-owned definition.");
         if (change.Operation == "create") ValidateKind(change, change.ElementType);
     }
     private static void ValidateKind(NativeMutation change, string kind)
@@ -41,6 +48,8 @@ public static class NativeArtifactPolicy
     public static void Verify(NativeMutation change, NativeElement element, NativeElement[] graph)
     {
         ValidateKind(change, element.Kind);
+        if (change.ArtifactProperties?.CustomArtifactTypeId is { } typeId && (element.Kind != "CustomArtifact" || element.Artifact?.CustomArtifactTypeId != typeId))
+            throw new InvalidDataException("Custom artifact definition reference did not survive independent readback.");
         if (change.ArtifactProperties is { Text: not null } patch && (element.Kind is not "TextAnnotation" and not "FormattedTextArtifact" ||
             element.Artifact?.Text != patch.Text)) throw new InvalidDataException("Native artifact text did not survive independent readback.");
         if (change.ArtifactProperties?.Image != null && (element.Kind != "ImageArtifact" || element.Artifact?.Image == null))
@@ -60,6 +69,12 @@ public static class NativeArtifactPolicy
             if (vendor != "FormattedText" && (vendor != null || (string?)after.Attribute("ArtifactType") != "Annotation"))
                 throw new InvalidDataException("Native artifact text carrier has an incompatible kind.");
             ProjectText(before, after, patch.Text!);
+        }
+        if (change.ArtifactProperties?.CustomArtifactTypeId is { } typeId)
+        {
+            if ((string?)after.Attribute("BizAgiArtifactType") != "Custom" || (string?)after.Attribute("CustomArtifactTypeId") != typeId)
+                throw new InvalidDataException("Native custom artifact reference differs from the requested definition.");
+            after.SetAttributeValue("CustomArtifactTypeId", (string?)before.Attribute("CustomArtifactTypeId"));
         }
         if (change.Name != null && (string?)after.Attribute("ArtifactType") == "Group")
         {

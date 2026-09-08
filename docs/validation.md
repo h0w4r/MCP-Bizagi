@@ -1,5 +1,68 @@
 # Verification baselines
 
+## Native custom artifact definitions, instances and `.bca` — 2026-09-07
+
+The final source circuit `20260907-235432-948997` passed **20 terminal native
+operations**: 18 completed and two expected worker failures. Two additional real
+MCP preflight checks rejected deletion of a referenced definition and an
+unacknowledged `.bca` identity collision.
+
+The circuit covered model-owned definition creation; explicit native alpha
+rasterization and repeated serialized-byte/pixel stability; root and nested
+instances; reference changes; replacement with a genuinely different image;
+shared-definition preservation through native diagram cloning; actual native
+`.bca` export and import; explicit replacement of conflicting existing content;
+import into an independently created model; root/nested native SVG payloads;
+instance and definition deletion; no-op persistence; and unchanged originals.
+Export verification used an exporter worker, a separate native importer and a
+fresh native model reader. No substitute archive writer or mock engine was used.
+
+| Source circuit | Terminal states | Workers / periodic samples | Transcript SHA-256 |
+| --- | --- | --- | --- |
+| `20260907-235432-948997`, final source and export-path guard | 18 completed, 2 expected failures | 38 / 358 | `180de8f163f9ae565f42a1632e7a601bff8aa43da6ce4411a36bf456e785b6d0` |
+| `20260907-234838-3e6790`, reinforced image/replacement/temp-path checks | 18 completed, 2 expected failures | 38 / 565 | `b685f0cf242187f9b3eedc55fb6b44cbd98162b78e4ba61f9cdb6792be023178` |
+| `20260907-234137-0c9f0e`, initial complete custom lifecycle | 16 completed, 2 expected failures | 34 / 698 | `fa987cb4c7cc93b4ca98df5e6e620024d2101b66d4da2e0f21638dd9b1025b74` |
+| `20260907-235925-b7e284`, complete image/clone/SVG/Word regression | 14 completed, 4 expected failures | 29 / 623 | `ea870a630851beb0d7af893a314ec02bf1687867c8e4c2093f3b0dba3b7f7700` |
+| `20260908-000426-34336f`, general extended/simulation/render/recovery regression | 12 completed, 1 expected failure, 1 cancelled, 1 interrupted | 19 / 145 | `b8b481d5adb8d8f5caf47071162f8777bf3d3568f79223f95961471be3a57945` |
+
+The expected worker failures were unacknowledged native pixel conversion and an
+unknown model-owned definition reference. The reinforced/final harness checked
+their actual error causes, not merely terminal failure status. Each owned worker's
+actual temporary directory was recorded and checked against its private run path.
+Periodic observation detected no owned visible window or foreground acquisition;
+this is not continuous proof or independent desktop GUI compatibility.
+
+Native SVG readback verified one root and one nested embedded image, including
+actual payload hashes and decoded pixels. The original source alpha PNG and its
+native normalized representation had different pixel fingerprints; that change
+was explicitly acknowledged and recorded. Ordinary image artifacts retain their
+separate exact-pixel contract. The installed renderer labeled the custom PNG data
+as `image/jpeg`; validation decoded the actual bytes instead of trusting the label.
+
+A development failure exposed an unbound inherited
+`CustomArtifactTypeManager` dependency in native persistence. Wiring the real
+installed manager allowed fresh-process reopening without initializing the GUI or
+loading/modifying the operator's global palette. Native bitmap stream lifetimes
+were detached only after comparison with durable source payloads. Deletion removed
+only the exact isolated definition file that native persistence would otherwise
+leave behind; fresh readback proved it did not reappear.
+
+The final Release build had no warnings/errors, **819 unit/component tests**
+passed, and the independent SDK listed **33 MCP tools**. These counts do not
+accredit full Modeler automation. The new source family is not automatically part
+of the previous immutable release package. See the
+[custom artifact contract](native-custom-artifacts.md) for intent, limits and
+reproduction commands. Raw native research, model copies and transcripts remain
+private; only sanitized results and owned source/tests are published.
+
+After the shared image-decoding and persistence-dependency changes, the complete
+image lifecycle passed again. The general regression also passed real MCP XML,
+BPMN/native roundtrip, multi-diagram/nested editing, native simulation results,
+offscreen rendering, stale/corrupt inputs, active cancellation, host-death child
+cleanup, journal restart and state-lease checks. No owned visible/foreground
+window was observed in either regression. The recorded interruption and
+cancellation were deliberate recovery tests, not substituted successes.
+
 ## Native image artifacts — 2026-09-07
 
 The source image lifecycle and reinforced native-SVG payload circuit

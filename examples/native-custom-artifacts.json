@@ -1,0 +1,57 @@
+{
+  "description": "Illustrative requests; replace paths, source hashes, revisions and native identities from actual inspection.",
+  "define": {
+    "tool": "native_custom_artifacts_apply",
+    "arguments": {
+      "path": "models/approval.bpm",
+      "expectedRevision": "REPLACE_WITH_MODEL_SHA256",
+      "patch": {
+        "Changes": [{
+          "Operation": "create",
+          "Id": "e860f252-f193-45bb-97a8-f2323917b780",
+          "Name": "Risk symbol",
+          "Image": {
+            "SourcePath": "assets/risk.png",
+            "ExpectedRevision": "REPLACE_WITH_IMAGE_SHA256",
+            "AllowPngReencoding": true
+          },
+          "AllowNativeRasterization": true
+        }]
+      }
+    }
+  },
+  "instantiate": {
+    "tool": "native_mutate",
+    "arguments": {
+      "path": "REPLACE_WITH_COMPLETED_OUTPUT_ARTIFACT",
+      "expectedRevision": "REPLACE_WITH_COMPLETED_OUTPUT_REVISION",
+      "mutations": [{
+        "Operation": "create",
+        "ElementType": "CustomArtifact",
+        "ElementId": "2182f51a-75a6-4b1e-966b-745c9db85c51",
+        "ParentId": "REPLACE_WITH_NATIVE_PROCESS_OR_SUBPROCESS_ID",
+        "Name": "Escalation risk",
+        "Geometry": { "X": 120, "Y": 100, "Width": 96, "Height": 96 },
+        "ArtifactProperties": { "CustomArtifactTypeId": "e860f252-f193-45bb-97a8-f2323917b780" }
+      }]
+    }
+  },
+  "export": {
+    "tool": "native_custom_artifacts_export",
+    "arguments": {
+      "path": "REPLACE_WITH_COMPLETED_OUTPUT_ARTIFACT",
+      "definitionIds": ["e860f252-f193-45bb-97a8-f2323917b780"]
+    }
+  },
+  "import": {
+    "tool": "native_custom_artifacts_import",
+    "arguments": {
+      "path": "models/another-model.bpm",
+      "expectedRevision": "REPLACE_WITH_DESTINATION_MODEL_SHA256",
+      "archivePath": "REPLACE_WITH_COMPLETED_BCA_EXPORT_ARTIFACT",
+      "archiveRevision": "REPLACE_WITH_BCA_SHA256",
+      "replaceExisting": false,
+      "allowNativeRasterization": false
+    }
+  }
+}

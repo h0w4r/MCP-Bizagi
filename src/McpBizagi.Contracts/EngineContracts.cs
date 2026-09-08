@@ -26,6 +26,11 @@ public sealed class EngineRequest
     public NativeDocumentationPatch? DocumentationPatch { get; set; }
     public NativeAttachmentInfo? Attachment { get; set; }
     public NativeDiagramPatch? DiagramPatch { get; set; }
+    public NativeCustomArtifactPatch? CustomArtifactPatch { get; set; }
+    public string CustomArtifactArchivePath { get; set; } = "";
+    public bool ReplaceCustomArtifacts { get; set; }
+    public bool AllowCustomArtifactRasterization { get; set; }
+    public string[] CustomArtifactIds { get; set; } = System.Array.Empty<string>();
     public string[] ScenarioIds { get; set; } = System.Array.Empty<string>();
 }
 
@@ -173,6 +178,8 @@ public sealed class EngineReply
     public NativeImageFile[] ImageFiles { get; set; } = System.Array.Empty<NativeImageFile>();
     public NativeImageImportReceipt[] ImageImports { get; set; } = System.Array.Empty<NativeImageImportReceipt>();
     public NativeRenderedImage[] RenderedImages { get; set; } = System.Array.Empty<NativeRenderedImage>();
+    public NativeCustomArtifactDefinition[] CustomArtifacts { get; set; } = System.Array.Empty<NativeCustomArtifactDefinition>();
+    public NativeCustomArtifactReceipt[] CustomArtifactImports { get; set; } = System.Array.Empty<NativeCustomArtifactReceipt>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
     public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();

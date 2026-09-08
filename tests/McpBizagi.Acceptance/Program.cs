@@ -154,6 +154,12 @@ try
         await NativeArtifactAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
         Console.WriteLine("NATIVE_ARTIFACT_LIFECYCLE_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--custom-artifacts-only"))
+    {
+        if (!native) throw new ArgumentException("Custom artifact acceptance requires --native.");
+        await NativeCustomArtifactAcceptance.Run(repo, run, stateRoot, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_CUSTOM_ARTIFACT_LIFECYCLE_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--images-only"))
     {
         if (!native) throw new ArgumentException("Image acceptance requires --native.");

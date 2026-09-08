@@ -313,7 +313,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
             if (!Path.GetExtension(path).Equals(".bpm", StringComparison.OrdinalIgnoreCase)) throw new NotSupportedException("Expected a native .bpm file.");
             bytes = files.Read(path);
         }
-        NativeArchive.Validate(bytes);
+        NativeCustomArtifactPolicy.ValidateArchiveReferences(NativeArchive.ReadEntries(bytes));
         return (bytes, BpmnDocument.Revision(bytes));
     }
     public NativeFidelityReport Compare(string path, string otherPath, NativeNameChange[]? names) =>

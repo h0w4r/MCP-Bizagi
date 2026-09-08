@@ -25,6 +25,7 @@ internal static class Program
         Directory.CreateDirectory(args[1]);
         Environment.SetEnvironmentVariable("TEMP", args[1]);
         Environment.SetEnvironmentVariable("TMP", args[1]);
+        File.WriteAllText(Path.Combine(args[1], "worker-temp-path.txt"), Path.GetFullPath(Path.GetTempPath()));
         var service = new EngineService(args[0], args[1]);
         if (args[2] == "--probe")
         {

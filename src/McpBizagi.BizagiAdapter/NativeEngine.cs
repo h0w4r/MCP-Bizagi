@@ -123,6 +123,7 @@ public sealed partial class NativeEngine
     {
         imageImports.Clear();
         renderedImages.Clear();
+        customArtifactImports.Clear();
         if (request.ProtocolVersion != 1) throw new NotSupportedException("Unsupported worker protocol version.");
         RequireExportLabel(request.ModelName);
         Initialize(progress);
@@ -147,10 +148,13 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
-        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
+        // V5's constructor does not wire this inherited persistence dependency; normal GUI startup does.
+        // Bind the real installed manager without loading or modifying its global user palette.
+        Set(persistence, "CustomArtifactTypeManager", Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.ICustomArtifactTypeManager"));
         if (request.Action == "create_save")
         {
             var patch = request.DiagramPatch ?? throw new InvalidDataException("Missing native model creation request.");
@@ -203,6 +207,7 @@ public sealed partial class NativeEngine
             progress("native_load_bpm");
             model = Call(persistence, "Load", model)!;
             reply.IntegrationAdjustments = DetachLoadedImages(model, progress);
+            reply.IntegrationAdjustments = reply.IntegrationAdjustments.Concat(DetachLoadedCustomArtifacts(model, progress)).ToArray();
             ResolveCompensationReferences(model);
             reply.IntegrationAdjustments = reply.IntegrationAdjustments.Concat(RestoreNestedDataFlows(model, progress)).ToArray();
             // Capture input references before the native simulation pipeline clears its in-memory
@@ -216,8 +221,11 @@ public sealed partial class NativeEngine
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, progress);
             if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
-            if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save" or "diagrams_save")
+            if (request.Action == "custom_export") reply.Artifacts = new[] { ExportCustomArtifacts(model, request, progress) };
+            if (request.Action is "edit_save" or "mutate_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
+                if (request.Action == "custom_save") EditCustomArtifacts(model, request.CustomArtifactPatch ?? throw new InvalidDataException("Missing custom artifact patch."), progress);
+                if (request.Action == "custom_import") ImportCustomArtifacts(model, request, progress);
                 if (request.Action == "diagrams_save") reply.DiagramClones = EditDiagrams(model, persistence, request.DiagramPatch ?? throw new InvalidDataException("Missing diagram patch."), progress);
                 if (request.Action == "documentation_save") EditDocumentation(model, persistence, request.DocumentationPatch ?? throw new InvalidDataException("Missing documentation patch."), progress);
                 if (request.Action == "metadata_save") EditMetadata(model, request.MetadataPatch ?? throw new InvalidDataException("Missing metadata patch."), progress);
@@ -258,6 +266,8 @@ public sealed partial class NativeEngine
         reply.ImageFiles = DescribeImageFiles(model);
         reply.ImageImports = imageImports.ToArray();
         reply.RenderedImages = renderedImages.ToArray();
+        reply.CustomArtifacts = DescribeCustomArtifacts(model);
+        reply.CustomArtifactImports = customArtifactImports.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save") reply.Metadata = Metadata(model);
