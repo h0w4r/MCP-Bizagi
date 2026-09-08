@@ -76,6 +76,7 @@ public sealed partial class NativeEngine
             ActivityProperties = DescribeActivity(element), ActivityLoop = DescribeLoop(element), FlowCondition = DescribeCondition(element),
             SubProcess = DescribeSubProcess(element), Event = DescribeEvent(element),
             Data = DescribeData(element), Artifact = DescribeArtifact(element),
+            Style = DescribeStyle(element),
             DataFlow = DescribeDataFlow(entry),
             EventGateway = element.GetType().Name == "EventBasedGateway" ? new NativeEventGatewayInfo
             { Instantiate = (bool)Get(element, "Instantiate"), Kind = Text(element, "EventGatewayType") } : null,

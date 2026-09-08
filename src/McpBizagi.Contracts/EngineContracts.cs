@@ -60,6 +60,7 @@ public sealed class NativeMutation
     public NativeEventPayloadPatch[]? EventPayloads { get; set; }
     public NativeDataProperties? DataProperties { get; set; }
     public NativeArtifactProperties? ArtifactProperties { get; set; }
+    public NativeStylePatch? Style { get; set; }
     /// <summary>Creation-only native embedded subclass: SubProcess, Transaction or AdHoc.</summary>
     public string? SubProcessKind { get; set; }
     public NativeSubProcessProperties? SubProcessProperties { get; set; }
@@ -134,6 +135,7 @@ public sealed class NativeElement
     public string Documentation { get; set; } = "";
     public NativeDataInfo? Data { get; set; }
     public NativeArtifactInfo? Artifact { get; set; }
+    public NativeStyleInfo? Style { get; set; }
     public NativeDataFlowInfo? DataFlow { get; set; }
     public NativeGeometry? Geometry { get; set; }
     /// <summary>Native expanded bounds are distinct from the collapsed shape's size.</summary>
@@ -180,6 +182,7 @@ public sealed class EngineReply
     public NativeRenderedImage[] RenderedImages { get; set; } = System.Array.Empty<NativeRenderedImage>();
     public NativeCustomArtifactDefinition[] CustomArtifacts { get; set; } = System.Array.Empty<NativeCustomArtifactDefinition>();
     public NativeCustomArtifactReceipt[] CustomArtifactImports { get; set; } = System.Array.Empty<NativeCustomArtifactReceipt>();
+    public NativeFontFamily[] Fonts { get; set; } = System.Array.Empty<NativeFontFamily>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
     public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();

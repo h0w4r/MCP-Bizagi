@@ -63,6 +63,7 @@ public sealed partial class NativeEngine
                     Set(target, "Id", Guid.Parse(change.DiagramId)); Set(target, "DisplayName", change.Name!);
                     // Reuse the installed desktop command's domain defaults, without its UI event dispatcher.
                     object main = DiagramDefault("CreateMainParticipant")!;
+                    InitializeNewStyle(main);
                     // Persist the same default size the native XPDL reader materializes for the invisible pool.
                     Set(Get(main, "GraphicalProperties"), "Size", Get(Get(main, "DefaultGraphicalProperties"), "Size"));
                     Call(Get(target, "Participants"), "Add", main);
@@ -74,6 +75,7 @@ public sealed partial class NativeEngine
                         Set(settings, "PropertyParameters", New(settings.GetType().GetProperty("PropertyParameters")!.PropertyType));
                     }
                     object pool = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.Participant"));
+                    InitializeNewStyle(pool);
                     Set(pool, "DisplayName", "Process"); Set(Get(pool, "Process"), "DisplayName", "Process");
                     Call(Get(target, "Participants"), "Add", pool); Call(Get(model, "Diagrams"), "Add", target);
                     ((IDictionary)Get(Get(model, "ExtendedAttributes"), "Values")).Add(Guid.Parse(change.DiagramId), New(DocumentationType("DiagramAttributeValues")));

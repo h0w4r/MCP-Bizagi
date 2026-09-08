@@ -40,6 +40,12 @@ native element kinds. See [semantic properties and their separate simulation
 boundary](native-semantics.md). Delete/reconnect cannot carry hidden property
 updates. Unknown members in typed requests are rejected by the SDK marshaller.
 
+`NativeMutation.Style` adds sparse typography, fill/outline colors and native
+label bounds, with installed-font discovery through `native_fonts_get`.
+Persistence and rendered label placement have separate, type-specific limits;
+see [native styling](native-styles.md). Styling is not accepted on delete or
+reconnect operations and cannot duplicate colors supplied in `Geometry`.
+
 `ActivityLoop` explicitly replaces the native loop configuration; see
 [loop semantics and limits](native-loops.md). `EventMode` selects an intermediate
 event class at creation, and `EventProperties` patches interruption and boundary

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add installed-font inventory and sparse native typography, colors and label
+  rectangles with independent restart, clone and whole-container fidelity.
+  Reject unpersisted pool/connector fields and implicit font substitution;
+  distinguish native values from measured SVG styling and external label bounds.
+
 - Add typed native annotation/formatted-text content, diagram-owned groups and
   header context, with original-preserving native cloning and exact XPDL text
   and duplicate group-reference fidelity. Group geometry uses its actual native

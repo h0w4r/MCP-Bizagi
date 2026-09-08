@@ -124,7 +124,9 @@ public sealed class NativeDiagramPolicyTests
     private static EngineReply CloneState()
     {
         var state = State((A, "Original"), (B, "Copy Ω"));
-        state.Elements = new[] { (B, "Collaboration"), (Q, "Process"), (U, "UserTask") }.Select(e => new NativeElement { Id = e.Item1, Kind = e.Item2, DiagramId = B }).ToArray();
+        // A real native snapshot contains both retained source and newly cloned graph identities.
+        state.Elements = new[] { (B, "Collaboration"), (Q, "Process"), (U, "UserTask") }.Select(e => new NativeElement { Id = e.Item1, Kind = e.Item2, DiagramId = B })
+            .Concat(new[] { (A, "Collaboration"), (P, "Process"), (T, "UserTask") }.Select(e => new NativeElement { Id = e.Item1, Kind = e.Item2, DiagramId = A })).ToArray();
         state.DiagramClones = [new() { SourceId = A, TargetId = B, Identities = new[] { (A, B), (P, Q), (T, U) }.Select(e => new NativeCloneIdentity { SourceId = e.Item1, TargetId = e.Item2 }).ToArray() }];
         return state;
     }
@@ -149,6 +151,16 @@ public sealed class NativeDiagramPolicyTests
         var report = NativeDiagramPolicy.Compare(Archive(new() { [A] = source }), Archive(new() { [A] = source, [B] = Diagram(B, "Copy Ω", Flow(Q, U)) }), Patch("clone", A, "Copy Ω"), state, state);
         Assert.True(report.Preserved);
         Assert.Contains(report.Differences, d => d.Location == "clone" && d.ElementId == A);
+    }
+    [Fact] public void CloneRequiresIndependentTypographyAndLabelReadback()
+    {
+        string source = Diagram(A, "Original", Flow(P, T)); var state = CloneState();
+        state.Elements.Single(e => e.Id == T).Style = new() { FontName = "Arial", FontSize = 12, Bold = true, LabelBounds = new() { X = 10, Y = 20, Width = 80, Height = 40 } };
+        state.Elements.Single(e => e.Id == U).Style = new() { FontName = "Arial", FontSize = 12, Bold = true, LabelBounds = new() { X = 10, Y = 20, Width = 80, Height = 40 } };
+        byte[] before = Archive(new() { [A] = source }), after = Archive(new() { [A] = source, [B] = Diagram(B, "Copy Ω", Flow(Q, U)) });
+        Assert.True(NativeDiagramPolicy.Compare(before, after, Patch("clone", A, "Copy Ω"), state, state).Preserved);
+        state.Elements.Single(e => e.Id == U).Style!.LabelBounds = new();
+        Assert.Throws<InvalidDataException>(() => NativeDiagramPolicy.Compare(before, after, Patch("clone", A, "Copy Ω"), state, state));
     }
     [Theory] [InlineData("drop")] [InlineData("rename-child")] [InlineData("change-original")]
     public void CloneDoesNotWaivePayloadLossOrSourceMutation(string fault)

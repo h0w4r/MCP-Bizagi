@@ -158,6 +158,11 @@ public static class NativeDiagramPolicy
         var nodes = mainNodes.Concat(mainNodes.SelectMany(NativeDataFlowPolicy.OwnedNodes)).ToArray();
         NativeDataFlowPolicy.VerifyClonedData(Read(result[Prefix(clone.TargetId) + "Diagram.xml"]), mainNodes);
         if (nodes.Length != reverse.Count || nodes.Any(e => !reverse.ContainsKey(e.Id))) throw new InvalidDataException("Clone readback does not cover every mapped native identity.");
+        foreach (var node in mainNodes)
+        {
+            var source = reopened.Where(e => e.Id == reverse[node.Id] && e.DiagramId == clone.SourceId).ToArray();
+            if (source.Length != 1 || !NativeStylePolicy.Same(source[0].Style, node.Style)) throw new InvalidDataException("Native clone changed persisted typography or label geometry, or its source snapshot is missing/ambiguous.");
+        }
         foreach (var image in nodes.Where(e => e.Kind == "ImageArtifact"))
         {
             var sourceImage = reopened.Single(e => e.Id == reverse[image.Id] && e.DiagramId == clone.SourceId);

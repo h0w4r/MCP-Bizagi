@@ -1,5 +1,62 @@
 # Verification baselines
 
+## Native typography, colors and label bounds — 2026-09-08 UTC
+
+The final source circuit `20260908-005617-3388f3` passed **16 terminal native
+operations**: 12 completed and four expected worker failures. Two additional
+real MCP preflight rejections covered fractional coordinates and empty label
+bounds, which must not silently reset an existing label rectangle.
+The official SDK discovered **34 tools**. Release compilation had no warnings
+or errors, and **847 unit/component tests** passed separately.
+
+The native circuit enumerated actual installed fonts; created styled tasks,
+an end event, gateway, embedded subprocess, annotation, nested data object,
+sequence flow and association; edited an existing pool; created a styled pool,
+lane and milestone; saved and reopened every change; checked no-op persistence;
+cloned the diagram with exact style/label readback; verified later source edits
+did not mutate cloned formatting; and checked original-source revisions.
+Expected failures covered an absent font, an unsupported connector fill, an
+unpersisted process style and unsupported pool text direction. Valid updates
+and native reads succeeded after these failures, without replaying a write.
+
+The installed native renderer produced real root/nested SVG and transparent
+PNG artifacts. Independent assertions checked font family, measured font size,
+bold/italic/underline/strikeout, opaque font/fill/outline colors, alignment and
+native direction attributes. The authored external sequence-flow label retained
+its requested `(230, 145, 130, 40)` rectangle in the actual SVG. A 14-unit font
+rendered as 18.5941 CSS pixels; a 12-unit font rendered as 15.9378 pixels.
+
+| Source circuit | Terminal states | Workers / periodic samples | Transcript SHA-256 |
+| --- | --- | --- | --- |
+| `20260908-005617-3388f3`, final source and complete rectangle intent | 12 completed, 4 expected failures | 25 / 226 | `e4fb61ae3ebd0aee4aa87b80ea11c932d2b0d7fd883210bb2515e14eb8e16fb9` |
+| `20260908-004001-860345`, reinforced style/render/type corpus | 12 completed, 4 expected failures | 25 / 227 | `01b41199c96e649a7281178b8ec38558f83a427555ce5c48fed650c36c35fd6e` |
+| `20260908-003334-e915e7`, initial native style lifecycle | 11 completed, 3 expected failures | 23 / 220 | `7d02231a856106441456c69a473b98f1a3ab8ba2ef4744cf936c9e407feab4a7` |
+| `20260908-004427-fe2f4a`, general native/recovery regression | 12 completed, 1 expected failure, 1 cancelled, 1 interrupted | 19 / 799 | `286801195a5b8f669adbd231b692746a8f682eeb4000c8b3b0c6673ceac32792` |
+| `20260908-004855-f4fa0d`, native custom artifact regression | 18 completed, 2 expected failures | 38 / 366 | `f59397775188cb873a0420708bb324f1412dde5d1bfbe267ecf2100c367fd9c3` |
+
+The general regression retained actual MCP XML operations, native roundtrip,
+stale-revision rejection, multi-diagram/nested editing, no-op fidelity, vendor
+validation, simulation results, offscreen SVG, corrupt-input diagnostics,
+cancellation/recovery and host-death Job Object cleanup with journal restart
+and competing-state-owner rejection.
+The custom-artifact regression retained real `.bca` import/export, explicit
+image conversion, shared definitions, root/nested instances and native SVG
+image pixels, cloning, deletion and original-preserving persistence.
+
+No worker-visible window or worker foreground ownership was observed in those
+periodic samples. This is not continuous desktop instrumentation or independent
+Modeler GUI compatibility accreditation. Initial development also exposed real
+constructor/reader graphical-default differences; only new objects now receive
+the reader's actual defaults, without normalizing existing model observations.
+
+Internal task labels ignored some manually persisted bounds, and the native
+pool adapter does not persist arbitrary label geometry/direction/background.
+Those limits are explicit in the tool contract and mutation warning. Direction
+attributes alone do not accredit pixel rotation, and semitransparent rendering
+or universal glyph coverage is not claimed. See [native style boundaries](native-styles.md).
+This source milestone does not update an older immutable release ZIP or close
+the full Modeler automation objective.
+
 ## Native custom artifact definitions, instances and `.bca` — 2026-09-07
 
 The final source circuit `20260907-235432-948997` passed **20 terminal native

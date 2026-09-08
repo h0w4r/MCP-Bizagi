@@ -42,6 +42,10 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeSubProcessKinds = NativeSubProcessPolicy.Kinds,
             nativeEventPayloadKinds = NativeEventPayloadPolicy.Kinds,
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
+            nativeStyles = new { patch = "NativeMutation.Style", fontInventoryTool = "native_fonts_get", fontSize = "whole_native_units_1_to_512_not_css_pixels",
+                alignments = NativeStylePolicy.Alignments, directions = NativeStylePolicy.Directions,
+                labels = "whole_nonnegative_native_bounds_or_four_zeroes_to_clear_not_universal_rendered_geometry",
+                pools = "font_and_fill_border_colors_only", connectors = "no_background_fill_or_border_visibility" },
             nativeCustomArtifacts = new { ownership = "model_not_global_palette", operations = new[] { "create", "update", "delete", "native_bca_import", "native_bca_export" },
                 references = "ArtifactProperties.CustomArtifactTypeId", pixelConversion = "explicit_native_rasterization_acknowledgement_with_stable_serialization_and_restart_verification" },
             nativeImageInput = new { source = "confined_path_or_completed_native_image_export", revision = "sha256", frames = "explicit_when_multiple", sourceByteBound = NativeImagePolicy.MaxSourceBytes, decodedPixelBound = 64L * 1024 * 1024,
@@ -136,6 +140,9 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_image_export"), Description("Export one actual ImageArtifact payload without re-encoding. Verify exact bytes against the native archive. Returns original file name, decoded pixel fingerprint, SHA-256 and a typed reusable image artifact reference; this is not an extended-attribute attachment.")]
     public CallToolResult ExportNativeImage(string path, string diagramId, string elementId) => Guard(() => native.ExportImage(path, diagramId, elementId));
+
+    [McpServerTool(Name = "native_fonts_get"), Description("Observe installed Windows/GDI+ font families and native face availability through the isolated worker. Does not install fonts, modify settings or establish glyph-level rendering compatibility. Use the returned family names in native_mutate Style.FontName. Poll operation_get.")]
+    public CallToolResult GetNativeFonts() => Guard(() => native.Fonts());
 
     [McpServerTool(Name = "native_custom_artifacts_apply"), Description("Create, update or delete model-owned custom artifact definitions in a revision-checked native copy. Inspect CustomArtifacts first. Changes require explicit Operation and Id; creation requires Name and Image. Image uses the same revision-checked raster/frame input as native images. AllowNativeRasterization explicitly permits the installed custom-type serializer's pixel conversion; unstable repeated serialization fails. Referenced definitions cannot be deleted. Never modifies the global user palette. Poll operation_get.")]
     public CallToolResult ApplyNativeCustomArtifacts(string path, string expectedRevision, NativeCustomArtifactPatch patch) => Guard(() => native.ApplyCustomArtifacts(path, expectedRevision, patch));

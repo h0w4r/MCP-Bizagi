@@ -148,6 +148,11 @@ public sealed partial class NativeEngine
             reply.Message = "Native services resolved. No file operation has been accredited by this probe.";
             return reply;
         }
+        if (request.Action == "fonts")
+        {
+            progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
+            reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
+        }
         if (!new[] { "create_save", "import_save", "read_export", "edit_save", "mutate_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");

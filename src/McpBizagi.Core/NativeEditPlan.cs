@@ -38,10 +38,11 @@ public static class NativeEditPlan
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
             }
             else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
-            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null || c.ArtifactProperties != null))
+            if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null || c.ArtifactProperties != null || c.Style != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
-            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null && c.ArtifactProperties == null) throw new InvalidDataException("An update must specify an actual property.");
+            if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null && c.ArtifactProperties == null && c.Style == null) throw new InvalidDataException("An update must specify an actual property.");
             NativeSemanticPolicy.Validate(c);
+            NativeStylePolicy.Validate(c);
             NativeEventPolicy.Validate(c);
             NativeEventPayloadPolicy.Validate(c); NativeDataPolicy.Validate(c); NativeArtifactPolicy.Validate(c);
             NativeSubProcessPolicy.Validate(c);
@@ -93,6 +94,7 @@ public static class NativeEditPlan
             NativeSemanticPolicy.Verify(c, e, elements);
             NativeEventPolicy.Verify(c, e, elements);
             NativeEventPayloadPolicy.Verify(c, e, elements); NativeDataPolicy.Verify(c, e, elements); NativeArtifactPolicy.Verify(c, e, elements);
+            if (c.Style != null) NativeStylePolicy.Verify(c.Style, e);
             NativeSubProcessPolicy.Verify(c, e);
             if (c.ActivityLoop != null) NativeLoopPolicy.Verify(c.ActivityLoop, e.ActivityLoop);
             if (c.Operation == "create" && (e.ParentId != c.ParentId || (c.ElementType == "DataStore" ? e.Kind != "DataStore" || e.ElementType != "Other" : e.ElementType != c.ElementType))) throw new InvalidDataException("Created native type/containment differs from the request.");

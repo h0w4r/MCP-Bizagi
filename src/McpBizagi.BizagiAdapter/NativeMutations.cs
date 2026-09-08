@@ -84,7 +84,9 @@ public sealed partial class NativeEngine
                         // A cleared pool description must use the native absent value. Persisting "" leaves
                         // a transient process-runtime JSON key that the next native load/save removes.
                         Set(element, "Documentation", change.Documentation == "" && element.GetType().Name == "Participant" ? null! : change.Documentation);
+                    if (change.Operation == "create") InitializeNewStyle(element);
                     if (change.Geometry != null) ApplyGeometry(element, change.Geometry);
+                    if (change.Style != null) ApplyStyle(element, change.Style);
                     if (change.ExpandedSize is { } size)
                     {
                         if (Text(element, "ElementType") != "SubProcess") throw new InvalidDataException("ExpandedSize currently applies to embedded subprocesses only.");

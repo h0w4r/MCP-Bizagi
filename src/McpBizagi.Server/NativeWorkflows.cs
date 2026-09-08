@@ -13,6 +13,10 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
     public OperationView Probe() => operations.Start("native_probe", async (id, progress, token) =>
         await Execute(new EngineRequest { OperationId = id }, RunDirectory(id, "probe"), progress, token));
 
+    public OperationView Fonts() => operations.Start("native_fonts_get", async (id, progress, token) =>
+        // The worker already owns the Windows drawing dependency; the modern host does not add another graphics stack.
+        await Execute(new EngineRequest { OperationId = id, Action = "fonts" }, RunDirectory(id, "fonts"), progress, token));
+
     public OperationView Roundtrip(string path, string modelName, string[]? additionalPaths = null)
     {
         var input = files.ReadBpmn(path);
@@ -129,6 +133,7 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 fidelity,
                 nativeSourceUnmodified = true,
                 requestedChangesVerified = mutations.Length,
+                styleInterpretationWarning = mutations.All(c => c.Style == null) ? null : "Styling verifies persisted native fields. The installed renderer chooses label placement and intrinsic rotation by element kind; internal labels can ignore manual bounds and text backgrounds. Semitransparent color rendering and glyph-level compatibility are not accredited by persistence.",
                 imageConversionWarning = imageSources.Count == 0 ? null : "Images use selected-frame GDI+ decoding and 8-bit RGBA PNG encoding. Source-container metadata, color profiles, greater precision and other frames are not preserved. Receipts verify decoded pixels and durable native payload bytes separately.",
                 outputArtifact = "artifact:" + id + ":edited.bpm",
                 outputRevision = BpmnDocument.Revision(File.ReadAllBytes(output))
