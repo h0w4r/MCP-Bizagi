@@ -13,9 +13,9 @@ public static class NativePresentationPolicy
 {
     public static readonly string[] Types = ["None", "Link", "File", "Image", "Text"];
     public static readonly string[] ValueTypes = ["Normal", "Description", "ExtendedAttribute"];
-    private static string Key(NativePresentationAction a) => a.DiagramId + ":" + a.ElementId;
-    private static bool Binary(NativePresentationAction a) => a.TypeValue == "Normal" && a.Type is "File" or "Image";
-    private static string FileKey(NativePresentationAction a) => a.DiagramId + ".diag!/Actions/" + a.Content[12..];
+    internal static string Key(NativePresentationAction a) => a.DiagramId + ":" + a.ElementId;
+    internal static bool Binary(NativePresentationAction a) => a.TypeValue == "Normal" && a.Type is "File" or "Image";
+    internal static string FileKey(NativePresentationAction a) => a.DiagramId + ".diag!/Actions/" + a.Content[12..];
     public static void Validate(NativePresentationActionChange[] changes)
     {
         if (changes == null || changes.Length is < 1 or > 1000 || changes.Any(c => c?.Action == null)) throw new InvalidDataException("Supply 1-1000 explicit presentation changes.");
@@ -91,7 +91,7 @@ public static class NativePresentationPolicy
         return doc.ToString();
     }
 
-    private static NativePresentationAction ReadAction(XElement node, string diagram)
+    internal static NativePresentationAction ReadAction(XElement node, string diagram)
     {
         if (node.Attributes().Any(a => a.Name.Namespace != XNamespace.None || !new[] { "ElementId", "Type", "TypeValue", "ExtendedAttributeId" }.Contains(a.Name.LocalName)) ||
             node.Nodes().Any(n => n is not XElement && (n is not XText t || !string.IsNullOrWhiteSpace(t.Value))) ||
@@ -164,7 +164,7 @@ public static class NativePresentationPolicy
         return new(actions.Values.ToArray(), files, entries);
     }
 
-    private static void Verify(NativePresentationAction[] expected, NativeAttachmentInfo[]? files, NativePresentationSnapshot actual)
+    internal static void Verify(NativePresentationAction[] expected, NativeAttachmentInfo[]? files, NativePresentationSnapshot actual)
     {
         string Stable<T>(IEnumerable<T> values) => JsonSerializer.Serialize(values);
         if (Stable(expected.OrderBy(Key)) != Stable(actual.Actions.OrderBy(Key))) throw new InvalidDataException("Native presentation action fields differ from expected intent.");

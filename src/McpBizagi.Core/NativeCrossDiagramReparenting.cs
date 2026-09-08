@@ -6,12 +6,13 @@ namespace McpBizagi.Core;
 
 public static partial class NativeReparentingPolicy
 {
-    public static NativeSimulationMigrationPlan Preflight(byte[] bytes, EngineReply source, NativeReparenting[] changes, NativeSimulationMigration? simulationMigration = null)
+    public static NativeSimulationMigrationPlan Preflight(byte[] bytes, EngineReply source, NativeReparenting[] changes, NativeSimulationMigration? simulationMigration = null, bool migratePresentationActions = false)
     {
         var expected = Expected(source.Elements, changes).ToDictionary(e => e.Id);
         var moved = source.Elements.Where(e => e.DiagramId != expected[e.Id].DiagramId).ToArray();
         if (moved.Length == 0)
         {
+            if (migratePresentationActions) throw new InvalidDataException("Presentation migration requires a cross-diagram move.");
             if (simulationMigration != null) throw new InvalidDataException("Scenario migration requires a cross-diagram move.");
             return NativeSimulationMigrationPlan.Empty;
         }
@@ -22,18 +23,19 @@ public static partial class NativeReparentingPolicy
         foreach (string diagram in moved.SelectMany(e => new[] { e.DiagramId, expected[e.Id].DiagramId }).Distinct())
             foreach (string name in new[] { "Actions.xml", "BPSimDataResult.xml" })
                 if (entries.TryGetValue(diagram + ".diag!/" + name, out var value) && NativeMetadataPolicy.Read(Encoding.UTF8.GetString(value)).Root?.Elements().Any() == true &&
-                    (name != "BPSimDataResult.xml" || !simulation.DiscardResultDiagrams.Contains(diagram)))
+                    (name != "BPSimDataResult.xml" || !simulation.DiscardResultDiagrams.Contains(diagram)) && (name != "Actions.xml" || !migratePresentationActions))
                     throw new NotSupportedException("Cross-diagram migration cannot silently retire or invalidate presentation actions or simulation results.");
         return simulation;
     }
 
     private static NativeFidelityReport CompareCrossDiagram(byte[] beforeBytes, byte[] afterBytes, NativeElement[] before, NativeElement[] after,
-        NativeReparenting[] changes, EngineReply? sourceReply, EngineReply? editedReply, EngineReply? reopenedReply, NativeSimulationMigrationPlan? simulation)
+        NativeReparenting[] changes, EngineReply? sourceReply, EngineReply? editedReply, EngineReply? reopenedReply, NativeSimulationMigrationPlan? simulation, NativePresentationMigrationPlan? presentation)
     {
         var original = before.ToDictionary(e => e.Id); var expected = Expected(before, changes).ToDictionary(e => e.Id);
         var moved = before.Where(e => e.DiagramId != expected[e.Id].DiagramId).ToDictionary(e => e.Id, e => (Source: e.DiagramId, Target: expected[e.Id].DiagramId));
         var left = NativeArchive.ReadEntries(beforeBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(afterBytes).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        if (presentation != null) NativePresentationMigrationPolicy.Project(left, right, presentation, editedReply ?? throw new InvalidDataException("Missing action editor evidence."), reopenedReply ?? throw new InvalidDataException("Missing action restart evidence."));
         if (!left.Keys.Where(k => k.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)).Order().SequenceEqual(right.Keys.Where(k => k.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)).Order()))
             throw new InvalidDataException("Cross-diagram reparenting cannot create or remove diagrams.");
         var a = before.Where(e => e.Kind == "Collaboration").ToDictionary(e => e.Id, e => NativeMetadataPolicy.Read(Encoding.UTF8.GetString(left[e.Id + ".diag!/Diagram.xml"])));

@@ -193,6 +193,12 @@ try
         await WaitOperation(recoveredId); VerifyWorkerExit(recoveredId);
         Console.WriteLine("NATIVE_CONNECTION_FAILURE_CLASSIFICATION_AND_RECOVERY_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--action-migration-only"))
+    {
+        if (!native) throw new ArgumentException("Action migration requires --native.");
+        await NativePresentationMigrationAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_ACTION_MIGRATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--presentation-only"))
     {
         if (!native) throw new ArgumentException("Presentation acceptance requires --native.");
@@ -222,6 +228,13 @@ try
         if (!native) throw new ArgumentException("XPDL acceptance requires --native.");
         await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
+    }
+    if (args.Contains("--action-scenario-migration-only"))
+    {
+        if (!native) throw new ArgumentException("Combined action/scenario migration requires --native.");
+        await NativeScenarioMigrationAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit,
+            saveResults: true, reject: (name, input) => Call(name, input, true), migrateActions: true);
+        Console.WriteLine("NATIVE_ACTION_SCENARIO_MIGRATION_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--saved-simulation-only"))
     {

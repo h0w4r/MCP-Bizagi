@@ -86,7 +86,8 @@ separate revision-checked `native_commit` operation.
 
 ## Saved results and remaining boundaries
 
-Nonempty presentation actions remain rejected. Saved simulation results are not
+Nonempty action collections require the separate `migratePresentationActions` flag
+and [action migration gate](native-action-migration.md). Saved simulation results are not
 migrated as if they still described the modified graph. Without explicit discard
 consent, existing nonempty result containers reject. With consent, the adapter
 clears native scenario result strings and the comparator requires an empty
@@ -98,8 +99,8 @@ results, default rejection and explicit native retirement, without injecting
 synthetic archive payloads.
 Likewise, mapping an inherited scenario's configuration is not proof of its
 runtime execution. Resource/calendar execution below tests explicit base
-scenarios. Arbitrary distributions, behavioral equivalence, presentation-action
-migration, automatic layout, live unsaved sessions and Modeler GUI compatibility
+scenarios. Arbitrary distributions, behavioral equivalence,
+automatic layout, live unsaved sessions and Modeler GUI compatibility
 remain separate gates.
 
 ## Repeat the real circuit

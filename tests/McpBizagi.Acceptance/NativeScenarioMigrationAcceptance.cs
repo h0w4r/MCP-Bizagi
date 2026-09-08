@@ -10,7 +10,7 @@ internal static class NativeScenarioMigrationAcceptance
     private static string S(JsonElement e, string name) => e.GetProperty(name).GetString()!;
     public static async Task Run(string repo, string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
         Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool saveResults = false,
-        Func<string, Dictionary<string, object?>, Task<JsonElement>>? reject = null)
+        Func<string, Dictionary<string, object?>, Task<JsonElement>>? reject = null, bool migrateActions = false)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string name, Dictionary<string, object?> input, string state = "completed")
@@ -69,6 +69,31 @@ internal static class NativeScenarioMigrationAcceptance
         var config = Root(Scene("Resources", true), Scene("Calendar", true, true), inherited);
         var targetConfig = Root(Scene("TargetResources", false), Scene("TargetCalendar", false), targetInherited);
         await Write("native_metadata_apply", new { Simulations = new[] { new { DiagramId = sourceDiagram, Xml = config.ToString() }, new { DiagramId = targetDiagram, Xml = targetConfig.ToString() } }, DiscardSimulationResults = true });
+        byte[] actionPayload = Encoding.UTF8.GetBytes("Scenario and presentation migration Ω");
+        if (migrateActions)
+        {
+            var actions = await Op("native_presentation_apply", new() { ["path"] = path, ["expectedRevision"] = revision, ["changes"] = new object[] {
+                new { Action = new { DiagramId = sourceDiagram, ElementId = S(task, "Id"), Type = "File", Content = "action-file:Scenario action.bin" }, DataBase64 = Convert.ToBase64String(actionPayload) },
+                new { Action = new { DiagramId = sourceDiagram, ElementId = S(graph.Single(e => S(e, "BpmnId") == start), "Id"), Type = "Text", Content = "Keep this action cache Ω" } }
+            } });
+            path = S(actions, "outputArtifact"); revision = S(actions, "outputRevision");
+        }
+        void VerifyActions(JsonElement migration, string diagram)
+        {
+            if (!migrateActions) return;
+            foreach (string field in new[] { "edited", "reopened" })
+            {
+                var snapshot = migration.GetProperty(field).GetProperty("Presentation");
+                var actions = snapshot.GetProperty("Actions").EnumerateArray().ToArray();
+                if (actions.Length != 2 || actions.Any(a => S(a, "DiagramId") != diagram) ||
+                    S(actions.Single(a => S(a, "ElementId") == S(task, "Id")), "Content") != "action-file:Scenario action.bin" ||
+                    S(actions.Single(a => S(a, "Type") == "Text"), "Content") != "Keep this action cache Ω") throw new InvalidDataException("Combined migration changed action content or ownership.");
+            }
+            using var archive = ZipFile.OpenRead(migration.GetProperty("edited").GetProperty("Artifacts")[0].GetString()!);
+            using var stream = archive.GetEntry(diagram + ".diag")!.Open(); using var nested = new ZipArchive(stream);
+            using var input = nested.GetEntry("Actions/Scenario action.bin")!.Open(); using var bytes = new MemoryStream(); input.CopyTo(bytes);
+            if (!bytes.ToArray().SequenceEqual(actionPayload)) throw new InvalidDataException("Combined scenario/action migration changed native action bytes.");
+        }
         string originalPath = path, originalRevision = revision;
         var expectedSaved = new Dictionary<(string Diagram, string Scenario), string>();
         void VerifySaved(JsonElement saved, Dictionary<(string Diagram, string Scenario), string> expected)
@@ -150,7 +175,7 @@ internal static class NativeScenarioMigrationAcceptance
             TargetDiagramId = reverse ? sourceDiagram : targetDiagram, TargetScenarioId = to };
         object[] Mappings(bool reverse) => reverse ? [Map("TargetResources", "Resources", true), Map("TargetCalendar", "Calendar", true), Map("TargetInherited", "Inherited", true)]
             : [Map("Resources", "TargetResources"), Map("Calendar", "TargetCalendar"), Map("Inherited", "TargetInherited")];
-        Dictionary<string, object?> Request(bool reverse, object? migration) => new() { ["path"] = path, ["expectedRevision"] = revision, ["simulationMigration"] = migration,
+        Dictionary<string, object?> Request(bool reverse, object? migration) => new() { ["path"] = path, ["expectedRevision"] = revision, ["simulationMigration"] = migration, ["migratePresentationActions"] = migrateActions,
             ["moves"] = selected.Select(id => new { ElementId = id, ExpectedParentId = reverse ? targetProcess : process, TargetParentId = reverse ? process : targetProcess,
                 ExpectedDiagramId = reverse ? targetDiagram : sourceDiagram, TargetDiagramId = reverse ? sourceDiagram : targetDiagram }).ToArray() };
         async Task Rejected(object? migration, string message)
@@ -163,6 +188,7 @@ internal static class NativeScenarioMigrationAcceptance
         await Rejected(new { Mappings = Mappings(false).Take(2).ToArray(), CopyMissingDependencies = true }, "complete scenario");
         if (saveResults) await Rejected(new { Mappings = Mappings(false), CopyMissingDependencies = true }, "simulation results");
         var forward = await Op("native_elements_reparent", Request(false, new { Mappings = Mappings(false), CopyMissingDependencies = true, DiscardSimulationResults = saveResults }));
+        VerifyActions(forward, targetDiagram);
         if (saveResults) { expectedSaved.Clear(); VerifySaved(forward, expectedSaved); }
         path = S(forward, "outputArtifact"); revision = S(forward, "outputRevision");
         if (saveResults)
@@ -188,6 +214,7 @@ internal static class NativeScenarioMigrationAcceptance
         var noOp = await Op("native_save_copy", new() { ["path"] = path, ["expectedRevision"] = revision });
         if (saveResults) VerifySaved(noOp, expectedSaved);
         var backward = await Op("native_elements_reparent", Request(true, new { Mappings = Mappings(true), CopyMissingDependencies = false, DiscardSimulationResults = saveResults }));
+        VerifyActions(backward, sourceDiagram);
         if (saveResults) { expectedSaved.Clear(); VerifySaved(backward, expectedSaved); }
         path = S(backward, "outputArtifact"); revision = S(backward, "outputRevision");
         var restored = backward.GetProperty("reopened").GetProperty("Metadata").GetProperty("Simulations").EnumerateArray().Single(e => S(e, "DiagramId") == sourceDiagram);

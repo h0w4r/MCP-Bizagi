@@ -28,6 +28,7 @@ public sealed class EngineRequest
     public int SimulationLevel { get; set; } = 1;
     public NativeSimulationResultWrite? SimulationResultWrite { get; set; }
     public NativePresentationActionChange[] PresentationChanges { get; set; } = System.Array.Empty<NativePresentationActionChange>();
+    public NativePresentationTransfer[] PresentationTransfers { get; set; } = System.Array.Empty<NativePresentationTransfer>();
     public string PublicationFormat { get; set; } = "";
     public string PublicationTitle { get; set; } = "Process documentation";
     public string[] SelectedDiagramIds { get; set; } = System.Array.Empty<string>();

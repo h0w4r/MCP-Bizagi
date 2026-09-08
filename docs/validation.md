@@ -1,5 +1,62 @@
 # Verification baselines
 
+## Explicit native action migration — source after 0.6, 2026-09-08 UTC
+
+The final dedicated official-SDK stdio circuit `20260908-223045-f3a69b` passed
+**15 terminal operations: 13 completed and two expected failures** against the
+installed Modeler 4.3.0.008 engine. This is copy-only programmatic migration,
+not presentation playback or independent desktop compatibility.
+
+- Native-authored actions followed a root and its nested subtree between two
+  diagrams and back. Text, Link, File, Image, Description and referenced embedded
+  file/image/linked content survived native persistence and a fresh reader.
+- An independently changed owner description did not silently refresh the earlier
+  action cache. Shared source action bytes remained available to the unmoved owner;
+  destination bytes and moved referenced attachments matched independent ZIP and
+  attachment-export readback. A native no-op save retained the migrated content.
+- Default missing consent and explicit migration into a different-byte filename
+  collision failed as expected. Explicitly resolving the conflicting target
+  action allowed recovery without changing the original input.
+- All **29 workers / 34 owned processes** exited. **174 periodic desktop samples**
+  observed no owned visible window or worker foreground takeover. A post-run
+  audit rehashed **nine earlier output artifacts**, **seven captured inputs** and
+  **111 distinct loaded vendor module contents**, without drift.
+
+Dedicated transcript SHA-256:
+`7e74946c27d8238505db5d60935b46a706effe812856be044b8674d5e2dcb308`.
+Independent action-migration receipt SHA-256:
+`8d73f13f0c186f5d63c7de627abbaa16d9ddbc9611bf82924a9601560e2ec4bf`.
+
+The separate **combined action/scenario/saved-result circuit**
+`20260908-223503-8c987d` passed **29 terminal operations: 22 completed and seven
+expected failures**, plus two expected parameter/protocol rejections. It authored
+actual File/Text actions through MCP and preserved both through forward/inverse
+scenario migration. It also generated real saved simulation results, rejected
+missing scenario/dependency/discard permissions, explicitly retired stale results,
+and re-executed the existing quantitative resource/calendar corpus after movement.
+The independent client checked action bytes and historical result metrics rather
+than accepting native method completion alone.
+
+All **52 workers / 62 owned processes** exited; **361 periodic desktop samples**
+observed no owned visible window or worker foreground takeover. Post-run hashes
+retained **nine prior outputs**, **15 captured inputs** and **108 distinct loaded
+vendor module contents** unchanged. These are sampled observations, not continuous
+desktop monitoring or GUI equivalence.
+
+Combined transcript SHA-256:
+`2e4aca6d62ae83d2c7917401ce622c2a2354b97ba07b573d9469013fae8da32f`.
+Independent combined scenario/action receipt SHA-256:
+`edc7bdc4d191a593602fdca03c248f5fea1e85ebc6bc2e04e4eb4cc4f4b6ff3b`.
+
+Release build passed with zero warnings/errors; **1,277 unit/component tests**
+passed, including 16 new migration-policy cases. XML-only MCP circuit
+`20260908-223845-70feae` exposed 46 tools and passed with native execution
+explicitly disabled. Eighteen package-policy cases passed separately; neither
+those cases nor the XML-only circuit are packaged native acceptance. The immutable
+0.6.0-alpha.1 ZIP was not replaced. See the [migration contract](native-action-migration.md).
+Full automation, unsaved sessions, global layout, independent Modeler GUI
+compatibility and broader scenario/corpus acceptance remain open.
+
 ## Native presentation actions — source after 0.6, 2026-09-08 UTC
 
 Final official-SDK stdio circuit `20260908-215517-c1fc42` passed **27 terminal

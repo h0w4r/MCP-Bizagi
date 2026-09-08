@@ -84,7 +84,8 @@ Configured parameters require an explicit `simulationMigration` request with
 complete source/target scenario correspondence and matching context. Missing
 resource/calendar dependencies require copy consent; conflicting dependencies
 reject. See the [scenario migration contract](native-scenario-migration.md).
-Presentation actions remain rejected. Saved-result retirement requires explicit
+Presentation actions require `migratePresentationActions: true`; see the
+[action migration contract](native-action-migration.md). Saved-result retirement requires explicit
 consent; the [saved-results circuit](native-saved-simulation.md) verifies nonempty native retirement. Complete
 scenario replacement via `native_metadata_apply` is a separate operation, not
 migration.

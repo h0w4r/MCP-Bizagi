@@ -261,6 +261,7 @@ public sealed partial class NativeEngine
                 if (request.Action == "reparent_save")
                 {
                     Reparent(model, persistence, request.Reparentings, progress);
+                    MigratePresentation(model, request.PresentationTransfers, progress);
                     MigrateScenarioParameters(model, request.ScenarioTransfers, request.DiscardScenarioResultDiagrams, progress);
                 }
                 if (request.Action == "extract_save") reply.Extraction = ExtractSubProcess(model, persistence, request.Extraction ?? throw new InvalidDataException("Missing extraction request."), progress);
@@ -319,7 +320,7 @@ public sealed partial class NativeEngine
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "reparent_save" or "exchange_read") reply.DiagramState = DiagramState(model);
         if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);
         if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Documentation = Documentation(model);
-        if (request.Action is "presentation_save" or "exchange_read") reply.Presentation = Presentation(model);
+        if (request.Action is "presentation_save" or "exchange_read" or "reparent_save") reply.Presentation = Presentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)
         {
             var wanted = request.Attachment;

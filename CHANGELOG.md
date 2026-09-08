@@ -2,11 +2,21 @@
 
 ## Unreleased
 
+- Add explicit `migratePresentationActions` consent to cross-diagram native
+  reparenting. Move the original action objects and owned bytes with their
+  owners, retain shared source payloads and literal caches, and reject different-byte
+  collisions or unrepresented content. Independent action-archive verification
+  precedes the full model fidelity gate. Actual MCP circuits cover forward/inverse
+  subtree migration and combined action/scenario migration with real saved-result
+  retirement, resource/calendar execution and fresh-process readback.
+  This source addition is not included in the immutable 0.6.0-alpha.1 ZIP.
+
 - Add typed native presentation action inspection and complete per-owner
   upsert/deletion in revision-checked copies. Use installed action collections,
   selected native description/attribute resolvers, opaque embedded payloads and
   independent fresh-reader/whole-archive gates. Content is never activated.
-  Playback, live documents and cross-diagram action migration remain separate.
+  Playback and live documents remain separate; migration uses the explicit
+  reparenting contract described above.
   This source addition is not included in the immutable 0.6.0-alpha.1 ZIP.
 
 

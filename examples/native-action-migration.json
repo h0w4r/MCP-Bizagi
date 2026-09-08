@@ -1,0 +1,14 @@
+{
+  "path": "<native path or artifact URI>",
+  "expectedRevision": "<source revision from inspection>",
+  "migratePresentationActions": true,
+  "moves": [
+    {
+      "ElementId": "<native subtree root GUID>",
+      "ExpectedParentId": "<current parent GUID>",
+      "TargetParentId": "<destination parent GUID>",
+      "ExpectedDiagramId": "<current diagram GUID>",
+      "TargetDiagramId": "<destination diagram GUID>"
+    }
+  ]
+}

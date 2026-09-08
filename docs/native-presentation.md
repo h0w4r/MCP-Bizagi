@@ -92,8 +92,9 @@ adopting a verified copy remains a separate revision-checked commit operation.
 ## Boundaries
 
 This does not activate presentation playback, open linked applications, fetch
-remote URLs, edit unsaved desktop documents, or migrate actions between diagrams.
-Cross-diagram reparenting still rejects affected nonempty action collections.
+remote URLs, edit unsaved desktop documents, or establish GUI playback compatibility.
+Cross-diagram action migration requires explicit consent through the separate
+[action migration contract](native-action-migration.md).
 Changing an owner's description/attribute elsewhere is not an automatic promise
 that its presentation cache has been refreshed: explicitly upsert that action.
 Independent Modeler GUI interpretation and broader existing-model corpora require

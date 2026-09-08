@@ -27,3 +27,10 @@ public sealed class NativePresentationSnapshot
     public NativePresentationAction[] Actions { get; set; } = System.Array.Empty<NativePresentationAction>();
     public NativeAttachmentInfo[] Files { get; set; } = System.Array.Empty<NativeAttachmentInfo>();
 }
+
+/// <summary>Host-derived relocation of an existing action, not a replacement or cache refresh.</summary>
+public sealed class NativePresentationTransfer
+{
+    public NativePresentationAction SourceAction { get; set; } = new();
+    public string TargetDiagramId { get; set; } = "";
+}
