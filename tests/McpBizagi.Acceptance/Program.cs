@@ -199,6 +199,12 @@ try
         await NativePresentationMigrationAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
         Console.WriteLine("NATIVE_ACTION_MIGRATION_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--connector-ports-only"))
+    {
+        if (!native) throw new ArgumentException("Connector port acceptance requires --native.");
+        await NativeConnectorPortAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_CONNECTOR_PORTS_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--presentation-only"))
     {
         if (!native) throw new ArgumentException("Presentation acceptance requires --native.");

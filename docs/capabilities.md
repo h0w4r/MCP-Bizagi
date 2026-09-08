@@ -20,6 +20,7 @@ It does not imply that every combination or unsaved GUI workflow is verified.
 | Blank native model creation | Experimental current source | Native constructor/domain defaults, exact durable diagram identities, ordered tabs and no-op stability; [contract](native-models.md) and [execution evidence](validation.md) |
 | Native workspace adoption and save-as | Experimental current source | Exact source bytes, real engine preflight, guarded replacement/backup, durable receipts, cancellation and host-death reconciliation; [contract](native-commit.md) |
 | `.bpm` name batches | Locally verified, copy-only | Task/event batch and task nested two subprocess levels; full archive checked on tested inputs |
+| Native connector port metadata | Locally verified source after 0.6 | SequenceFlow, Association and MessageFlow explicit port lifecycle, fresh reader and independent archive checks; not all port/shape combinations or global layout; [contract](native-connector-ports.md) |
 | Native no-op save and comparison | Basic and documented rich corpora locally verified | Unknown/binary changes rejected; untested combinations remain subject to the same fidelity gate |
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |
 | Host death and state ownership | Locally verified | Actual host termination, Job Object worker cleanup, interrupted journal, restart, competing-host rejection |

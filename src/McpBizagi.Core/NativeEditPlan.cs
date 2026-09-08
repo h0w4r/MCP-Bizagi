@@ -36,8 +36,9 @@ public static class NativeEditPlan
                 Id(c.SourceId); Id(c.TargetId);
                 if (c.Points.Length is < 2 or > 10000 || c.Geometry != null) throw new InvalidDataException("Connections require 2 to 10000 points and no node bounds.");
                 foreach (var p in c.Points) { Number(p.X); Number(p.Y); }
+                NativeConnectorPortPolicy.Validate(c.SourcePort); NativeConnectorPortPolicy.Validate(c.TargetPort);
             }
-            else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
+            else if (c.SourceId != "" || c.TargetId != "" || c.Points.Length != 0 || c.SourcePort != null || c.TargetPort != null) throw new InvalidDataException("Connection fields require creation of a flow or reconnect.");
             if (c.Operation is "delete" or "reconnect" && (c.Name != null || c.Documentation != null || c.Geometry != null || c.ExpandedSize != null || c.CallTarget != null || c.ActivityProperties != null || c.ActivityLoop != null || c.FlowCondition != null || c.GatewayDirection != null || c.EventProperties != null || c.EventMode != null || c.SubProcessKind != null || c.SubProcessProperties != null || c.EventPayloads != null || c.DataProperties != null || c.ArtifactProperties != null || c.Style != null))
                 throw new InvalidDataException("Delete/reconnect do not accept node property updates.");
             if (c.Operation == "update" && c.Name == null && c.Documentation == null && c.Geometry == null && c.CallTarget == null && c.ActivityProperties == null && c.ActivityLoop == null && c.FlowCondition == null && c.GatewayDirection == null && c.EventProperties == null && c.SubProcessProperties == null && c.EventPayloads == null && c.DataProperties == null && c.ArtifactProperties == null && c.Style == null) throw new InvalidDataException("An update must specify an actual property.");
@@ -89,6 +90,8 @@ public static class NativeEditPlan
             if (c.Operation == "delete") { if (matches.Length != 0) throw new InvalidDataException("Deleted native element survived readback."); continue; }
             if (matches.Length != 1) throw new InvalidDataException("Native identity did not survive readback exactly once.");
             var e = matches[0];
+            NativeConnectorPortPolicy.Verify(c.SourcePort, e.SourcePort);
+            NativeConnectorPortPolicy.Verify(c.TargetPort, e.TargetPort);
             if (c.Geometry?.Expanded == true && c.ExpandedSize == null && e.Kind != "Group")
                 throw new InvalidDataException("Only a native group's intrinsic expanded view omits ExpandedSize.");
             NativeSemanticPolicy.Verify(c, e, elements);

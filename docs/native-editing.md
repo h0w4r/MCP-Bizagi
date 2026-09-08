@@ -4,6 +4,11 @@
 an isolated worker. It does not reconstruct a `.bpm` ZIP or convert it to BPMN.
 The original file is never overwritten.
 
+Connector creation and reconnection also accept optional `NativeMutation.SourcePort`
+and `NativeMutation.TargetPort` identifiers. Omission preserves, an empty string
+clears, and an explicit identifier replaces. See the [native port contract](native-connector-ports.md);
+coordinates are not rerouted automatically.
+
 ## Transaction and evidence
 
 1. Read the archive and verify its SHA-256 revision.

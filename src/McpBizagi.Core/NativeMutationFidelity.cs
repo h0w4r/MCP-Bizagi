@@ -131,6 +131,8 @@ public static class NativeMutationFidelity
                     var oldGraphics = x[0].Element(Xpdl + "ConnectorGraphicsInfos")?.Element(Xpdl + "ConnectorGraphicsInfo");
                     var newGraphics = y[0].Element(Xpdl + "ConnectorGraphicsInfos")?.Element(Xpdl + "ConnectorGraphicsInfo");
                     if (oldGraphics == null || newGraphics == null) throw new InvalidDataException("Missing native connector graphics.");
+                    NativeConnectorPortPolicy.Project(oldGraphics, newGraphics, "FromPort", c.SourcePort);
+                    NativeConnectorPortPolicy.Project(oldGraphics, newGraphics, "ToPort", c.TargetPort);
                     var oldPoints = oldGraphics.Elements(Xpdl + "Coordinates").ToArray(); var newPoints = newGraphics.Elements(Xpdl + "Coordinates").ToArray();
                     if (oldPoints.Concat(newPoints).Any(p => p.HasElements || p.Nodes().Any() || p.Attributes().Any(v => v.Name != "XCoordinate" && v.Name != "YCoordinate")))
                         throw new InvalidDataException("Unknown content in connector coordinates cannot be normalized away.");

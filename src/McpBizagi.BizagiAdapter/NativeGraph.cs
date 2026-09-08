@@ -96,6 +96,8 @@ public sealed partial class NativeEngine
             TargetRef = Text(element, "TargetRef"),
             SourceId = Optional(element, "Source") is object source ? Text(source, "Id") : "",
             TargetId = Optional(element, "Target") is object target ? Text(target, "Id") : "",
+            SourcePort = Optional(element, "SourcePort") as string,
+            TargetPort = Optional(element, "TargetPort") as string,
             Points = Optional(element, "Points") is IEnumerable points ? points.Cast<object>().Select(p => new NativePoint
             { X = Convert.ToDouble(Get(p, "X")), Y = Convert.ToDouble(Get(p, "Y")) }).ToArray() : Array.Empty<NativePoint>()
         };

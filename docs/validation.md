@@ -1,5 +1,50 @@
 # Verification baselines
 
+## Native connector port lifecycle — source after 0.6, 2026-09-08 UTC
+
+The official-SDK stdio circuit `20260908-233637-3d8c8f` passed **10 terminal
+operations: nine completed and one expected native failure**, plus one expected
+protocol rejection. It used installed Modeler 4.3.0.008, not a simulated engine.
+
+- Two diagrams and two visible pools were authored natively. SequenceFlow,
+  Association and cross-pool MessageFlow connectors exposed their native ports
+  through the new readback fields. Creation, omitted-port preservation, explicit
+  one-sided replacement, clearing both ports and restoration survived fresh workers.
+- Identifier `75` was rejected at the protocol boundary. An unknown native target
+  failed in the real worker; the following valid request recovered successfully.
+- Independent ZIP/XML decoding checked **five durable snapshots and 15 connector
+  observations**, including exact persisted FromPort/ToPort and unchanged remaining
+  connector graphics. The final native no-op, offscreen render and original-input
+  readback also succeeded. Metadata replacement alone does not reroute coordinates.
+- All **18 workers / 26 owned processes** exited. **199 periodic desktop samples**
+  observed no owned visible window or foreground takeover. A post-run audit
+  rehashed **seven previous outputs, three captured inputs and 111 loaded vendor
+  module contents**, without drift.
+- The complete independent unit suite passed **1,295 tests**. Unit fixtures were
+  corrected to include the required model header and sequence-flow source; those
+  fixtures do not constitute native acceptance.
+
+Transcript SHA-256:
+`cbf0c86bb47fae993d23dd80347b8611898178cdbf5795c62ee52d32b86f2378`.
+Independent lifecycle receipt SHA-256:
+`a84e4d65b56357ea2079f8391678c2e70c16c091cdb156a861ee728b5d0c15bb`.
+
+A separate rich-alignment regression, `20260908-234223-d39a96`, passed eight
+completed operations and one explicitly requested cancellation, including later
+native recovery. All 21 workers / 42 owned processes exited; 286 periodic samples
+observed no owned visible window or foreground takeover. Seven prior outputs,
+one captured input and 111 loaded vendor module contents were rechecked unchanged.
+Its transcript SHA-256 is
+`a3fdd63b1cabf06b293f7b63d686d0bdb9aa2b453e73e0832e5053b5f637eef9`.
+The independent XML/MCP circuit and 18 package-policy checks also passed; neither
+is counted as additional native accreditation.
+
+The [contract](native-connector-ports.md) deliberately separates metadata from
+port-to-shape geometry. This is not all offset-port combinations, anchored-event
+layout, full global layout, independent desktop compatibility or a new packaged
+release. The published 0.6 archive remains immutable.
+
+
 ## Explicit native action migration — source after 0.6, 2026-09-08 UTC
 
 The final dedicated official-SDK stdio circuit `20260908-223045-f3a69b` passed

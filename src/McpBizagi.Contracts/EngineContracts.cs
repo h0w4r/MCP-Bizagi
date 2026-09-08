@@ -78,6 +78,9 @@ public sealed class NativeMutation
     public NativeSubProcessProperties? SubProcessProperties { get; set; }
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
+    /// <summary>Null preserves a native port; empty explicitly clears it. Canonical installed port identifiers are 0 through 74.</summary>
+    public string? SourcePort { get; set; }
+    public string? TargetPort { get; set; }
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
 }
 
@@ -156,6 +159,9 @@ public sealed class NativeElement
     public string TargetRef { get; set; } = "";
     public string SourceId { get; set; } = "";
     public string TargetId { get; set; } = "";
+    /// <summary>Exact native persisted port identifiers, including unknown identifiers; null means absent or not a connector.</summary>
+    public string? SourcePort { get; set; }
+    public string? TargetPort { get; set; }
     public NativePoint[] Points { get; set; } = System.Array.Empty<NativePoint>();
 }
 

@@ -92,11 +92,16 @@ public sealed partial class NativeEngine
                         if (Text(element, "ElementType") != "SubProcess") throw new InvalidDataException("ExpandedSize currently applies to embedded subprocesses only.");
                         Set(Get(element, "GraphicalProperties"), "ExpandedSize", new SizeF((float)size.Width, (float)size.Height));
                     }
-                    if (!string.IsNullOrEmpty(change.SourceId)) Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
+                    if (!string.IsNullOrEmpty(change.SourceId))
+                    {
+                        Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
+                        ApplyConnectorPorts(element, change);
+                    }
                     if (change.FlowCondition != null) ApplyFlowCondition(element, change.FlowCondition);
                     break;
                 case "reconnect":
                     Connect(element, Require(change.SourceId), Require(change.TargetId), change.Points, graph);
+                    ApplyConnectorPorts(element, change);
                     break;
                 case "delete":
                     string processId = element.GetType().Name == "Participant" ? Text(Get(element, "Process"), "Id") : "";
@@ -132,6 +137,13 @@ public sealed partial class NativeEngine
         ValidateDataStateOwnership(model, changes);
         ValidateLanePartitions(model);
         ValidateArtifactContainment(model);
+    }
+
+    private static void ApplyConnectorPorts(object element, NativeMutation change)
+    {
+        // Omission never resets imported port metadata. Clearing uses the native absent value.
+        if (change.SourcePort != null) Set(element, "SourcePort", change.SourcePort == "" ? null! : change.SourcePort);
+        if (change.TargetPort != null) Set(element, "TargetPort", change.TargetPort == "" ? null! : change.TargetPort);
     }
 
     private static void ValidateArtifactContainment(object model)
