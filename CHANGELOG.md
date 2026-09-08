@@ -2,12 +2,18 @@
 
 ## Unreleased
 
-## 0.5.0-alpha.1 candidate
+- Add the independent client's `--discover-worker` option and verify the
+  released package's default worker lookup through native creation, mutation,
+  rendering, simulation, failure/recovery and original-state comparison.
 
-This consolidated source version remains experimental. A version bump or
-successful build is not package acceptance: an extracted distribution must
-pass the independent MCP/native circuits before release publication. The
-earlier 0.4.0-alpha.1 archive remains immutable and does not gain these features.
+## 0.5.0-alpha.1 — 2026-09-08
+
+This consolidated release remains experimental. Its clean extracted archive
+passed ten independent MCP/native circuits: 174 terminal native operations,
+280 exited workers and 347 unchanged manifest entries. The earlier
+0.4.0-alpha.1 archive remains immutable and does not gain these features.
+See [package evidence](docs/validation-consolidated-package.md); this is not
+full Modeler automation or independent desktop compatibility accreditation.
 
 - Extract ordinary root/nested embedded subprocesses into native reusable
   diagrams, retaining descendant identities, original archive content,

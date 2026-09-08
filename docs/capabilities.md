@@ -2,6 +2,11 @@
 
 This ledger distinguishes implementation from operational accreditation.
 
+The [0.5.0-alpha.1 extracted-package record](validation-consolidated-package.md)
+consolidates ten real MCP/native circuits. "After 0.4" below identifies the
+source generation of a feature, not its absence from the newer package.
+It does not imply that every combination or unsaved GUI workflow is verified.
+
 | Family | Status | Evidence required for broader claims |
 | --- | --- | --- |
 | XML create/read/name edits | Locally verified through MCP | Unicode, stale revision and original backup checks |
@@ -14,7 +19,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Blank native model creation | Experimental current source | Native constructor/domain defaults, exact durable diagram identities, ordered tabs and no-op stability; [contract](native-models.md) and [execution evidence](validation.md) |
 | Native workspace adoption and save-as | Experimental current source | Exact source bytes, real engine preflight, guarded replacement/backup, durable receipts, cancellation and host-death reconciliation; [contract](native-commit.md) |
 | `.bpm` name batches | Locally verified, copy-only | Task/event batch and task nested two subprocess levels; full archive checked on tested inputs |
-| Native no-op save and comparison | Basic native case locally verified | Unknown/binary changes rejected by comparator; broad rich-content no-op corpus pending |
+| Native no-op save and comparison | Basic and documented rich corpora locally verified | Unknown/binary changes rejected; untested combinations remain subject to the same fidelity gate |
 | Worker cancellation and recovery | Locally verified | Active registration cancellation, exit evidence, subsequent native call |
 | Host death and state ownership | Locally verified | Actual host termination, Job Object worker cleanup, interrupted journal, restart, competing-host rejection |
 | Native validator | Real invocation locally verified | Exhaustive invalid-model categories still pending |
@@ -36,6 +41,8 @@ This ledger distinguishes implementation from operational accreditation.
 | Native event definition payloads | Experimental source after 0.4 | Unique existing-kind text/code/timer patches and compensation references with exact native fidelity; collection editing and runtime execution remain separate; [contract](native-event-payloads.md) |
 | Native data and flow-node I/O | Experimental source after 0.4 | Typed objects/stores, shared references, association-derived activity/event bindings, nested-loader adjustments and clone identity checks; not a general I/O editor or GUI accreditation; [contract](native-data.md) |
 | Native content artifacts | Experimental source after 0.4 | Annotation/formatted text, diagram groups, headers and associations with typed native persistence, cloning and explicit geometry; not every artifact or rich-text editor behavior; [contract](native-artifacts.md) |
+| Native image artifacts | Experimental, source and 0.5 package verified | Explicit raster/frame inputs, native files and decoded pixels, clone/extraction/deletion; broad rendering and GUI equivalence remain separate; [contract](native-images.md) |
+| Native custom artifacts | Experimental, source and 0.5 package verified | Model-owned definitions/instances, nested clone/rendering, `.bca` exchange and native restart; broader catalogs/options remain separate; [contract](native-custom-artifacts.md) |
 | Diagram lifecycle and persisted tabs | Experimental source after 0.4 | Creation, name/derived-header change, native cloning with checked ID maps, deletion and ordered/selected diagram/subprocess tabs; [contract and remaining corpus](native-diagrams.md) |
 | Extended attributes/attachments editing | Experimental source acceptance after 0.4 | 12 definition/value kinds, two-row table, embedded file/image, lifecycle, rich no-op and unrelated edit; [contract and remaining corpus](native-attributes.md) |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |

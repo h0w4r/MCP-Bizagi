@@ -20,6 +20,16 @@ var env = new Dictionary<string, string?>
         : Path.Combine(package, "worker", "McpBizagi.Worker.exe"),
     ["MCP_BIZAGI_EXPERIMENTAL_NATIVE"] = native ? "1" : "0"
 };
+if (args.Contains("--discover-worker"))
+{
+    if (package == null || args.Contains("--connection-failure"))
+        throw new ArgumentException("Worker discovery acceptance requires an intact --package distribution.");
+    // Exercise the operator's default sibling-worker lookup, not an explicit test override.
+    // Clear only this acceptance process's environment; never change the user's saved settings.
+    env.Remove("MCP_BIZAGI_WORKER");
+    Environment.SetEnvironmentVariable("MCP_BIZAGI_WORKER", null, EnvironmentVariableTarget.Process);
+    Console.WriteLine("PACKAGED_WORKER_AUTODISCOVERY_ENABLED");
+}
 StdioClientTransport NewTransport(Action<string>? stderr = null) => new(new StdioClientTransportOptions
 {
     Name = "MCP-Bizagi acceptance",

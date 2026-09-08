@@ -27,12 +27,13 @@ foreground-window automation, or redistributing Bizagi binaries.
 > **Real execution, explicit boundaries.** Native persistence, structural edits,
 > documentation, configured simulation, offscreen rendering and recovery have
 > their own [acceptance records](docs/validation.md), not a blanket fidelity claim.
-> A clean extracted package passed [106 terminal native operations across five circuits](docs/validation-native-data-package.md).
+> The consolidated package passed [174 terminal native operations across ten circuits](docs/validation-consolidated-package.md).
 >
-> **Source is ahead of the published archive.** New native modeling and metadata
-> families below are not retroactively included in the existing **0.4.0-alpha.1**
-> release ZIP. Check each contract and the [capability ledger](docs/capabilities.md)
-> before relying on a feature. A green build is not native accreditation.
+> **Packaged milestone: [0.5.0-alpha.1](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1).**
+> The newer native families are now consolidated in a verified Windows ZIP.
+> Earlier archives remain immutable. Check each contract and the
+> [capability ledger](docs/capabilities.md) before relying on a feature;
+> package acceptance is not full automation or GUI compatibility.
 
 ## Why this project
 
@@ -105,6 +106,13 @@ The current engine version is intentionally gated. Future versions require fresh
 integration evidence before native writes are enabled. Bizagi is not bundled.
 
 ## Quick start
+
+**Use a package:** download the ZIP and checksum from the
+[experimental release](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1),
+verify SHA-256, then follow [packaged configuration](docs/packaging.md#verify-the-packaged-server).
+The package requires the .NET 10 runtime but not the SDK.
+
+**Build from source:**
 
 ```powershell
 git clone https://github.com/h0w4r/MCP-Bizagi.git

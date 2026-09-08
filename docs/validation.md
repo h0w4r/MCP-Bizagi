@@ -1,5 +1,14 @@
 # Verification baselines
 
+## Consolidated 0.5.0-alpha.1 Windows package
+
+The [consolidated package record](validation-consolidated-package.md) documents
+ten independent MCP/native circuits against a clean extracted archive: 174
+terminal native operations, 280 exited workers and 347 unchanged manifest
+entries. It includes exact source/archive/transcript fingerprints and clearly
+separates deliberate failure assertions from successful operations. Historical
+source and earlier-package records below remain valid for their stated versions.
+
 ## Native embedded-subprocess extraction — 2026-09-08 UTC
 
 The enriched independent MCP run `20260908-040825-01d182` passed root and

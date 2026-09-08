@@ -4,6 +4,11 @@ The initial distribution is framework-dependent. Operators need the x64 .NET 10
 runtime, .NET Framework 4.8, and their own installation of Modeler for native
 operations. Building requires the SDK pinned in `global.json` and PowerShell 7.2+.
 
+The [0.5.0-alpha.1 prerelease](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.5.0-alpha.1)
+has a [clean extracted-package verification record](validation-consolidated-package.md).
+Its ZIP and checksum are immutable; building a newer checkout creates a different
+candidate that requires its own evidence.
+
 ## Build and inspect
 
 Run `scripts/package.ps1` from a reviewed checkout. The script uses locked restore,
@@ -58,6 +63,12 @@ Configure an MCP client with command `dotnet` and argument
 discovered in the sibling `worker/` directory unless explicitly overridden.
 Set `MCP_BIZAGI_ROOT` and opt into native diagnostics as described in
 [configuration](configuration.md).
+
+To test that default worker lookup rather than the client's explicit worker
+override, the current acceptance client supports `--discover-worker` with
+`--package`. For example, append `--native --model-create-only --discover-worker`.
+It clears only the acceptance process's worker-path variable before starting
+the server; it does not change saved user or machine environment settings.
 
 ## Additional native acceptance families
 
