@@ -154,7 +154,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "simulation_result_save", "saved_results_read", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -241,6 +241,7 @@ public sealed partial class NativeEngine
             if (request.Action is "simulate" or "what_if") reply.SimulationLimitations = SimulationLimitations(model, request.DiagramId);
             if (request.Action == "validate") reply.Validation = ValidateModel(model, progress);
             if (request.Action == "simulate") reply.Artifacts = Simulate(model, request, progress);
+            if (request.Action == "saved_results_read") reply.Artifacts = ReadSavedSimulationResult(model, request, progress);
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
             if (request.Action is "simulate" or "what_if") reply.SimulationInputs = VerifySimulationInputs(reply.Artifacts, simulationActivities);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
@@ -253,7 +254,7 @@ public sealed partial class NativeEngine
                 reply.ExchangeFiles = ExportXpdl(model, request, progress);
                 reply.Artifacts = reply.ExchangeFiles.Select(e => e.Path).ToArray();
             }
-            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
+            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save" or "metadata_save" or "simulation_result_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
                 if (request.Action == "align_save") reply.Alignment = Align(model, persistence, request, progress);
                 if (request.Action == "copy_save") reply.SelectionCopy = CopySelection(model, persistence, request, progress);
@@ -269,6 +270,7 @@ public sealed partial class NativeEngine
                 if (request.Action == "diagrams_save") reply.DiagramClones = EditDiagrams(model, persistence, request.DiagramPatch ?? throw new InvalidDataException("Missing diagram patch."), progress);
                 if (request.Action == "documentation_save") EditDocumentation(model, persistence, request.DocumentationPatch ?? throw new InvalidDataException("Missing documentation patch."), progress);
                 if (request.Action == "metadata_save") EditMetadata(model, request.MetadataPatch ?? throw new InvalidDataException("Missing metadata patch."), progress);
+                if (request.Action == "simulation_result_save") SaveSimulationResult(model, request.SimulationResultWrite ?? throw new InvalidDataException("Missing simulation-result write intent."), progress);
                 if (request.Action == "mutate_save") Mutate(model, request.Mutations, progress);
                 if (request.Changes.Length > 0) progress("native_edit_names");
                 var indexed = Graph(model).ToLookup(e => Get(e.Value, "Id").ToString());
@@ -310,6 +312,7 @@ public sealed partial class NativeEngine
         reply.CustomArtifactImports = customArtifactImports.ToArray();
         reply.VisioPages = visioPages.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
+        reply.SavedSimulationResults = SavedSimulationResults(model);
         // Reparenting can migrate current-user subprocess tabs across diagrams;
         // preserve the editor's actual write scope for independent restart checks.
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "reparent_save" or "exchange_read") reply.DiagramState = DiagramState(model);
@@ -325,7 +328,7 @@ public sealed partial class NativeEngine
             File.Copy(Path.Combine(AttachmentFolder(model, found.DiagramId, found.ElementId), found.FileName), request.OutputPath, false);
             reply.Artifacts = new[] { request.OutputPath };
         }
-        if (request.Action is "simulate" or "what_if") reply.SimulationReports = SimulationReports(reply.Artifacts, request);
+        if (request.Action is "simulate" or "what_if" or "saved_results_read") reply.SimulationReports = SimulationReports(reply.Artifacts, request);
         reply.Success = true;
         reply.Code = "native_operation_completed";
         reply.Message = "Native operation completed; verify artifacts in a fresh worker before accreditation.";

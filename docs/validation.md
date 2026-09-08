@@ -1,5 +1,60 @@
 # Verification baselines
 
+## Native saved simulation results — source after 0.6, 2026-09-08 UTC
+
+Final official-SDK stdio circuit `20260908-210023-dbb545` passed **28 terminal
+operations: 21 completed and seven expected failures**, plus two expected
+parameter/protocol rejections. The installed Modeler 4.3.0.008 manager generated
+the actual simulation results; separate editors loaded the original model,
+persisted selected native result properties and independently reopened the copies.
+
+- Five actual saved simulations and five historical `native_simulation_results_get`
+  calls verified 12 completions, three minutes average processing, 36 minutes busy
+  time, 84 fixed cost, resource contention and working-calendar waiting. Historical
+  reading used the native persisted property, not another simulation. Every
+  structured task metric matched the separately decoded historical XML.
+- Replacing an existing result preserved the other scenario's opaque payload.
+  Independent ZIP inspection, editor/reader property hashes and native no-op
+  saving verified durable contents. The original revision remained unchanged.
+- Native missing-scenario execution, missing historical results, metadata
+  replacement without discard permission, and four migration preconditions
+  failed as expected. Subsequent valid operations recovered on the same inputs.
+- Explicit native metadata discard `f93ce982aaa3432384d858b5dde67843`, forward
+  migration `66805e9153dd4a13ba7c0e727b1feab4`, and inverse migration
+  `572a506453c24219a57920aca94e7438` retired genuine nonempty result sets with
+  explicit consent. No synthetic ZIP payloads or fake simulator results were used.
+- All **49 workers** and **51 owned-process records** were recorded exited.
+  **386 periodic desktop samples** observed no visible worker window or worker
+  foreground takeover. Independent Modeler GUI compatibility remains unverified.
+- Locked restore, Release build (zero warnings/errors), **1,227 unit tests**,
+  **18 package-policy cases**, and actual MCP XML circuit
+  `20260908-210235-3b51f4` (44 tools; native explicitly not run) passed separately.
+
+Transcript SHA-256:
+`953454a3fdaad4c98a039de029ffca8d502713111beb26efba069eafa1537397`
+
+Independent scenario/result receipt SHA-256:
+`4f0b48243466d0fb12ec4761035e738a9df284a08936541273213ae63e429e4b`
+
+The existing metadata/scenario/what-if regression passed on the same final build:
+`20260908-210751-b6d26a`, **16 terminal operations: 14 completed and two expected
+failures**. All 25 workers/owned-process records exited; 139 periodic desktop
+samples observed no visible/foreground worker. Its quantitative timing, resource,
+calendar and replication checks remained intact. Regression transcript SHA-256:
+`856a8e0561181ea9c975fd0a250727807bbdb85edc0aaa8d2278d1ee7f846234`
+
+The preliminary native write/retirement circuit `20260908-204914-bf6880` passed
+before historical-result reading was added. A synthetic metadata-retirement unit
+test initially represented an orphaned result with no owning scenario; the fixture
+now includes that scenario. Production validation rejects orphaned/duplicate result
+identities and unknown container annotations across both replacement and migration.
+No acceptance assertion was replaced with mock or success-on-missing-data logic.
+
+See [saved-result usage and boundaries](native-saved-simulation.md). This is a
+source-only milestone; the immutable 0.6 ZIP is unchanged. What-if result-history
+persistence, arbitrary historical-result editing, general inherited-scenario
+execution, broader behavior/visual corpora and full Modeler automation remain open.
+
 ## Explicit scenario migration — source after 0.6, 2026-09-08 UTC
 
 Final official-SDK MCP/native circuit `20260908-202129-e86615` passed **16

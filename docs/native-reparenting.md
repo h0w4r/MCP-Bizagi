@@ -85,7 +85,7 @@ complete source/target scenario correspondence and matching context. Missing
 resource/calendar dependencies require copy consent; conflicting dependencies
 reject. See the [scenario migration contract](native-scenario-migration.md).
 Presentation actions remain rejected. Saved-result retirement requires explicit
-consent and remains unaccredited for nonempty native result containers. Complete
+consent; the [saved-results circuit](native-saved-simulation.md) verifies nonempty native retirement. Complete
 scenario replacement via `native_metadata_apply` is a separate operation, not
 migration.
 

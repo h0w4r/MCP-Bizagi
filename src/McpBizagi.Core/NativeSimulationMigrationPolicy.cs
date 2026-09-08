@@ -155,18 +155,7 @@ public static class NativeSimulationMigrationPolicy
         foreach (string diagram in touched) NativeMetadataPolicy.ValidateSimulation(projected[diagram].ToString());
         if (migration.DiscardSimulationResults)
             foreach (string diagram in affected)
-                if (archive.TryGetValue(diagram + ".diag!/BPSimDataResult.xml", out var resultBytes))
-                {
-                    // Consent to retire results is not consent to discard unknown
-                    // archive annotations or an unrepresented result container.
-                    var root = NativeMetadataPolicy.Read(Encoding.UTF8.GetString(resultBytes)).Root;
-                    if (root?.Name != "ScenarioResults" || root.HasAttributes || root.Nodes().Any(n => n is not XElement && (n is not XText t || !string.IsNullOrWhiteSpace(t.Value))))
-                        throw new InvalidDataException("Unrepresented saved-result container cannot be retired safely.");
-                    var known = original[diagram].Root!.Elements(Ns + "Scenario").Select(s => A(s, "id")).ToHashSet(StringComparer.Ordinal);
-                    foreach (var result in root.Elements())
-                        if (result.Name != "Result" || result.Attributes().Count() != 1 || !known.Contains(A(result, "scenarioId")) || result.Nodes().Any(n => n is not XText))
-                            throw new InvalidDataException("Unrepresented saved-result record cannot be retired safely.");
-                }
+                NativeSavedSimulationPolicy.ValidateResultRetirement(archive, diagram);
         return new(transfers.ToArray(), touched.Select(d => new NativeSimulationConfiguration { DiagramId = d, Xml = projected[d].ToString() }).ToArray(),
             migration.DiscardSimulationResults ? affected.Order(StringComparer.Ordinal).ToArray() : []);
     }

@@ -289,10 +289,16 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
         });
     }
 
-    public OperationView Analyze(string path, string action, string diagramId = "", string scenarioId = "", int simulationLevel = 1, string subProcessId = "")
+    public OperationView Analyze(string path, string action, string diagramId = "", string scenarioId = "", int simulationLevel = 1, string subProcessId = "", bool saveResultsAsNativeCopy = false)
     {
-        if (action is not "validate" and not "simulate" and not "render_svg") throw new NotSupportedException("Unknown analysis action.");
+        if (action is not "validate" and not "simulate" and not "render_svg" and not "saved_results_read") throw new NotSupportedException("Unknown analysis action.");
         var input = ReadNative(path);
+        if (action == "saved_results_read") NativeSavedSimulationPolicy.ValidateTarget(input.Bytes, diagramId, scenarioId);
+        if (saveResultsAsNativeCopy)
+        {
+            if (action != "simulate") throw new InvalidDataException("Saving results requires an actual simulation operation.");
+            NativeSavedSimulationPolicy.ValidateTarget(input.Bytes, diagramId, scenarioId);
+        }
         return operations.Start("native_" + action, async (id, progress, token) =>
         {
             string directory = CreateArtifactDirectory(id), source = Path.Combine(directory, "input.bpm");
@@ -309,13 +315,18 @@ public sealed partial class NativeWorkflows(WorkspaceFiles files, ServerOptions 
                 SimulationLevel = simulationLevel
             },
                 RunDirectory(id, "analyzer"), progress, token);
+            if (!input.Bytes.SequenceEqual(File.ReadAllBytes(source))) throw new InvalidDataException("Native analysis changed its captured source file.");
+            object? savedNative = saveResultsAsNativeCopy
+                ? await PersistSimulationResult(id, input.Bytes, source, diagramId, scenarioId, result, progress, token) : null;
             return new
             {
                 sourceRevision = input.Revision,
                 result,
+                savedNative,
                 nativeSourceUnmodified = true,
-                warning = action == "simulate" ? "Scenario settings are used in memory only; an empty scenario ID uses native defaults. No result is saved into the source model. Inspect result.SimulationLimitations for input-specific native semantics; an empty list is not a complete semantic-support assessment."
+                warning = action == "simulate" ? "The source model is unchanged. savedNative, when explicitly requested, contains a verified native copy with this scenario's actual results; other saved results and configuration are preserved. Otherwise results remain external artifacts. Inspect result.SimulationLimitations for input-specific semantics; an empty list is not a complete semantic-support assessment."
                     : action == "render_svg" ? "Native offscreen rendering is not independent visual compatibility accreditation."
+                    : action == "saved_results_read" ? "Metrics come from the native persisted scenario property, not a new simulation. The exported XML uses UTF-8; SavedSimulationResults hashes refer to the original native strings. Original .bpm bytes are unchanged."
                     : "Validation findings are reported by the installed engine; a successful execution can contain validation errors."
             };
         });

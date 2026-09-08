@@ -1,0 +1,20 @@
+{
+  "save": {
+    "tool": "native_simulate",
+    "arguments": {
+      "path": "<workspace-relative .bpm or native artifact URI>",
+      "diagramId": "<native diagram GUID>",
+      "scenarioId": "<existing scenario ID>",
+      "simulationLevel": 3,
+      "saveResultsAsNativeCopy": true
+    }
+  },
+  "readAfterCompletion": {
+    "tool": "native_simulation_results_get",
+    "arguments": {
+      "path": "<savedNative.outputArtifact returned by the completed operation>",
+      "diagramId": "<same native diagram GUID>",
+      "scenarioId": "<same existing scenario ID>"
+    }
+  }
+}

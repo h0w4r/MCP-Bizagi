@@ -1,4 +1,7 @@
+using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
+using System.Xml;
 using System.Xml.Linq;
 
 /// <summary>Independent MCP/native scenario migration with before/after real resource and calendar simulations.</summary>
@@ -6,7 +9,8 @@ internal static class NativeScenarioMigrationAcceptance
 {
     private static string S(JsonElement e, string name) => e.GetProperty(name).GetString()!;
     public static async Task Run(string repo, string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
-        Func<string, string, Task<JsonElement>> wait, Action<string> exited)
+        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool saveResults = false,
+        Func<string, Dictionary<string, object?>, Task<JsonElement>>? reject = null)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string name, Dictionary<string, object?> input, string state = "completed")
@@ -66,14 +70,82 @@ internal static class NativeScenarioMigrationAcceptance
         var targetConfig = Root(Scene("TargetResources", false), Scene("TargetCalendar", false), targetInherited);
         await Write("native_metadata_apply", new { Simulations = new[] { new { DiagramId = sourceDiagram, Xml = config.ToString() }, new { DiagramId = targetDiagram, Xml = targetConfig.ToString() } }, DiscardSimulationResults = true });
         string originalPath = path, originalRevision = revision;
+        var expectedSaved = new Dictionary<(string Diagram, string Scenario), string>();
+        void VerifySaved(JsonElement saved, Dictionary<(string Diagram, string Scenario), string> expected)
+        {
+            // Decode the actual V5 archive independently of the production policy.
+            string file = saved.GetProperty("edited").GetProperty("Artifacts").EnumerateArray().Single().GetString()!;
+            using var zip = ZipFile.OpenRead(file);
+            var actual = new Dictionary<(string Diagram, string Scenario), string>();
+            foreach (var entry in zip.Entries.Where(e => e.Name.EndsWith(".diag", StringComparison.OrdinalIgnoreCase)))
+            {
+                using var nestedStream = entry.Open(); using var nested = new ZipArchive(nestedStream, ZipArchiveMode.Read);
+                var results = nested.GetEntry("BPSimDataResult.xml"); if (results == null) continue;
+                using var xmlStream = results.Open(); var xml = XDocument.Load(xmlStream);
+                foreach (var record in xml.Root!.Elements("Result")) actual.Add((Path.GetFileNameWithoutExtension(entry.Name), (string)record.Attribute("scenarioId")!), record.Value);
+            }
+            if (actual.Count != expected.Count || expected.Any(e => !actual.TryGetValue(e.Key, out var value) || value != e.Value))
+                throw new InvalidDataException("Independent durable saved-result payloads changed.");
+            foreach (string observation in new[] { "edited", "reopened" })
+            {
+                var records = saved.GetProperty(observation).GetProperty("SavedSimulationResults").EnumerateArray().ToArray();
+                if (records.Length != expected.Count || expected.Any(e => records.Count(r => S(r, "DiagramId") == e.Key.Diagram && S(r, "ScenarioId") == e.Key.Scenario &&
+                    S(r, "Sha256") == Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(e.Value))).ToLowerInvariant() && r.GetProperty("CharacterCount").GetInt32() == e.Value.Length) != 1))
+                    throw new InvalidDataException("Independent native saved-result property readback changed.");
+            }
+        }
+        if (saveResults)
+        {
+            if (reject == null) throw new InvalidOperationException("Saved-result acceptance requires protocol-rejection verification.");
+            await reject("native_simulate", new() { ["path"] = path, ["diagramId"] = sourceDiagram, ["saveResultsAsNativeCopy"] = true });
+            await reject("native_simulate", new() { ["path"] = path, ["diagramId"] = sourceDiagram, ["scenarioId"] = "Missing", ["saveResultsAsNativeCopy"] = true });
+            // Also traverse the actual native failure path, then recover with
+            // the same untouched model rather than substituting a fake result.
+            await Op("native_simulate", new() { ["path"] = path, ["diagramId"] = sourceDiagram, ["scenarioId"] = "Missing" }, "failed");
+        }
         async Task Simulate(string diagram, string scenario, int level)
         {
-            var result = await Op("native_simulate", new() { ["path"] = path, ["diagramId"] = diagram, ["scenarioId"] = scenario, ["simulationLevel"] = level });
+            var result = await Op("native_simulate", new() { ["path"] = path, ["diagramId"] = diagram, ["scenarioId"] = scenario, ["simulationLevel"] = level, ["saveResultsAsNativeCopy"] = saveResults });
             string file = result.GetProperty("result").GetProperty("Artifacts").EnumerateArray().Select(e => e.GetString()!).Single(p => Path.GetFileName(p) == "Results.xml");
             NativeMetadataAcceptance.VerifyTiming(file, 3, resources: true, calendar: level == 4,
                 processBpmnId: diagram == sourceDiagram ? sourceProcessBpmn : targetProcessBpmn, taskBpmnId: taskBpmn);
+            if (saveResults)
+            {
+                var xml = new XmlDocument { XmlResolver = null }; xml.Load(file);
+                expectedSaved[(diagram, scenario)] = xml.OuterXml;
+                var saved = result.GetProperty("savedNative"); VerifySaved(saved, expectedSaved);
+                path = S(saved, "outputArtifact"); revision = S(saved, "outputRevision");
+                var historical = await Op("native_simulation_results_get", new() { ["path"] = path, ["diagramId"] = diagram, ["scenarioId"] = scenario });
+                string exported = historical.GetProperty("result").GetProperty("Artifacts").EnumerateArray().Single().GetString()!;
+                if (!XNode.DeepEquals(XDocument.Parse(xml.OuterXml).Root, XDocument.Load(exported).Root) || S(historical, "sourceRevision") != revision)
+                    throw new InvalidDataException("Historical native result export differs from the persisted simulation.");
+                NativeMetadataAcceptance.VerifyTiming(exported, 3, resources: true, calendar: level == 4,
+                    processBpmnId: diagram == sourceDiagram ? sourceProcessBpmn : targetProcessBpmn, taskBpmnId: taskBpmn);
+                var report = historical.GetProperty("result").GetProperty("SimulationReports").EnumerateArray().Single();
+                var metrics = report.GetProperty("Elements").EnumerateArray().Single(e => S(e, "Id") == taskBpmn && S(e, "Kind") == "Task").GetProperty("Metrics");
+                var taskXml = XDocument.Load(exported).Descendants("element").Single(e => (string?)e.Attribute("name") == taskBpmn).Element("Task")!;
+                if (S(report, "ScenarioId") != scenario || taskXml.Attributes().Any(a => S(metrics, a.Name.ToString()) != a.Value))
+                    throw new InvalidDataException("Structured historical MCP metrics differ from the actual saved native XML.");
+            }
         }
         await Simulate(sourceDiagram, "Resources", 3); await Simulate(sourceDiagram, "Calendar", 4);
+        if (saveResults)
+        {
+            // Replacing one existing result must retain the second scenario's opaque result exactly.
+            await Simulate(sourceDiagram, "Resources", 3);
+            var savedCopy = await Op("native_save_copy", new() { ["path"] = path, ["expectedRevision"] = revision });
+            VerifySaved(savedCopy, expectedSaved);
+            originalPath = path; originalRevision = revision;
+            var blocked = await Op("native_metadata_apply", new() { ["path"] = path, ["expectedRevision"] = revision,
+                ["patch"] = new { Simulations = new[] { new { DiagramId = sourceDiagram, Xml = config.ToString() } } } }, "failed");
+            if (!S(blocked, "Error").Contains("saved results", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Configuration replacement failed for an unrelated reason.");
+            // Exercise existing explicit replacement/discard on a separate copy.
+            // Keep the genuine result-bearing input for subsequent migration tests.
+            var discarded = await Op("native_metadata_apply", new() { ["path"] = path, ["expectedRevision"] = revision,
+                ["patch"] = new { Simulations = new[] { new { DiagramId = sourceDiagram, Xml = config.ToString() } }, DiscardSimulationResults = true } });
+            VerifySaved(discarded, new());
+        }
         object Map(string from, string to, bool reverse = false) => new { SourceDiagramId = reverse ? targetDiagram : sourceDiagram, SourceScenarioId = from,
             TargetDiagramId = reverse ? sourceDiagram : targetDiagram, TargetScenarioId = to };
         object[] Mappings(bool reverse) => reverse ? [Map("TargetResources", "Resources", true), Map("TargetCalendar", "Calendar", true), Map("TargetInherited", "Inherited", true)]
@@ -89,8 +161,12 @@ internal static class NativeScenarioMigrationAcceptance
         await Rejected(null, "simulation");
         await Rejected(new { Mappings = Mappings(false), CopyMissingDependencies = false }, "CopyMissingDependencies");
         await Rejected(new { Mappings = Mappings(false).Take(2).ToArray(), CopyMissingDependencies = true }, "complete scenario");
-        var forward = await Op("native_elements_reparent", Request(false, new { Mappings = Mappings(false), CopyMissingDependencies = true }));
+        if (saveResults) await Rejected(new { Mappings = Mappings(false), CopyMissingDependencies = true }, "simulation results");
+        var forward = await Op("native_elements_reparent", Request(false, new { Mappings = Mappings(false), CopyMissingDependencies = true, DiscardSimulationResults = saveResults }));
+        if (saveResults) { expectedSaved.Clear(); VerifySaved(forward, expectedSaved); }
         path = S(forward, "outputArtifact"); revision = S(forward, "outputRevision");
+        if (saveResults)
+            await Op("native_simulation_results_get", new() { ["path"] = path, ["diagramId"] = targetDiagram, ["scenarioId"] = "TargetResources" }, "failed");
         var before = forward.GetProperty("before").GetProperty("Metadata").GetProperty("Simulations").EnumerateArray().ToDictionary(e => S(e, "DiagramId"), e => XDocument.Parse(S(e, "Xml")));
         var after = forward.GetProperty("reopened").GetProperty("Metadata").GetProperty("Simulations").EnumerateArray().ToDictionary(e => S(e, "DiagramId"), e => XDocument.Parse(S(e, "Xml")));
         XElement Find(Dictionary<string, XDocument> docs, string diagram, string scenario) => docs[diagram].Descendants(ns + "Scenario").Single(e => (string?)e.Attribute("id") == scenario);
@@ -109,8 +185,10 @@ internal static class NativeScenarioMigrationAcceptance
         if ((string?)Find(after, targetDiagram, "TargetInherited").Attribute("inherits") != "TargetResources" ||
             !XNode.DeepEquals(before[unrelatedDiagram], after[unrelatedDiagram])) throw new InvalidDataException("Inheritance or unrelated configuration changed.");
         await Simulate(targetDiagram, "TargetResources", 3); await Simulate(targetDiagram, "TargetCalendar", 4);
-        await Op("native_save_copy", new() { ["path"] = path, ["expectedRevision"] = revision });
-        var backward = await Op("native_elements_reparent", Request(true, new { Mappings = Mappings(true), CopyMissingDependencies = false }));
+        var noOp = await Op("native_save_copy", new() { ["path"] = path, ["expectedRevision"] = revision });
+        if (saveResults) VerifySaved(noOp, expectedSaved);
+        var backward = await Op("native_elements_reparent", Request(true, new { Mappings = Mappings(true), CopyMissingDependencies = false, DiscardSimulationResults = saveResults }));
+        if (saveResults) { expectedSaved.Clear(); VerifySaved(backward, expectedSaved); }
         path = S(backward, "outputArtifact"); revision = S(backward, "outputRevision");
         var restored = backward.GetProperty("reopened").GetProperty("Metadata").GetProperty("Simulations").EnumerateArray().Single(e => S(e, "DiagramId") == sourceDiagram);
         // Native collection order is preserved for existing target records; the

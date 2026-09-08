@@ -111,7 +111,10 @@ Both return `EngineReply.SimulationReports` with:
 - Original XML artifacts containing additional nested statistics and native input.
 
 Simulation is read-only with respect to the source model. Results are operation
-artifacts, not automatically saved into `.bpm`. The native engine may filter
+artifacts, not automatically saved into `.bpm`. Current source adds explicit
+`saveResultsAsNativeCopy` and `native_simulation_results_get` for durable results
+and historical metrics; see the [saved-results contract](native-saved-simulation.md).
+What-if results remain external artifacts. The native engine may filter
 parameters according to the selected level; running level 1 does not prove that
 resource or calendar settings were exercised.
 

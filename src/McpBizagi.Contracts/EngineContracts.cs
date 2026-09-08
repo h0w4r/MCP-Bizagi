@@ -26,6 +26,7 @@ public sealed class EngineRequest
     public string ImageElementId { get; set; } = "";
     public string ScenarioId { get; set; } = "";
     public int SimulationLevel { get; set; } = 1;
+    public NativeSimulationResultWrite? SimulationResultWrite { get; set; }
     public string PublicationFormat { get; set; } = "";
     public string PublicationTitle { get; set; } = "Process documentation";
     public string[] SelectedDiagramIds { get; set; } = System.Array.Empty<string>();
@@ -199,6 +200,7 @@ public sealed class EngineReply
     public NativeCustomArtifactReceipt[] CustomArtifactImports { get; set; } = System.Array.Empty<NativeCustomArtifactReceipt>();
     public NativeFontFamily[] Fonts { get; set; } = System.Array.Empty<NativeFontFamily>();
     public NativeSimulationReport[] SimulationReports { get; set; } = System.Array.Empty<NativeSimulationReport>();
+    public NativeSavedSimulationResult[] SavedSimulationResults { get; set; } = System.Array.Empty<NativeSavedSimulationResult>();
     public NativeSimulationLimitation[] SimulationLimitations { get; set; } = System.Array.Empty<NativeSimulationLimitation>();
     public NativeSimulationInputReadback[] SimulationInputs { get; set; } = System.Array.Empty<NativeSimulationInputReadback>();
 }

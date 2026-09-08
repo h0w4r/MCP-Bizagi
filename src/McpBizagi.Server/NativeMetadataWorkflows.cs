@@ -23,6 +23,11 @@ public sealed partial class NativeWorkflows
         NativeMetadataPolicy.Validate(patch);
         var input = ReadNative(path);
         if (input.Revision != expectedRevision) throw new IOException("Revision conflict: native file changed since inspection.");
+        if (patch.DiscardSimulationResults)
+        {
+            var entries = NativeArchive.ReadEntries(input.Bytes);
+            foreach (var simulation in patch.Simulations) NativeSavedSimulationPolicy.ValidateResultRetirement(entries, simulation.DiagramId);
+        }
         return operations.Start("native_metadata_apply", async (id, progress, token) =>
         {
             string directory = CreateArtifactDirectory(id), source = Path.Combine(directory, "input.bpm"), output = Path.Combine(directory, "edited.bpm");

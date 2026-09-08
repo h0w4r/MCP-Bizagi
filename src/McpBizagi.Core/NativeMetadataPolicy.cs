@@ -132,6 +132,8 @@ public static class NativeMetadataPolicy
         Validate(patch);
         var left = NativeArchive.ReadEntries(before).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         var right = NativeArchive.ReadEntries(after).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        if (patch.DiscardSimulationResults)
+            foreach (var simulation in patch.Simulations) NativeSavedSimulationPolicy.ValidateResultRetirement(left, simulation.DiagramId);
         foreach (var simulation in patch.Simulations)
         {
             var readback = reopened.Simulations.Single(s => s.DiagramId == simulation.DiagramId);

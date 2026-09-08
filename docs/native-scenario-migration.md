@@ -39,7 +39,7 @@ its own real models and discovers their identities through MCP.
 | `NativeScenarioMapping.SourceDiagramId` / `TargetDiagramId` | Distinct affected native diagrams, not names or inferred destinations |
 | `NativeScenarioMapping.SourceScenarioId` / `TargetScenarioId` | Existing XML scenario identities; one destination per source scenario and target diagram |
 | `NativeSimulationMigration.CopyMissingDependencies` | Explicit permission to copy missing resource-parameter records and calendars; default false |
-| `NativeSimulationMigration.DiscardSimulationResults` | Explicit retirement of saved results in affected diagrams; default false; nonempty-result native acceptance remains pending |
+| `NativeSimulationMigration.DiscardSimulationResults` | Explicit retirement of saved results in affected diagrams; default false; native result-bearing acceptance is recorded separately |
 
 ## Context and dependency preservation
 
@@ -93,8 +93,9 @@ clears native scenario result strings and the comparator requires an empty
 native-persisted result container. Unknown container annotations or unrepresented
 records reject rather than disappear.
 
-**The nonempty saved-result retirement path has policy tests, but does not yet
-have its own real native acceptance fixture.** It is not an accredited capability.
+The [saved-results circuit](native-saved-simulation.md) exercises genuine nonempty
+results, default rejection and explicit native retirement, without injecting
+synthetic archive payloads.
 Likewise, mapping an inherited scenario's configuration is not proof of its
 runtime execution. Resource/calendar execution below tests explicit base
 scenarios. Arbitrary distributions, behavioral equivalence, presentation-action

@@ -369,11 +369,14 @@ public sealed class NativeMetadataPolicyTests
     public void ExplicitDiscardAcceptsOnlyAnEmptyResultSetAndOnlyForTargetedDiagram(string? oldResults)
     {
         string xml = Simulation(Scenario()); var patch = SimulationPatch(xml, discard: true);
-        var report = NativeMetadataPolicy.Compare(Archive(results: oldResults), Archive(simulation: xml), patch, SimulationReadback(xml));
+        // A real saved result belongs to an existing scenario; orphaned records
+        // now reject under the shared unknown-content preservation guard.
+        var before = Archive(simulation: xml, results: oldResults);
+        var report = NativeMetadataPolicy.Compare(before, Archive(simulation: xml), patch, SimulationReadback(xml));
         Assert.True(report.Preserved);
-        Assert.Throws<InvalidDataException>(() => NativeMetadataPolicy.Compare(Archive(results: oldResults),
+        Assert.Throws<InvalidDataException>(() => NativeMetadataPolicy.Compare(before,
             Archive(simulation: xml, results: "<ScenarioResults><Result scenarioId='Scenario_One'>Uncleared</Result></ScenarioResults>"), patch, SimulationReadback(xml)));
-        Assert.Throws<InvalidDataException>(() => NativeMetadataPolicy.Compare(Archive(results: oldResults), Archive(simulation: xml, results: null), patch, SimulationReadback(xml)));
+        Assert.Throws<InvalidDataException>(() => NativeMetadataPolicy.Compare(before, Archive(simulation: xml, results: null), patch, SimulationReadback(xml)));
     }
 
     [Fact]

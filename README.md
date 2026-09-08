@@ -94,6 +94,7 @@ every operation into a BPMN XML export.
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |
 | Native scenario configuration | Opt-in, copy-only | Complete per-diagram BPSim replacement; explicit result discard; [contract](docs/native-simulation.md) |
 | Native simulation and what-if | Experimental | Defaults and configured levels 2–4, costs, resource contention, shift calendars and replications verified on the documented corpus |
+| Native saved simulation results | Experimental source after 0.6 | Explicit single-scenario result-copy persistence, historical native metrics/readback, original/result preservation and explicit stale-result retirement; [contract](docs/native-saved-simulation.md) |
 | Native SVG/PNG export | Experimental | Installed offscreen renderer, transparent PNG; basic diagram verified |
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
 | Native Web publication | Experimental source after 0.6 | Selected root/subprocess pages, native search, byte-verified PNGs and tested embedded file; browser quality remains partial; [contract](docs/native-web-publication.md) |

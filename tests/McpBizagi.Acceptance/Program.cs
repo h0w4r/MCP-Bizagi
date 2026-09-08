@@ -217,6 +217,13 @@ try
         await NativeXpdlAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_XPDL_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--saved-simulation-only"))
+    {
+        if (!native) throw new ArgumentException("Saved simulation acceptance requires --native.");
+        await NativeScenarioMigrationAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit,
+            saveResults: true, reject: (name, input) => Call(name, input, true));
+        Console.WriteLine("NATIVE_SAVED_SIMULATION_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--scenario-migration-only"))
     {
         if (!native) throw new ArgumentException("Scenario migration acceptance requires --native.");
