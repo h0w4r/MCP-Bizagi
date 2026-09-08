@@ -15,9 +15,16 @@ public static class NativeMutationFidelity
     public static NativeFidelityReport Compare(byte[] before, byte[] after, NativeMutation[] changes, NativeElement[] reopened,
         NativeImageImportReceipt[]? imageImports = null, NativeImageFile[]? imageFiles = null)
     {
+        return CompareEntries(NativeArchive.ReadEntries(before), NativeArchive.ReadEntries(after), changes, reopened, imageImports, imageFiles);
+    }
+
+    // Reuse exact mutation projection after an independently checked structural relocation.
+    internal static NativeFidelityReport CompareEntries(IReadOnlyDictionary<string, byte[]> before, IReadOnlyDictionary<string, byte[]> after,
+        NativeMutation[] changes, NativeElement[] reopened, NativeImageImportReceipt[]? imageImports = null, NativeImageFile[]? imageFiles = null)
+    {
         NativeEditPlan.Validate(changes); NativeEditPlan.Verify(changes, reopened);
-        var left = NativeArchive.ReadEntries(before).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-        var right = NativeArchive.ReadEntries(after).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        var left = before.ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        var right = after.ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         NativeImagePolicy.Project(left, right, changes, reopened, imageImports ?? [], imageFiles ?? []);
         var coverage = changes.ToDictionary(c => c.ElementId, _ => 0, StringComparer.Ordinal);
         var collections = new List<NativeDifference>();

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add explicit native element reparenting between same-diagram processes and
+  embedded subprocesses, using actual objects and native persistence with
+  independent readback, reference-closure and whole-container fidelity gates.
+  Preserve actual I/O association payloads, flattened subprocess activity sets,
+  retained identities and optional selected-root coordinates. Cross-diagram
+  migration and automatic layout remain separate work.
 - Add the independent client's `--discover-worker` option and verify the
   released package's default worker lookup through native creation, mutation,
   rendering, simulation, failure/recovery and original-state comparison.

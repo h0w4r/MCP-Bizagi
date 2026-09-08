@@ -1,5 +1,67 @@
 # Verification baselines
 
+## Native same-diagram reparenting — 2026-09-08 UTC
+
+Independent MCP run `20260908-055324-7533b8` passed the full self-authored
+reparenting corpus against installed Modeler **4.3.0.008**. Its **21 terminal
+native operations** comprise **19 completed** and two expected failures
+(incomplete reference closure and cyclic containment). A stale revision was
+separately rejected by the MCP tool before dispatch. Recovery and both latest
+artifact and original-source revisions were checked afterward.
+
+The client created two native diagrams, two visible pools in the tested
+diagram, root/nested subprocesses, tasks, a sequence flow, a data object and
+its visible/native I/O associations, an attached boundary event, Unicode
+attributes, an embedded file, a transparent nested image, all four RACI sets,
+configured BPSim input and persisted subprocess tabs. Through actual MCP:
+
+- Six selected roots moved to another subprocess and back
+  (`7f1b223d7b6a4edf99541411992d4ba0`, `e8069b75730a480ea341b06f0598ecc7`).
+- The rich subtree moved to another participant process and back with explicit
+  selected-root positions (`bca8fb7e7ba74ed89ed7be2d217dac1f`,
+  `6a58ee9659614c848986898f7cc91086`).
+- The nested image moved to the target process's root and back
+  (`d6524e3f2d35417583fa1a9d4855ce72`, `c2be26cf6fd14c10a1165d7221f8dcd6`).
+- Native no-op save and nested SVG generation completed after the moves.
+
+Each successful move used independent source-reader, editor and fresh-reader
+workers and a whole-container fidelity gate, including separately serialized
+I/O associations, process-level ports and flattened activity sets. Metadata
+assignment rows were compared by element identity, retaining each row's ordered
+RACI values and every other metadata field, including exact scenario XML.
+Retaining scenario configuration does not prove unchanged execution behavior.
+
+All **44 workers exited**. **485 periodic read-only samples** observed no visible
+worker window or foreground ownership. These are sampled observations, not
+continuous desktop tracing or independent Modeler GUI compatibility. The MCP
+transcript SHA-256 is
+`033b5d25afaad422b614014611941d0a0db94cfd9b34937acdb25c8ee062e58f`.
+The build had zero warnings/errors; **934 unit/component tests** passed
+separately, including adversarial unknown-payload and wrong-owner cases.
+
+The subsequent general regression `20260908-055919-eff99c` also passed actual
+MCP import, edits, validation, simulation, rendering, engine failure, active
+cancellation, host-death cleanup, journal restart and recovery. Its 15 terminal
+operations comprise 12 completed, one expected failure, one cancellation and
+one interruption. All 19 workers exited; 144 periodic samples observed no
+visible/foreground worker. Transcript SHA-256:
+`ca0e7ab16d97021f6f2dd3a66552d5d58760764ec86b026dda9b6731c4f862dd`.
+This regression also exercises the shared mutation-fidelity entry projection;
+the new relocation policy does not replace the existing mutation checks.
+
+Earlier private diagnostics are retained: `20260908-053152-1b5456` exposed a
+missing comparison relocation for actual native data associations;
+`20260908-054408-77fad9` exposed an overly strict client assertion about
+graph-derived assignment-row order; `20260908-054828-47c809` exposed flattened
+process-level I/O port relocation. These were not accepted as successful full
+circuits. The policy now checks exact durable owners and retains actual record
+payloads; unexplained differences remain failures.
+
+This is **source after 0.5.0-alpha.1**, not a retroactive change to that ZIP.
+See [the contract and reproducible command](native-reparenting.md). Cross-diagram
+migration, automatic layout, live documents and full Modeler automation remain
+open; this record does not narrow their scope.
+
 ## Consolidated 0.5.0-alpha.1 Windows package
 
 The [consolidated package record](validation-consolidated-package.md) documents

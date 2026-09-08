@@ -104,8 +104,10 @@ The current request rejects rather than silently interpreting:
 - Unrepresented activity-set semantics, shared Enterprise models, a stale
   revision, an absent/wrong element kind, or a colliding diagram name.
 
-Arbitrary selection extraction, task-to-call conversion, general reparenting,
-scenario/action migration and reverse inlining remain separate work. This
+Arbitrary selection extraction, task-to-call conversion, cross-diagram
+reparenting, scenario/action migration and reverse inlining remain separate work.
+Explicit [same-diagram reparenting](native-reparenting.md) has its own contract
+in source after 0.5.0-alpha.1; it is not implemented by this extraction tool. This
 contract does not redefine the project's full-automation objective around the
 implemented subset.
 

@@ -14,6 +14,7 @@ public sealed class EngineRequest
     public NativeMutation[] Mutations { get; set; } = System.Array.Empty<NativeMutation>();
     public NativeTypeConversion[] Conversions { get; set; } = System.Array.Empty<NativeTypeConversion>();
     public NativeSubProcessExtraction? Extraction { get; set; }
+    public NativeReparenting[] Reparentings { get; set; } = System.Array.Empty<NativeReparenting>();
     public string DiagramId { get; set; } = "";
     public string SubProcessId { get; set; } = "";
     public string ImageElementId { get; set; } = "";
