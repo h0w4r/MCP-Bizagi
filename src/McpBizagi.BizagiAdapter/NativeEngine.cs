@@ -153,7 +153,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "import_save", "xpdl_import_save", "xpdl_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "documentation_read", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -242,9 +242,10 @@ public sealed partial class NativeEngine
                 reply.ExchangeFiles = ExportXpdl(model, request, progress);
                 reply.Artifacts = reply.ExchangeFiles.Select(e => e.Path).ToArray();
             }
-            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "extract_save" or "reparent_save" or "align_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
+            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save" or "metadata_save" or "documentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
                 if (request.Action == "align_save") reply.Alignment = Align(model, persistence, request, progress);
+                if (request.Action == "copy_save") reply.SelectionCopy = CopySelection(model, persistence, request, progress);
                 if (request.Action == "reparent_save") Reparent(model, request.Reparentings, progress);
                 if (request.Action == "extract_save") reply.Extraction = ExtractSubProcess(model, persistence, request.Extraction ?? throw new InvalidDataException("Missing extraction request."), progress);
                 if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
@@ -294,8 +295,8 @@ public sealed partial class NativeEngine
         reply.CustomArtifactImports = customArtifactImports.ToArray();
         reply.Scenarios = Scenarios(model).ToArray();
         if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "exchange_read") reply.DiagramState = DiagramState(model);
-        if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save") reply.Metadata = Metadata(model);
-        if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save") reply.Documentation = Documentation(model);
+        if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);
+        if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Documentation = Documentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)
         {
             var wanted = request.Attachment;

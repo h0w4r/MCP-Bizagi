@@ -115,6 +115,12 @@ public sealed partial class NativeEngine
     {
         var original = Visit(source, "", "", new HashSet<string>(StringComparer.Ordinal)).ToArray();
         var copied = Visit(clone, "", "", new HashSet<string>(StringComparer.Ordinal)).ToDictionary(e => Text(e.Value, "Id"));
+        CloneDataFlows(original, copied, map);
+    }
+    private void CloneDataFlows(GraphEntry[] original, Dictionary<string, GraphEntry> copied, IDictionary map)
+    {
+        // A complete selected graph permits bindings between independently selected roots;
+        // whole-diagram cloning uses this same implementation and identity map.
         object Mapped(object element)
         {
             object id = Get(element, "Id");
@@ -128,7 +134,7 @@ public sealed partial class NativeEngine
             // copies of the exact original state. Remap every owned identity explicitly below.
             foreach (string property in new[] { "IoSpecification", "DataInputs", "DataOutputs", "InputSet", "OutputSet", "DataInputAssociations", "DataOutputAssociations" })
                 if (owner.Value.GetType().GetProperty(property) is { CanWrite: true }) Set(target, property, NativeValueClone(Optional(owner.Value, property))!);
-            foreach (var node in DataFlowNodes(new GraphEntry(target, "", Text(clone, "Id"))))
+            foreach (var node in DataFlowNodes(copied[Text(target, "Id")]))
             {
                 Guid old = (Guid)Get(node.Value, "Id"), id = Guid.NewGuid(); map.Add(old, id); Set(node.Value, "Id", id);
                 copied.Add(id.ToString(), node);

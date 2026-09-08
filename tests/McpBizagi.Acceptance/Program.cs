@@ -207,6 +207,20 @@ try
         await NativeReparentingAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_REPARENTING_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--selection-copy-only"))
+    {
+        if (!native) throw new ArgumentException("Selection copy acceptance requires --native.");
+        string? Option(string name)
+        {
+            int index = Array.IndexOf(args, name);
+            if (index < 0) return null;
+            if (index + 1 >= args.Length) throw new ArgumentException(name + " requires a path.");
+            return args[index + 1];
+        }
+        await NativeSelectionCopyAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit,
+            (name, input) => Call(name, input, true), Option("--input"), Option("--selection-request"));
+        Console.WriteLine("NATIVE_SELECTION_COPY_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--alignment-rich-only"))
     {
         if (!native) throw new ArgumentException("Rich alignment acceptance requires --native.");

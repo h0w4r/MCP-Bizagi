@@ -49,6 +49,7 @@ It does not imply that every combination or unsaved GUI workflow is verified.
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
 | Native selection alignment and distribution | Experimental source after 0.5; real root/nested MCP corpora verified | Eight modes, actual CEF Promise acknowledgment, independent readback, archive fidelity, no-op, nested attachment/manual-label preservation, active-CEF cancellation and recovery. Broader combinations and package gates remain separate; not global auto-layout; [contract](native-layout.md) |
 | Live open/unsaved desktop documents | Not implemented | Inspected instance lookup and file CLI are not editing channels; [observed boundary and acceptance](live-sessions.md) |
+| Native selection copying | Experimental source after 0.5 | Closed selections, explicit destination/position, source-derived closure, exact native record/payload comparison and fresh-process readback; arbitrary selection families, live editing and package gates remain separate; [contract](native-selection-copy.md) |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |
 
 The first implementation includes diagnostics to discover native integration

@@ -84,6 +84,7 @@ every operation into a BPMN XML export.
 | Extract embedded subprocess into a reusable process | Experimental current source | Installed refactoring command, root/nested content relocation, attachments/images and persisted-tab remapping; no behavioral equivalence or arbitrary-selection claim; [contract](docs/native-refactoring.md) |
 | Move native elements between containers | Experimental source after 0.5 | Explicit same-diagram process/subprocess ownership, subtree IDs, reference closure and optional position; not cross-diagram migration or auto-layout; [contract](docs/native-reparenting.md) |
 | Align/distribute selected native shapes | Experimental source after 0.5 | Eight installed-editor modes, typed MCP request, native callback acknowledgment, durable readback and archive fidelity; not whole-diagram auto-layout; [contract](docs/native-layout.md) |
+| Copy closed native selections | Experimental source after 0.5 | Explicit source/destination, native clone identity maps, original/archive and fresh-reader fidelity, exact attachments/images; no OS clipboard or live-unsaved editing; [contract](docs/native-selection-copy.md) |
 | Native no-op save and comparison | Opt-in | Every archive leaf checked; unknown differences reject the result |
 | Native model validation | Opt-in | Actual vendor validator; successful execution may report model errors |
 | Resources and activity RACI | Opt-in, copy-only | Create/update/delete local resources; explicit assignment sets and fresh-reader fidelity |

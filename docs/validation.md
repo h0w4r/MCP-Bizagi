@@ -1,5 +1,23 @@
 # Verification baselines
 
+## Native selection copying through MCP — 2026-09-08 UTC
+
+Seven installed-engine copy corpora passed the official stdio MCP client,
+isolated worker, native command/persistence and fresh-process readback:
+**14 completed copies, seven expected failures, seven active-reader cancellations**.
+All 56 workers exited; 864 periodic read-only desktop observations found no
+owned visible window or foreground takeover. These are sampled observations,
+not continuous proof or desktop visual compatibility.
+
+The corpora covered roots/connections, cross-diagram and embedded subtrees,
+nonempty timer/multiple/compensation payloads, exact attachments/images and
+cross-root native I/O. See the [selection-copy contract](native-selection-copy.md)
+for run identifiers, transcript hashes, failure history and remaining boundaries.
+The full unit/component suite passed **999 tests**. Independent MCP XML run
+`20260908-112651-42b781` passed with 41 tools enumerated, not 41 blanket
+accreditations. The immutable 0.5.0-alpha.1 package is unchanged and does not
+contain this later source feature. Full Modeler automation remains open.
+
 ## Native selection alignment through MCP — 2026-09-08 UTC
 
 The final source build passed the actual official stdio client, isolated worker,

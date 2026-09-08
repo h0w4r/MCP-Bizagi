@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add typed native selection copying through MCP, a separately loaded native
+  snapshot, actual inserted-object identity maps and three-worker persistence
+  verification. Preserve full event definitions, exact images/attachments and
+  owned I/O across selection roots. Independently reject incomplete reference
+  closure, changed copied payloads and unrelated archive changes. This is not
+  an OS clipboard bridge, live-unsaved editing or universal copy support.
 - Add explicit native element reparenting between same-diagram processes and
   embedded subprocesses, using actual objects and native persistence with
   independent readback, reference-closure and whole-container fidelity gates.
