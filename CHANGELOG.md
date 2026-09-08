@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add task-to-unbound-`CallActivity` conversion through the installed refactoring
+  command, including native configuration-service initialization, stable shape
+  size/order, reference reconciliation and three-process fidelity. No implicit
+  diagram creation, target binding or reverse inlining. Bind or clear afterwards
+  with the existing typed `native_mutate` call-target contract.
+- Require every converted element's attribute definitions to include its target
+  type; reject hidden-by-conversion values without automatically changing scopes.
+  Apply this protection to same-category task/gateway conversions too. Compare
+  only exact observed call factory defaults and retain unknown/nondefault data.
+  These additions are not in the immutable 0.6.0-alpha.1 package.
 - Correct native Excel validation for empty visible/implicit pools using actual
   native mapper projections and source identities. Return explicit per-pool
   publication omissions; require exact populated row IDs in independent workbook

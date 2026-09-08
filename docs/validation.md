@@ -1,5 +1,72 @@
 # Verification baselines
 
+## Native task-to-unbound-call conversion — source after 0.6, 2026-09-08 UTC
+
+Final circuit `20260908-170532-265468` passed through the actual official SDK
+stdio client, installed Modeler 4.3.0.008 command and fresh native workers:
+**24 completed operations and five expected protocol-level rejections**.
+
+- All eight root task types and a nested task became unbound `CallActivity`
+  objects with their original identities. Operation
+  `d4723d655aa2494080a084fb3d8a6d1f` verified all nine requested changes and
+  whole-archive fidelity; no diagram was created or implicitly chosen as a target.
+- Standard/multi-instance loops, nondefault quantities, Unicode descriptions,
+  shape/label geometry, incident sequence flow, root/nested native data inputs,
+  boundary timers and compensation references survived the independent read.
+- Four RACI assignments, scoped text/file attribute definitions, a Unicode
+  value and byte-exact embedded file survived conversion, explicit binding of
+  root/nested calls to another native process, and subsequent explicit unlinking.
+- A definition initially excluding `CallActivity` caused a real rejection.
+  Explicitly updating that definition through MCP enabled the subsequent
+  conversion. Separate calls rejected stale revision (with checked error cause),
+  stale source type, unrelated cross-category conversion and reverse call-to-task.
+- Native no-op save, nested offscreen rendering, additional metadata/attachment
+  reads and original-file revision verification completed. These do not establish
+  independent GUI compatibility or equivalent simulation behavior.
+- **37 worker records and 42 owned-process records, all exited.** Across
+  **245 periodic read-only observations**, no owned visible window or foreground
+  process was observed. These are sampled observations, not continuous proof.
+- Transcript SHA-256:
+  `981273fd43a7eadaef653b93801b393ec57010b998663fc23017543b3750dd56`.
+  Operation receipt SHA-256:
+  `8c353b6bb070a127931093aa05fe1ef73ce594cb250d002203ade11fc6134193`.
+
+Same-category regression `20260908-165619-772c99` passed **19 operations**:
+99 task/gateway conversions and their 99 reverse conversions, rich-content
+readback, three expected protocol rejections, native no-op save and nested render.
+All 31 workers and 36 owned-process records exited; 266 sampled observations
+found no owned visible/foreground process. Transcript SHA-256:
+`70e74648ba093c251eacbae53d11ef76e5fcd92a7038ce5399ddd44244897ad6`.
+This regression preceded the final call-only default projection; the
+same-category execution/projection paths were unchanged by that final adjustment.
+
+General regression `20260908-171009-5afcbe` also passed: **15 terminal operations**
+(12 completed, one expected native failure, one cancellation and one deliberate
+host-death interruption). Native roundtrip, edits, no-op save, validation,
+multi-diagram/nested content, simulation, rendering and recovery all completed
+their expected paths. Nineteen worker-exit records and the independent client's
+exact Job Object cleanup receipt account for all 20 workers; 24 normal owned-process
+records also confirm exit. There were 116 periodic desktop samples with no owned
+visible/foreground process observed. Transcript SHA-256:
+`69d951a81d5e6d9ae057be6f5c1e66d83b494b5f98dfc6cf386ef1a0fe17e6e7`.
+An earlier overlapping invocation was rejected by the existing per-user native
+settings lease before engine work; the successful regression was run sequentially.
+
+Locked restore, Release build with zero warnings/errors and **1,119 unit/component
+tests** passed without skips. Real XML-only MCP run `20260908-170219-c80a8e`
+passed discovery and XML workflows with native execution explicitly not run.
+All 18 package-policy fixtures passed separately; fixtures are not native proof.
+The earlier complete task-to-call run `20260908-170047-c50c13` passed before the
+client's stale-revision rejection-cause assertion was strengthened; the final
+run above supersedes that assertion's scope.
+
+Initial attempts exposed a missing native configuration-service assignment and
+then newly serialized call geometry/runtime defaults. Their failures were retained;
+only exact observed neutral defaults were added to comparison copies. Nondefault
+settings, unknown fields and original attachment bytes remain protected.
+See the [conversion contract](native-conversions.md). This source addition is not
+part of the immutable 0.6 package and does not close full Modeler automation.
+
 ## Native Excel pool projection — source after 0.6, 2026-09-08 UTC
 
 Final visible-row run `20260908-161951-57f636` traversed actual MCP stdio, isolated installed

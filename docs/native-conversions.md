@@ -1,12 +1,15 @@
-# Native task and gateway type conversion
+# Native task, gateway and unbound-call conversion
 
 `native_elements_convert` changes existing elements through the installed
-Modeler 4.3.0.008 `ChangeElementTypeCommand`. It does not delete/recreate a
+Modeler 4.3.0.008 `ChangeElementTypeCommand` for same-category edits, or
+`RefactorElementsCommand` for task-to-unbound-call conversion. It does not delete/recreate a
 diagram through BPMN import, rewrite native archive XML or control desktop UI.
 The source file is retained; a successful operation returns a new native artifact.
 
 This is an **experimental file-based capability**, not full Modeler automation.
-The source implementation is newer than the immutable 0.4.0-alpha.1 release ZIP.
+Same-category conversion is included in the 0.6 package. Task-to-call conversion
+and destination attribute-scope checks are newer source additions, not changes
+to the immutable 0.6.0-alpha.1 release ZIP.
 
 ## Explicit request
 
@@ -18,10 +21,10 @@ Submit `path`, `expectedRevision` and a `changes` array. Each
 | --- | --- |
 | `ElementId` | Existing nonzero canonical native GUID; not an imported BPMN identifier |
 | `ExpectedType` | Exact current palette type, checked before the command executes |
-| `TargetType` | Different allowed type within the same category |
+| `TargetType` | Different allowed type within the same category, or `CallActivity` for a task source |
 
 A batch contains 1–1,000 distinct identities. Duplicate identities, an unchanged
-type, a stale source revision, an absent source identity and cross-category
+type, a stale source revision, an absent source identity and other cross-category
 requests are rejected. Batch order is explicit; all changes are staged together.
 An editable request is provided in [the JSON example](../examples/native-conversions.json).
 Its sample path, revision and identity must be replaced with inspected values.
@@ -40,13 +43,40 @@ The native class for `AbstractTask` is `Task`; the three event gateway selectors
 share the `EventBasedGateway` class. Both class and palette selector are checked.
 
 Tasks in native processes and embedded subprocesses use the same contract.
-Event conversion, task-to-subprocess conversion, reusable subprocess refactoring,
-conditional/bot task options and live unsaved documents are not included.
+Event conversion, task-to-embedded-subprocess conversion, reverse call-to-task
+conversion, conditional/bot task options and live unsaved documents are not included.
+Embedded-subprocess extraction has its own [refactoring contract](native-refactoring.md).
+
+### Task to an unbound call
+
+All eight task source types above may explicitly target `CallActivity`, at root
+or inside an embedded subprocess. The actual native command's
+`TasksToReusableSubProcess` mode preserves the activity identity, but **does not
+create a diagram or choose a called process**. This is not extraction or inlining.
+
+The fresh read must show empty `CallReference.CatalogProcessId`, `BpmnName` and
+`BpmnNamespace`, and no external reference. To bind afterwards, submit an explicit
+`native_mutate` update with `CallTarget.ProcessId` containing an inspected native
+participant process ID. An empty `ProcessId` explicitly clears that binding.
+Do not pass a diagram ID. See [native calls](native-calls.md) and the
+[task-to-call request example](../examples/native-task-to-call.json).
+
+The adapter supplies the installed element-configuration service normally assigned
+by the desktop; it does not create an editor to initialize this dependency.
+It restores the source shape size and graphics values that the menu command
+would otherwise reset. Newly exposed `ExpandedGeometry` coordinates, colors and
+expansion state must match the common source geometry. Hidden expanded dimensions
+remain protected by whole-archive comparison; they are not silently assigned a
+new layout. This does not make an unbound call executable by the simulator.
 
 ## Execution and fidelity
 
 1. Capture revision-checked source bytes and validate the native task/route
-   selectors without modifying the input archive.
+   selectors without modifying the input archive. Every existing attribute value
+   on a converted element must have a native definition explicitly applicable
+   to its destination type. If not, update the definition intentionally through
+   `native_attributes_apply` before conversion; preserving hidden value bytes alone
+   is not sufficient. This rule applies to same-category conversion too.
 2. Read the source through an isolated native worker.
 3. Execute the installed type-change command in a separate writer worker.
 4. Restore the original collection ordinal and native label/graphics values
@@ -63,6 +93,13 @@ written back into a native archive. Known defaults include zero cost/priority,
 false native user/service flags, the empty script factory expression and the
 service command's explicit `isAsynchronous=false` value. The constructor may
 omit that nullable value; the actual command materializes it.
+
+For task-to-call, the installed serializer also materializes collapsed
+`Expanded=false`, zero expanded dimensions and call runtime defaults:
+`priority=0`, empty `asynchronousBehavior`, `subProcessType=None`,
+`inputMappingType=None`, `outputMappingType=None` and `exitMode=AllTokens`.
+Only these exact neutral values are recognized. Changed dimensions, nondefault
+mapping/exit settings and unknown runtime fields are still compared, not waived.
 
 Unknown and nondefault content remains protected. Nonempty scripts, nondefault
 implementation settings and gateway activation conditions cannot be silently
@@ -112,6 +149,17 @@ Build and execute the actual installed-engine circuit:
 
 ```powershell
 dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build --no-restore -- . --native --conversions-only
+```
+
+The separate task-to-call circuit covers all eight root task types and one nested
+task, native input associations, boundary/compensation references, incident flow,
+loops, quantities, RACI, scoped Unicode attributes and a byte-exact attachment.
+It exercises scope rejection followed by explicit definition repair, checks that
+no diagram was created, binds and clears both root/nested calls, and saves/renders
+the result. Reverse conversion is explicitly rejected, not simulated.
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build --no-restore -- . --native --task-to-call-only
 ```
 
 See [verification baselines](validation.md) for executed run identities and

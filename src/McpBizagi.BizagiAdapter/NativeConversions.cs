@@ -16,10 +16,17 @@ public sealed partial class NativeEngine
         object manager = New(Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.ElementManager"), null, persistence);
         try
         {
+            // The task refactoring path consumes the native size service that the
+            // desktop normally assigns to ElementManager. Resolve the installed
+            // service without creating an editor or loading personal preferences.
+            if (changes.Any(c => tasks.Contains(c.ExpectedType) && c.TargetType == "CallActivity"))
+                Set(manager, "ElementConfigurationManager", Call(injector!, "Resolve",
+                    Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.General.IElementConfigurationManager"))!);
             foreach (var change in changes)
             {
-                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType)) || change.ExpectedType == change.TargetType)
-                    throw new NotSupportedException("Explicit conversions currently require different task types or different gateway types in the same category.");
+                bool toCall = tasks.Contains(change.ExpectedType) && change.TargetType == "CallActivity";
+                if (!(tasks.Contains(change.ExpectedType) && tasks.Contains(change.TargetType) || gateways.Contains(change.ExpectedType) && gateways.Contains(change.TargetType) || toCall) || change.ExpectedType == change.TargetType)
+                    throw new NotSupportedException("Explicit conversions require different task/gateway types in the same category, or task to unbound call.");
                 var graph = Graph(model).ToDictionary(e => Text(e.Value, "Id"), StringComparer.Ordinal);
                 if (!graph.TryGetValue(change.ElementId, out var entry) || ConversionType(entry.Value) != change.ExpectedType)
                     throw new InvalidDataException("Conversion source identity or expected native type does not match.");
@@ -30,15 +37,36 @@ public sealed partial class NativeEngine
                 if (index < 0) throw new InvalidDataException("Conversion source is absent from its native owner.");
                 var links = RequiredDataLinks(graph.Values);
                 object graphics = Get(old, "GraphicalProperties");
-                object descriptor = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementDescriptor"),
-                    Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.TargetType));
-                object args = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.EventArgs.GraphicalElementEventArgs"), "ChangeElementType", Guid.Parse(entry.DiagramId));
-                Set(args, "GraphicalElement", old); Set(args, "ElementType", descriptor);
-                if (IsNativeSubProcess(parent)) Set(args, "SubProcessId", Guid.Parse(entry.ParentId));
-                object command = New(Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Command.ChangeElementTypeCommand"), args, model, manager);
-                progress("native_convert:" + change.ElementId + ":" + change.ExpectedType + ":" + change.TargetType);
-                if (Call(command, "Execute") is not true) throw new InvalidOperationException("Installed ChangeElementTypeCommand did not execute.");
-                object converted = Get(args, "GraphicalElement");
+                object converted;
+                if (toCall)
+                {
+                    // Invoke the installed editor command; this converts one root/nested
+                    // task to an unbound call. It does not create or choose a process.
+                    object args = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.EventArgs.RefactorEventArgs"), "RefactorElements");
+                    Set(args, "DiagramId", Guid.Parse(entry.DiagramId));
+                    Set(args, "Type", Enum.Parse(args.GetType().GetProperty("Type")!.PropertyType, "TasksToReusableSubProcess"));
+                    ((IList)Get(args, "Elements")).Add(old);
+                    if (IsNativeSubProcess(parent)) Set(args, "SubProcessId", Guid.Parse(entry.ParentId));
+                    object command = New(Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Command.RefactorElementsCommand"), args, model, manager);
+                    progress("native_task_to_call:" + change.ElementId + ":" + change.ExpectedType);
+                    if (Call(command, "Execute") is not true) throw new InvalidOperationException("Installed task-to-call refactoring command did not execute.");
+                    converted = collection.Cast<object>().Single(e => Text(e, "Id") == change.ElementId);
+                    // The menu command resizes the shape. The MCP conversion contract
+                    // preserves explicit source geometry; use real native graphics setters.
+                    Set(Get(converted, "GraphicalProperties"), "Size", Get(graphics, "Size"));
+                }
+                else
+                {
+                    object descriptor = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementDescriptor"),
+                        Enum.Parse(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.BPMN20.ElementType"), change.TargetType));
+                    object args = New(Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.EventArgs.GraphicalElementEventArgs"), "ChangeElementType", Guid.Parse(entry.DiagramId));
+                    Set(args, "GraphicalElement", old); Set(args, "ElementType", descriptor);
+                    if (IsNativeSubProcess(parent)) Set(args, "SubProcessId", Guid.Parse(entry.ParentId));
+                    object command = New(Type("Bizagi.ProcessModeler.BusinessLogic.dll", "Bizagi.ProcessModeler.BusinessLogic.Command.ChangeElementTypeCommand"), args, model, manager);
+                    progress("native_convert:" + change.ElementId + ":" + change.ExpectedType + ":" + change.TargetType);
+                    if (Call(command, "Execute") is not true) throw new InvalidOperationException("Installed ChangeElementTypeCommand did not execute.");
+                    converted = Get(args, "GraphicalElement");
+                }
                 if (Text(converted, "Id") != change.ElementId || ConversionType(converted) != change.TargetType)
                     throw new InvalidDataException("Native conversion did not preserve identity or produce the requested type.");
                 // The native command appends the replacement and CopyValues omits label geometry.

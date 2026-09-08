@@ -7,12 +7,14 @@ using McpBizagi.Contracts;
 
 namespace McpBizagi.Core;
 
-/// <summary>Category-preserving conversion with exact type selectors and whole-archive protection.</summary>
+/// <summary>Explicit native conversion with exact type selectors and whole-archive protection.</summary>
 public static class NativeConversionPolicy
 {
     public static readonly string[] TaskTypes = ["AbstractTask", "UserTask", "ManualTask", "ServiceTask", "ScriptTask", "SendTask", "ReceiveTask", "BusinessRuleTask"];
     public static readonly string[] GatewayTypes = ["ExclusiveGateway", "InclusiveGateway", "ParallelGateway", "ComplexGateway", "EventBasedGateway", "EventBasedGatewayExclusive", "EventBasedGatewayParallel"];
     private static readonly XNamespace Ns = "http://www.wfmc.org/2009/XPDL2.2";
+
+    public static bool IsTaskToCall(NativeTypeConversion change) => TaskTypes.Contains(change.ExpectedType) && change.TargetType == "CallActivity";
 
     public static void Validate(NativeTypeConversion[] changes)
     {
@@ -22,8 +24,8 @@ public static class NativeConversionPolicy
         {
             if (!Guid.TryParseExact(c.ElementId, "D", out var id) || id == Guid.Empty || id.ToString() != c.ElementId || !ids.Add(c.ElementId))
                 throw new InvalidDataException("Conversion identities must be distinct canonical native GUIDs.");
-            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType)))
-                throw new NotSupportedException("Conversion requires different task types or different gateway types within one native category.");
+            if (c.ExpectedType == c.TargetType || !(TaskTypes.Contains(c.ExpectedType) && TaskTypes.Contains(c.TargetType) || GatewayTypes.Contains(c.ExpectedType) && GatewayTypes.Contains(c.TargetType) || IsTaskToCall(c)))
+                throw new NotSupportedException("Conversion requires different task/gateway types within one category, or a task to an unbound CallActivity.");
         }
     }
 
@@ -45,6 +47,21 @@ public static class NativeConversionPolicy
                     throw new InvalidDataException("Conversion type readback differs from requested intent.");
                 // Category selectors may change. Every common field, relationship and style stays compared.
                 foreach (string field in new[] { "Kind", "ElementType" }) { a.Remove(field); b.Remove(field); }
+                if (IsTaskToCall(c))
+                {
+                    a["CallReference"] = JsonSerializer.SerializeToNode(new NativeCallReference());
+                    // The graph exposes expanded geometry only for subprocess/call
+                    // types. Coordinates, colors and expansion state remain derived
+                    // from the unchanged source geometry; hidden dimensions are
+                    // protected by the mandatory whole-archive comparison below.
+                    var expanded = target[id].ExpandedGeometry ?? throw new InvalidDataException("Converted call lacks expanded geometry readback.");
+                    if (!double.IsFinite(expanded.Width) || !double.IsFinite(expanded.Height) || expanded.Width < 0 || expanded.Height < 0)
+                        throw new InvalidDataException("Invalid converted call expanded dimensions.");
+                    var expected = JsonSerializer.Deserialize<NativeGeometry>(JsonSerializer.Serialize(source[id].Geometry))
+                        ?? throw new InvalidDataException("Task conversion requires native source geometry.");
+                    expected.Width = expanded.Width; expected.Height = expanded.Height;
+                    a["ExpandedGeometry"] = JsonSerializer.SerializeToNode(expected);
+                }
                 if (GatewayTypes.Contains(c.ExpectedType)) { a.Remove("EventGateway"); b.Remove("EventGateway"); }
             }
             if (!JsonNode.DeepEquals(a, b)) throw new InvalidDataException("Conversion changed unrequested native graph properties: " + id);
@@ -70,6 +87,7 @@ public static class NativeConversionPolicy
 
     private static Dictionary<string, byte[]> Project(IReadOnlyDictionary<string, byte[]> entries, NativeTypeConversion[] changes, bool result)
     {
+        if (!result) VerifyAttributeScopes(entries, changes);
         var projected = new Dictionary<string, byte[]>(entries, StringComparer.OrdinalIgnoreCase); var found = new HashSet<string>();
         foreach (var pair in entries.Where(p => p.Key.EndsWith(".diag!/Diagram.xml", StringComparison.OrdinalIgnoreCase)))
         {
@@ -82,12 +100,60 @@ public static class NativeConversionPolicy
                 if (owners.Length == 0) continue;
                 if (owners.Length != 1 || !found.Add(c.ElementId)) throw new InvalidDataException("Ambiguous native conversion identity.");
                 string type = result ? c.TargetType : c.ExpectedType;
-                if (TaskTypes.Contains(type)) ProjectTask(owners[0], type); else ProjectGateway(owners[0], type);
+                if (result && IsTaskToCall(c)) ProjectUnboundCall(owners[0], c.ExpectedType);
+                else if (TaskTypes.Contains(type)) ProjectTask(owners[0], type); else ProjectGateway(owners[0], type);
+                if (IsTaskToCall(c))
+                    foreach (var graphics in owners[0].Elements(Ns + "NodeGraphicsInfos").Elements(Ns + "NodeGraphicsInfo"))
+                        foreach (var attribute in graphics.Attributes().Where(a => a.Name == "Expanded" && a.Value == "false" ||
+                            (a.Name == "ExpandedWidth" || a.Name == "ExpandedHeight") && a.Value == "0").ToArray())
+                            attribute.Remove(); // Exact neutral values materialized only by the call serializer.
             }
             projected[pair.Key] = Encoding.UTF8.GetBytes(xml.ToString(SaveOptions.DisableFormatting));
         }
         if (found.Count != changes.Length) throw new InvalidDataException("Native conversion owner not found in the expected XPDL structure.");
         return projected;
+    }
+
+    private static void VerifyAttributeScopes(IReadOnlyDictionary<string, byte[]> entries, NativeTypeConversion[] changes)
+    {
+        // Keeping value bytes is not enough if the new type hides them. Apply this
+        // rule to every conversion category, without mutating any definition scope.
+        var targets = changes.ToDictionary(c => c.ElementId, c => c.TargetType, StringComparer.Ordinal);
+        foreach (var pair in entries.Where(p => p.Key.EndsWith(".diag!/ExtendedAttributeValues.xml", StringComparison.OrdinalIgnoreCase)))
+        {
+            var document = NativeMetadataPolicy.Read(Encoding.UTF8.GetString(pair.Value));
+            foreach (var owner in document.Root?.Elements("ElementAttributeValues") ?? [])
+            {
+                if (!targets.TryGetValue((string?)owner.Attribute("ElementId") ?? "", out string? target)) continue;
+                foreach (var value in owner.Element("Values")?.Elements() ?? [])
+                {
+                    string definitionId = (string?)value.Attribute("Id") ?? "";
+                    NativeMetadataPolicy.RequireId(definitionId);
+                    if (!entries.TryGetValue("Documentation/" + definitionId + ".xml", out var bytes))
+                        throw new InvalidDataException("Converted element has an attribute without its native definition.");
+                    var definition = NativeMetadataPolicy.Read(Encoding.UTF8.GetString(bytes)).Root;
+                    if (definition?.Name != "ExtendedAttribute" || (string?)definition.Attribute("Id") != definitionId ||
+                        definition.Element("ElementTypes")?.Elements("AttributeElementType").Any(e => (string?)e.Attribute("Type") == target) != true)
+                        throw new InvalidDataException("Converted element attributes must explicitly include " + target + " in their definition scopes before conversion.");
+                }
+            }
+        }
+    }
+
+    private static void ProjectUnboundCall(XElement owner, string sourceTaskType)
+    {
+        // Only the native type selector changes. Reject a silently introduced call
+        // target, external reference or any unknown payload instead of projecting it away.
+        ProjectTaskRuntime(owner, sourceTaskType);
+        ProjectTaskRuntime(owner, "CallActivity");
+        var implementations = owner.Elements(Ns + "Implementation").ToArray();
+        if (implementations.Length != 1) throw new InvalidDataException("Converted call must have one native Implementation.");
+        var children = implementations[0].Elements().ToArray();
+        if (children.Length != 1 || children[0].Name != Ns + "SubFlow") throw new InvalidDataException("Converted call must have one native SubFlow.");
+        var call = children[0];
+        if (call.Attributes().Any(a => a.Name != "Id" || a.Value != "") || call.Nodes().Any())
+            throw new InvalidDataException("Task conversion cannot introduce a bound or unknown call payload.");
+        call.ReplaceWith(new XElement(Ns + "Task"));
     }
 
     private static void ProjectTask(XElement owner, string type)
@@ -124,7 +190,7 @@ public static class NativeConversionPolicy
 
     private static void ProjectTaskRuntime(XElement owner, string type)
     {
-        if (type is not "UserTask" and not "ManualTask" and not "ServiceTask") return;
+        if (type is not "UserTask" and not "ManualTask" and not "ServiceTask" and not "CallActivity") return;
         var runtime = owner.Elements(Ns + "ExtendedAttributes").Elements(Ns + "ExtendedAttribute").Where(e => (string?)e.Attribute("Name") == "RuntimeProperties").ToArray();
         if (runtime.Length > 1) throw new InvalidDataException("Ambiguous native runtime record.");
         if (runtime.Length == 0) return;
@@ -139,6 +205,16 @@ public static class NativeConversionPolicy
         if (type is "UserTask" or "ServiceTask")
             foreach (string name in new[] { "cost", "priority" })
                 if (data[name] is JsonValue number && number.TryGetValue<decimal>(out var value) && value == 0) data.Remove(name);
+        if (type == "CallActivity")
+        {
+            // Observed native call-constructor defaults, not a wildcard runtime
+            // exemption. Unknown/nondefault fields survive and can fail fidelity.
+            if (data["priority"] is JsonValue priority && priority.TryGetValue<decimal>(out var number) && number == 0) data.Remove("priority");
+            foreach (var item in new[] { (Name: "subProcessType", Value: "None"), (Name: "inputMappingType", Value: "None"),
+                (Name: "outputMappingType", Value: "None"), (Name: "exitMode", Value: "AllTokens") })
+                if (data[item.Name] is JsonValue text && text.TryGetValue<string>(out var value) && value == item.Value) data.Remove(item.Name);
+            if (data["asynchronousBehavior"] is JsonObject empty && empty.Count == 0) data.Remove("asynchronousBehavior");
+        }
         foreach (string name in type == "UserTask" ? new[] { "notifyOnMobile", "isSingleton", "isConditional" } : type == "ServiceTask" ? new[] { "isBot" } : Array.Empty<string>())
             if (data[name] is JsonValue boolean && boolean.TryGetValue<bool>(out var value) && !value) data.Remove(name);
         if (type == "ServiceTask" && data["asynchronousBehavior"] is JsonObject behavior)

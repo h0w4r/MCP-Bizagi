@@ -143,6 +143,11 @@ try
         var modes = advertised.GetProperty("intermediateCreationModes").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var subprocesses = advertised.GetProperty("nativeSubProcessKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
         var payloads = advertised.GetProperty("nativeEventPayloadKinds").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        var taskToCall = advertised.GetProperty("nativeConversions").GetProperty("taskToUnboundCall");
+        if (taskToCall.GetProperty("targetType").GetString() != "CallActivity" || taskToCall.GetProperty("createsDiagram").GetBoolean() ||
+            taskToCall.GetProperty("selectsTarget").GetBoolean() || taskToCall.GetProperty("reverseSupported").GetBoolean() ||
+            taskToCall.GetProperty("bindingTool").GetString() != "native_mutate" || taskToCall.GetProperty("bindingField").GetString() != "CallTarget.ProcessId")
+            throw new InvalidDataException("Task-to-call discovery misrepresents its explicit scope.");
         if (types.Length == 0 || types.Distinct(StringComparer.Ordinal).Count() != types.Length ||
             !types.Contains("TimerIntermediate") || !types.Contains("CancelEnd") || !types.Contains("EventBasedGatewayParallel") ||
             !modes.SequenceEqual(new[] { "Catch", "Throw", "Boundary" }) || !subprocesses.SequenceEqual(new[] { "SubProcess", "Transaction", "AdHoc" }) ||
@@ -251,11 +256,11 @@ try
         else await NativeRefactoringAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_REFACTORING_PASS evidence=" + run); return 0;
     }
-    if (args.Contains("--conversions-only"))
+    if (args.Contains("--conversions-only") || args.Contains("--task-to-call-only"))
     {
         if (!native) throw new ArgumentException("Conversion acceptance requires --native.");
-        await NativeConversionAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
-        Console.WriteLine("NATIVE_CONVERSION_LIFECYCLE_PASS evidence=" + run); return 0;
+        await NativeConversionAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true), args.Contains("--task-to-call-only"));
+        Console.WriteLine((args.Contains("--task-to-call-only") ? "NATIVE_TASK_TO_CALL_LIFECYCLE_PASS" : "NATIVE_CONVERSION_LIFECYCLE_PASS") + " evidence=" + run); return 0;
     }
     if (args.Contains("--custom-artifacts-only"))
     {
