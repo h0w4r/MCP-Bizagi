@@ -156,7 +156,11 @@ private evidence. They may contain native audit identities: do not publish them
 unredacted. Consult [validation](validation.md) for sanitized run identifiers.
 
 Rich-text formatting, the complete numeric/selection validation corpus, nested
-table/image combinations, custom artifacts, manual attribute order editing,
+table/image combinations, manual attribute order editing,
 global catalogs, rich publication boundaries and independent Modeler visual
 verification still require broader acceptance. No successful write proves those
 capabilities, and none is silently promoted to full automation.
+
+Model-owned [custom artifact definitions and instances](native-custom-artifacts.md)
+were implemented and exercised by a later dedicated circuit. Their separate
+status must not be inferred from this earlier extended-attribute corpus.

@@ -36,6 +36,7 @@ This ledger distinguishes implementation from operational accreditation.
 | Diagram lifecycle and persisted tabs | Experimental source after 0.4 | Creation, name/derived-header change, native cloning with checked ID maps, deletion and ordered/selected diagram/subprocess tabs; [contract and remaining corpus](native-diagrams.md) |
 | Extended attributes/attachments editing | Experimental source acceptance after 0.4 | 12 definition/value kinds, two-row table, embedded file/image, lifecycle, rich no-op and unrelated edit; [contract and remaining corpus](native-attributes.md) |
 | Visual compatibility | Not accredited | Independent verification inside Modeler |
+| Live open/unsaved desktop documents | Not implemented | Inspected instance lookup and file CLI are not editing channels; [observed boundary and acceptance](live-sessions.md) |
 | Newer Modeler versions | Not accredited | Full version-specific contract rerun |
 
 The first implementation includes diagnostics to discover native integration

@@ -130,8 +130,10 @@ as an executable process. The quantitative simulation uses a separate diagram.
 The client also exercises source/default references, native rendering, Word
 publication, wrong kinds, duplicate-default rejection and no-op save fidelity.
 
-See [dated evidence](validation.md) for actually completed runs. Complete loop
-editing, event definitions, all advanced activity/gateway options, every
-conditional topology, nondefault token execution and independent desktop visual
-compatibility are not accredited by this contract. The full Modeler automation
-objective remains open.
+See [dated evidence](validation.md) for actually completed runs. Subsequent
+[loop editing](native-loops.md) and [event payload](native-event-payloads.md)
+contracts have their own implementation and acceptance; they are not wholly
+unimplemented merely because this earlier semantic corpus does not cover them.
+Advanced activity/gateway options, every conditional topology, nondefault token
+execution and independent desktop visual compatibility are not accredited by
+this contract. The full Modeler automation objective remains open.

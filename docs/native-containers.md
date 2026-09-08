@@ -129,9 +129,12 @@ and package execution.
 
 ## Still open in this family
 
-Diagram creation, deletion, cloning and ordering; container moves; reusable
-call-activity lifecycle; all subprocess variants and event/boundary semantics;
-automatic layout and the complete graphical corpus need further implementation
-and their own native acceptance. Independent visual compatibility **inside
-Modeler** is separate from the offscreen renderer and fresh native readback.
-None of these boundaries closes or reduces the full-automation objective.
+Container moves, general selection/refactoring and automatic layout still need
+implementation and native acceptance. Later work has separately added
+[diagram lifecycle](native-diagrams.md), [local reusable calls](native-calls.md),
+[special subprocesses](native-subprocesses.md), [events](native-events.md) and
+[typography](native-styles.md); their individual contracts and dated evidence,
+not this earlier container corpus, determine their verified scope.
+Independent visual compatibility **inside Modeler** remains separate from the
+offscreen renderer and fresh native readback. None of these boundaries closes
+or reduces the full-automation objective.
