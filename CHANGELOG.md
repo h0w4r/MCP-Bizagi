@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Add `native_surface_layout`: server-calculated MSAGL placement for a complete
+  closed, unpartitioned native process or embedded subprocess, followed by one
+  installed-editor grouped move/router transaction. Preserve dimensions,
+  attached-event offsets, manual labels, native semantics and unknown archive
+  content through independent callback intent and fresh-process readback gates.
+  This is not whole-model layout or independent desktop GUI accreditation.
+- Acknowledge worker progress after the host handles each phase, rather than
+  merely after notification transmission. Coalesce intermediate journal writes
+  while keeping live MCP status, cancellation and terminal persistence explicit.
+- Pin the MSAGL dependency and its reviewed MIT text separately from binary build
+  provenance; verify content-bound license sources during packaging.
+  These additions are not included in the immutable 0.6.0-alpha.1 ZIP.
+
 - Add explicit `migratePresentationActions` consent to cross-diagram native
   reparenting. Move the original action objects and owned bytes with their
   owners, retain shared source payloads and literal caches, and reject different-byte

@@ -9,15 +9,36 @@ public sealed partial class NativeWorkflows
     public OperationView Align(string path, string expectedRevision, NativeAlignmentRequest alignment)
     {
         NativeAlignmentPolicy.Validate(alignment);
+        if (!NativeAlignmentPolicy.Modes.Contains(alignment.Mode))
+            throw new InvalidDataException("Calculated placement is produced by native_surface_layout, not supplied through native_elements_align.");
+        var captured = JsonSerializer.Deserialize<NativeAlignmentRequest>(JsonSerializer.Serialize(alignment))!;
+        return StartLayout(path, expectedRevision, "native_elements_align", (_, _, _, _) => captured, false);
+    }
+
+    public OperationView LayoutSurface(string path, string expectedRevision, NativeSurfaceLayoutRequest layout)
+    {
+        NativeSurfaceLayoutPlanner.Validate(layout);
+        var captured = JsonSerializer.Deserialize<NativeSurfaceLayoutRequest>(JsonSerializer.Serialize(layout))!;
+        return StartLayout(path, expectedRevision, "native_surface_layout", (before, directory, progress, token) =>
+        {
+            var plan = NativeSurfaceLayoutPlanner.Calculate(before, captured, progress, token);
+            File.WriteAllText(Path.Combine(directory, "surface-layout-plan.json"), JsonSerializer.Serialize(plan));
+            return plan.Alignment;
+        }, true);
+    }
+
+    private OperationView StartLayout(string path, string expectedRevision, string operation,
+        Func<NativeElement[], string, Action<string>, CancellationToken, NativeAlignmentRequest> prepare, bool calculated)
+    {
         var input = ReadNative(path);
         if (input.Revision != expectedRevision) throw new IOException("Native alignment source revision conflict.");
-        var captured = JsonSerializer.Deserialize<NativeAlignmentRequest>(JsonSerializer.Serialize(alignment))!;
-        return operations.Start("native_elements_align", async (id, progress, token) =>
+        return operations.Start(operation, async (id, progress, token) =>
         {
             string directory = CreateArtifactDirectory(id), source = Path.Combine(directory, "input.bpm"), output = Path.Combine(directory, "edited.bpm");
             await File.WriteAllBytesAsync(source, input.Bytes, token);
-            File.WriteAllText(Path.Combine(directory, "alignment-request.json"), JsonSerializer.Serialize(captured));
             var before = await Execute(new EngineRequest { OperationId = id, Action = "exchange_read", InputPath = source }, RunDirectory(id, "source-reader"), progress, token);
+            var captured = prepare(before.Elements, directory, progress, token);
+            File.WriteAllText(Path.Combine(directory, "alignment-request.json"), JsonSerializer.Serialize(captured));
             var expected = NativeAlignmentPolicy.Expected(before.Elements, captured);
             string editorDirectory = RunDirectory(id, "editor");
             var edited = await Execute(new EngineRequest { OperationId = id, Action = "align_save", InputPath = source, OutputPath = output, Alignment = captured, AlignmentExpected = expected },
@@ -48,8 +69,13 @@ public sealed partial class NativeWorkflows
             var fidelity = NativeAlignmentPolicy.Compare(input.Bytes, File.ReadAllBytes(output), before.Elements, reopened.Elements, captured, receipt);
             File.WriteAllText(Path.Combine(directory, "alignment-fidelity.json"), JsonSerializer.Serialize(fidelity, new JsonSerializerOptions { WriteIndented = true }));
             if (!fidelity.Preserved) throw new InvalidDataException("Alignment changed unrequested native content; output is quarantined and the original is retained.");
+            if (calculated)
+                NativeSurfaceLayoutPlanner.VerifyBoundaryRoutes(reopened.Elements, before.Elements.Single(e => e.Id == captured.ElementIds[0]).ParentId);
             return new { before, edited, reopened, fidelity, receipt, editorPolicy, nativeSourceUnmodified = true,
-                interpretationWarning = "Selected native alignment/distribution is not global auto-layout, live-document editing or desktop visual compatibility. Nonrepresentable label changes and semantic relocation are rejected.",
+                layoutPlan = calculated ? JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(Path.Combine(directory, "surface-layout-plan.json"))) : (JsonElement?)null,
+                interpretationWarning = calculated
+                    ? "Automatic placement covers one closed, unpartitioned surface. Installed editor routing is verified for durable intent, not global obstacle clearance, text rendering quality, cross-pool layout or desktop visual compatibility. Unsupported surfaces are rejected without partial output."
+                    : "Selected native alignment/distribution is not global auto-layout, live-document editing or desktop visual compatibility. Nonrepresentable label changes and semantic relocation are rejected.",
                 outputArtifact = "artifact:" + id + ":edited.bpm", outputRevision = BpmnDocument.Revision(File.ReadAllBytes(output)) };
         });
     }

@@ -9,6 +9,23 @@
         throw new Error('Unsupported native editor component contract: no unique process diagram.');
     }
     const eventBus = diagrams[0].eventBus;
+    // One installed elements.align command groups all calculated moves and their
+    // dependent native routes into the normal single UpdateElementShape callback.
+    // This adapter entry point is private to the worker, not an arbitrary script tool.
+    window.__mcpApplyCalculatedLayout = positions => {
+        const modeling = diagrams[0].diagram.get('modeling');
+        if (!modeling || typeof modeling.alignElements !== 'function')
+            throw new Error('Installed calculated-move transaction API is unavailable.');
+        const changes = positions.map(position => {
+            const shape = diagrams[0].elementRegistry.get(position.ElementId);
+            if (!shape || shape.host || shape.waypoints || !Number.isFinite(shape.x) || !Number.isFinite(shape.y))
+                throw new Error('Calculated layout references an unsupported native node.');
+            return { shape, delta: { x: position.X - shape.x, y: position.Y - shape.y } };
+        });
+        window.__mcpCalculatedLayout = true;
+        try { modeling.alignElements(changes); }
+        finally { window.__mcpCalculatedLayout = false; }
+    };
     // The editor maps zero-participant subprocess DTOs to a transient canvas pool.
     // Retain the actual pre-command alias instead of mistaking it for a .bpm ID.
     window.__mcpLayoutInitial = diagrams[0].elementRegistry.getDiagramElements().map(element => ({
@@ -18,6 +35,16 @@
         bounds: { x: element.x, y: element.y, width: element.width, height: element.height }
     }));
     window.__mcpLayoutPolicy = { installed: true, suppressedInsertions: [], preservedSubprocessEndpoints: [], preservedBoundaryAttachments: [], acknowledged: false };
+    window.__mcpLayoutPolicy.preservedCalculatedOwnership = [];
+    window.__mcpLayoutPolicy.calculatedBoundaryDocking = [];
+    const boundarySides = new Map();
+    for (const element of diagrams[0].elementRegistry.getDiagramElements()) {
+        if (!element.host) continue;
+        const x = element.x + element.width / 2, y = element.y + element.height / 2, host = element.host;
+        const sides = [['top', Math.abs(y - host.y)], ['bottom', Math.abs(y - host.y - host.height)],
+            ['left', Math.abs(x - host.x)], ['right', Math.abs(x - host.x - host.width)]].filter(side => side[1] < 0.001);
+        if (sides.length === 1) boundarySides.set(element.id, sides[0][0]);
+    }
     window.__mcpLayoutPolicy.attachmentTrace = [];
     window.__mcpLayoutPolicy.attachmentTraceObserved = 0;
     window.__mcpLayoutPolicy.attachmentTraceTruncated = false;
@@ -47,9 +74,39 @@
     // behavior otherwise assigns a root-canvas participant from absolute coordinates.
     // Reuse the editor's own move hint to preserve this explicit surface ownership.
     eventBus.on('commandStack.elements.move.preExecute', 2000, event => {
-        if (window.__mcpAlignmentActive && window.__mcpAlignmentSubProcess) {
+        if (window.__mcpAlignmentActive && (window.__mcpAlignmentSubProcess || window.__mcpCalculatedLayout)) {
             event.context.hints = { ...event.context.hints, avoidUpdateParent: true };
         }
+    });
+
+    // During grouped calculated moves the native route may temporarily cross a
+    // pool while the other endpoint is still at its old position. Its normal
+    // geometry-based parent inference is inappropriate for a closed, same-owner
+    // transaction. Use the installed hint, not a callback/output ownership fixup.
+    for (const command of ['connection.layout', 'connection.updateWaypoints', 'connection.move']) {
+        eventBus.on(`commandStack.${command}.preExecute`, 2100, event => {
+            if (!window.__mcpAlignmentActive || !window.__mcpCalculatedLayout) return;
+            event.context.hints = { ...event.context.hints, avoidUpdateParent: true };
+            window.__mcpLayoutPolicy.preservedCalculatedOwnership.push({ command, connectionId: event.context.connection.id });
+        });
+    }
+
+    eventBus.on('commandStack.connection.layout.preExecute', 2050, event => {
+        if (!window.__mcpAlignmentActive || !window.__mcpCalculatedLayout) return;
+        const c = event.context, source = c.connection.source;
+        if (!source || !source.host) return;
+        const side = boundarySides.get(source.id);
+        if (!side) throw new Error('Calculated boundary docking has no unambiguous original host side.');
+        // The normal move helper can supply the bottom/right corner of a moved
+        // boundary as its docking hint. Feed the native router the actual outward
+        // event origin instead. Do not rewrite its returned callback or saved route.
+        const point = { x: source.x + source.width / 2, y: source.y + source.height / 2 };
+        if (side === 'top') point.y = source.y;
+        if (side === 'bottom') point.y = source.y + source.height;
+        if (side === 'left') point.x = source.x;
+        if (side === 'right') point.x = source.x + source.width;
+        c.hints = { ...c.hints, connectionStart: point };
+        window.__mcpLayoutPolicy.calculatedBoundaryDocking.push({ connectionId: c.connection.id, side, point });
     });
 
     // The installed move helper treats a sequence flow whose target is on the

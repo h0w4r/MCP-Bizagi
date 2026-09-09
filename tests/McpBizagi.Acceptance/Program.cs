@@ -205,6 +205,12 @@ try
         await NativeConnectorPortAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_CONNECTOR_PORTS_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--surface-layout-only"))
+    {
+        if (!native) throw new ArgumentException("Automatic surface layout requires --native.");
+        await NativeSurfaceLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_SURFACE_LAYOUT_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--anchored-alignment-only"))
     {
         if (!native) throw new ArgumentException("Anchored alignment requires --native.");

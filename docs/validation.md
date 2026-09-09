@@ -1,5 +1,105 @@
 # Verification baselines
 
+## Acknowledged native progress — extracted candidate, 2026-09-09 UTC
+
+Final private extracted-package run `20260909-014645-71516f` passed the rich
+alignment regression through the official SDK and stdio transport: **nine
+terminal operations, eight completed and one actual operator cancellation**.
+The client observed `native_render_surface` through `operation_get` before
+requesting cancellation; the next native alignment completed successfully.
+Nested embedded bytes and an explicitly positioned manual label survived.
+
+The worker now waits for a host RPC reply to each phase. Every received phase
+updates live status; intermediate durable snapshots are coalesced at 250 ms,
+while start/cancellation/terminal states remain immediately durable. This is
+not an operation timeout or a claim that polling observes every transient phase.
+
+- All **21 workers / 40 observed owned processes** exited. **429 periodic
+  desktop samples** observed no owned visible window or foreground ownership.
+- Seven successful output artifacts and 111 loaded vendor module contents were
+  independently rehashed without drift. All 413 extracted package entries also
+  remained unchanged after the run, using sibling-worker discovery from a path
+  containing spaces and Unicode.
+- The final source build passed **1,336 unit tests**, **18 package-policy tests**
+  and **eight reviewed-license policy tests**. Independent XML MCP run
+  `20260909-014640-76472b` passed with 47 tools; native execution was explicitly
+  not performed by that separate XML run.
+
+Native transcript SHA-256:
+`45b9514a530c95f578907818e820426f03795ae325f6d246b7b58c8d1f0ce021`.
+Private candidate ZIP SHA-256:
+`041eb9397073946893b3c005d24a1eeea76816045ef734eb22656eab5618502b`.
+This dirty-checkout candidate is not a new public release; the immutable
+0.6.0-alpha.1 distribution is unchanged.
+
+The first notification-only candidate failed this regression because the client
+never observed a live editor phase before the operation completed. No cancellation
+was issued in that failed trial. An acknowledgment-only intermediate candidate
+then passed (`20260909-012019-d799d9`); the final run above also includes the
+host's progress-journal coalescing. No failed observation is counted as a
+successful cancellation, and these runs are not a controlled performance benchmark.
+
+## Automatic native surface placement — source after 0.6, 2026-09-09 UTC
+
+The official-SDK stdio client now requests topology-based positions from the
+server with `native_surface_layout`; it does not supply a coordinate plan.
+Source run `20260909-005416-c58fb8` passed **ten terminal operations: nine
+completed and one expected invalid-owner failure**, followed by successful work.
+
+- The real installed editor applied a four-node root surface and a three-node
+  embedded surface, with ten connections including cycles, self-loops and
+  parallel flows. Seven independently measured host/manual-label envelopes did
+  not overlap. An attached timer retained its host, definition and exact offset.
+- Native fresh readback, full-archive fidelity, save copy, root/embedded renders
+  and original-source inspection completed. An independent archive/SVG audit
+  checked two boundary observations, ten callback/persisted port observations,
+  ten SVG endpoint pairs and one byte-exact `00FF11008027` opaque action file.
+- All **20 workers / 45 owned processes** exited; **477 periodic desktop samples**
+  observed no owned visible window or foreground ownership. Six successful output
+  artifacts and 111 loaded vendor module contents were rehashed without drift.
+- The modern host uses pinned Msagl 1.2.1 for placement only. The actual installed
+  native move/router commands produce the route intent. Library presence, a
+  solver return, and the **1,336 passing unit tests** are not native accreditation.
+
+Source transcript SHA-256:
+`9aa70a88d599be67c71d7fce3cc5a31ab17d15043a26c77c043a93cebd5f4454`.
+Independent source receipt SHA-256:
+`5bdf0b10871f2441b339f1ab52b7f2bb8bae30395f9c3650156d5c2c361de496`.
+
+Private prepared-package run `20260909-010315-2da2b5` independently repeated the
+same ten-operation circuit with automatic sibling-worker discovery. All twenty
+workers / 42 owned processes exited; 713 periodic samples observed no owned
+visible window or foreground ownership. Its independent archive/SVG audit also
+passed, and all 413 package-manifest entries remained unchanged. Transcript:
+`a6f0c6470d00b4873c38b8ea6d0a8645ecb06d7e4b42bf25a1eef9c64d2d04df`.
+This was a private dirty-checkout candidate, not a replacement for the immutable
+public 0.6 ZIP or a new consolidated release.
+
+Final extracted-candidate run `20260909-015054-e0c595` repeated this circuit after
+the progress acknowledgment/journal changes described above: **ten terminal
+operations, nine completed and one expected invalid-owner failure**. The
+independent audit again passed two boundary observations, ten callback/persisted
+ports, ten native SVG endpoint pairs and one exact opaque payload. All **20
+workers / 49 observed owned processes** exited, with **886 periodic samples**
+without owned visible/foreground observation. Six output artifacts and 111
+loaded vendor module contents were rehashed unchanged. All 413 manifest entries
+in the same extracted ZIP remained unchanged after both native suites.
+Final surface transcript SHA-256:
+`8aed8b538e17fe727d7a2f3afa4dc7e6d78e32497b42949b8b187d90a786491c`.
+
+Earlier trials were retained as failures rather than relaxed into success:
+intermediate native routing reassigned a connection's participant; malformed
+authored route origins failed native restart; and an attached-event route
+initially persisted a corner origin that disagreed with native SVG. The final
+adapter uses existing ownership/docking hints before native commands, plus an
+independent outward-origin gate before planning and after fresh readback. It
+does not modify failed callbacks or patch the saved archive into conformity.
+
+See the [surface contract](native-surface-layout.md). This is not global
+multi-owner routing, partition/expanded-container layout, every port/shape
+combination, complete rendered text/curve quality, or independent Modeler GUI
+compatibility. The full automation objective remains incomplete.
+
 ## Host-attached native alignment — source after 0.6, 2026-09-09 UTC
 
 Final official-SDK stdio run `20260909-000654-aba082` passed **11 terminal native

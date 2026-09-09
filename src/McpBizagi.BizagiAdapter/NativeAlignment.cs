@@ -21,9 +21,14 @@ public sealed partial class NativeEngine
     {
         var alignment = request.Alignment ?? throw new InvalidDataException("Missing native alignment request.");
         string mode = alignment.Mode, diagramId = alignment.DiagramId;
-        if (!new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly" }.Contains(mode) ||
+        if (!new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly", "Calculated" }.Contains(mode) ||
             alignment.ElementIds.Length < 2 || alignment.ElementIds.Length > 1000 || alignment.ElementIds.Distinct().Count() != alignment.ElementIds.Length)
             throw new InvalidDataException("Invalid native alignment selection or mode.");
+        if (mode == "Calculated" && (alignment.Placements == null ||
+            !alignment.Placements.Select(p => p.ElementId).SequenceEqual(alignment.ElementIds) ||
+            alignment.Placements.Any(p => double.IsNaN(p.X) || double.IsInfinity(p.X) || double.IsNaN(p.Y) || double.IsInfinity(p.Y) ||
+                p.X < 0 || p.Y < 0 || p.X > 1000000 || p.Y > 1000000 || p.X != Math.Truncate(p.X) || p.Y != Math.Truncate(p.Y))))
+            throw new InvalidDataException("Invalid calculated native layout positions.");
         object diagram = Items(model, "Diagrams").Single(d => Text(d, "Id") == diagramId);
         string asset = Path.Combine(installation, "ModelerProcessEditor", "output", "modeler-bpmn-editor.min.js");
         string assetHash = AlignmentHash(File.ReadAllBytes(asset));
@@ -105,7 +110,10 @@ public sealed partial class NativeEngine
             Wait("native_editor_geometry_policy", "String(window.__mcpLayoutPolicy?.installed===true)");
             File.WriteAllText(Path.Combine(workRoot, "native-editor-initial-identities.json"), EvaluateInNativeBrowser("JSON.stringify(window.__mcpLayoutInitial)"));
             bridge.Phase = "requested_alignment";
-            EvaluateInNativeBrowser("selectElementsById(" + JsonConvert.SerializeObject(ids) + ");window.__mcpAlignmentActive=true;try{alignSelectedShapes(" + JsonConvert.SerializeObject(mode) + ");}finally{window.__mcpAlignmentActive=false;}");
+            string command = mode == "Calculated"
+                ? "window.__mcpApplyCalculatedLayout(" + JsonConvert.SerializeObject(alignment.Placements) + ")"
+                : "alignSelectedShapes(" + JsonConvert.SerializeObject(mode) + ")";
+            EvaluateInNativeBrowser("selectElementsById(" + JsonConvert.SerializeObject(ids) + ");window.__mcpAlignmentActive=true;try{" + command + ";}finally{window.__mcpAlignmentActive=false;}");
             if (request.AlignmentExpected.Length == 0)
             {
                 // The host independently proved zero requested deltas on the immutable input.

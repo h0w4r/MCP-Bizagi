@@ -55,7 +55,15 @@ internal static class Program
         await pipe.WaitForConnectionAsync();
         using var rpc = new JsonRpc(pipe, pipe);
         rpc.AddLocalRpcTarget(service);
-        service.Progress = phase => { Console.Error.WriteLine("phase=" + phase); rpc.NotifyAsync("phase", phase).GetAwaiter().GetResult(); };
+        service.Progress = phase =>
+        {
+            Console.Error.WriteLine("phase=" + phase);
+            // A notification acknowledges transport only. Fast native work could
+            // finish while durable host phase handlers were still queued, hiding
+            // the live cancellation boundary. Await the existing RPC handler's
+            // response so the operator can observe the phase before work advances.
+            rpc.InvokeAsync("phase", phase).GetAwaiter().GetResult();
+        };
         rpc.StartListening();
         await rpc.Completion;
         return 0;

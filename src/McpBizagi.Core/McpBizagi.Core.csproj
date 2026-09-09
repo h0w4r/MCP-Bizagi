@@ -1,4 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
   <ItemGroup><ProjectReference Include="../McpBizagi.Contracts/McpBizagi.Contracts.csproj" /></ItemGroup>
+  <!-- Modern-host geometry planning only; no layout dependency is loaded into the native worker. -->
+  <ItemGroup><PackageReference Include="Msagl" /></ItemGroup>
 </Project>

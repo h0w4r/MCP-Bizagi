@@ -1,0 +1,11 @@
+[
+  {
+    "package": "Msagl/1.2.1",
+    "nugetSha512": "IlKyVvu9DCcc/xDAW2yw9N1i3xMzaogrL7oa4dE8/IFH3pt0loQo4O2TUKKeAvPgAKgNz45YSyD2/8qdTj8l6Q==",
+    "license": "MIT",
+    "file": "Msagl-1.2.1/LICENSE.txt",
+    "sha256": "789bf207455e832e8cc853262ad5aa05b31837dfc43670f3e1b0407046a1e2cc",
+    "source": "https://raw.githubusercontent.com/microsoft/automatic-graph-layout/0a902c5b112d5bfcdf9f20108c900224030948c1/LICENSE",
+    "reason": "The NuGet package declares MIT but omits its license text and repository commit. This separately reviewed license source is not an assertion of the binary's build commit."
+  }
+]

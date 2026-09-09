@@ -10,6 +10,7 @@ in each project's `packages.lock.json`.
 | StreamJsonRpc | https://github.com/microsoft/vs-streamjsonrpc | MIT |
 | Json.NET | https://github.com/JamesNK/Newtonsoft.Json | MIT |
 | Microsoft.Extensions.Hosting | https://github.com/dotnet/runtime | MIT |
+| MSAGL (Msagl) | https://github.com/microsoft/automatic-graph-layout | MIT |
 | .NET reference assemblies | https://github.com/microsoft/dotnet | MIT |
 | xUnit.net | https://github.com/xunit/xunit | Apache-2.0 |
 | Visual Studio Test Platform | https://github.com/microsoft/vstest | MIT |
@@ -22,6 +23,10 @@ components, not only this summary.
 embedded license/notice files, and a dependency inventory. When a package omits
 its license text, the script fetches it from the exact upstream repository commit
 recorded in that package's metadata. An unresolved license stops packaging.
+If the package also omits repository provenance, an explicitly reviewed source in
+`licenses/reviewed-sources.json` must match the exact NuGet content hash, declared
+license and checked-in license text hash. This pins the license, not an inferred
+binary build commit. MSAGL 1.2.1 uses this reviewed-source path.
 
 Bizagi Modeler and its bundled third-party components remain separately licensed.
 They are loaded from the operator's installation and must not be added to this

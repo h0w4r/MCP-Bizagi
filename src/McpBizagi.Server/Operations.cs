@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 
@@ -16,6 +17,7 @@ public sealed class Operations : IHostedService
         public readonly CancellationTokenSource Cancellation = new();
         public readonly object Sync = new();
         public Task Completion = Task.CompletedTask;
+        public long LastProgressPersistence = Stopwatch.GetTimestamp();
     }
     private readonly ConcurrentDictionary<string, Entry> entries = new();
     private readonly string root;
@@ -67,7 +69,17 @@ public sealed class Operations : IHostedService
                     lock (entry.Sync)
                     {
                         if (entry.View.State is not "running" and not "cancelling") return;
-                        entry.View = entry.View with { Phase = phase, UpdatedAt = DateTimeOffset.UtcNow }; Persist(entry);
+                        entry.View = entry.View with { Phase = phase, UpdatedAt = DateTimeOffset.UtcNow };
+                        // Keep every acknowledged phase immediately visible through MCP,
+                        // but coalesce disk snapshots during bursty native registration.
+                        // Start, cancellation and terminal state still persist immediately;
+                        // a crash may lose at most the recent intermediate phase snapshot,
+                        // never permission to replay a potentially applied write.
+                        if (Stopwatch.GetElapsedTime(entry.LastProgressPersistence) >= TimeSpan.FromMilliseconds(250))
+                        {
+                            Persist(entry);
+                            entry.LastProgressPersistence = Stopwatch.GetTimestamp();
+                        }
                     }
                 }
                 try

@@ -5,7 +5,8 @@ Build a framework-dependent Windows package with dependency licenses and hashes.
 .DESCRIPTION
 Requires a restored checkout and network access for license texts absent from
 NuGet packages. Upstream license requests use the exact repository commit from
-the package metadata. Never reads or redistributes the Bizagi installation.
+the package metadata, or exact content-bound reviewed license sources when that
+metadata is absent. Never reads or redistributes the Bizagi installation.
 #>
 param([string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
@@ -50,6 +51,7 @@ try {
     $seen = @{}
     $downloadCache = @{}
     $inventory = [Collections.Generic.List[object]]::new()
+    . (Join-Path $repo 'scripts/dependency-license.ps1')
     foreach ($project in 'McpBizagi.Server', 'McpBizagi.Worker') {
         $assets = Get-Content -LiteralPath "src/$project/obj/project.assets.json" -Raw | ConvertFrom-Json -AsHashtable
         foreach ($target in $assets.targets.Values) {
@@ -80,32 +82,39 @@ try {
                 }
                 $source = 'NuGet package'
                 if (-not ($licenseFiles | Where-Object { $_ -match '(?i)license' })) {
-                    $repository = [string]$metadata.repository.url
-                    $commit = [string]$metadata.repository.commit
-                    if ($repository -notmatch '^https://github\.com/([\w.-]+/[\w.-]+?)(?:\.git)?/?$' -or $commit -notmatch '^[0-9a-f]{40}$') {
-                        throw "No embedded license or pinned GitHub license source for $key. Review manually."
-                    }
-                    # Extract independently because the preceding commit check also uses regex state.
-                    $upstream = ([regex]::Match($repository, '^https://github\.com/(.+?)(?:\.git)?/?$')).Groups[1].Value
-                    $cacheKey = "$upstream/$commit"
-                    if (-not $downloadCache.ContainsKey($cacheKey)) {
-                        $found = $null
-                        foreach ($name in 'LICENSE', 'LICENSE.txt', 'LICENSE.md', 'License.txt', 'LICENSE.TXT') {
-                            $url = "https://raw.githubusercontent.com/$cacheKey/$name"
-                            try {
-                                $response = Invoke-WebRequest -Uri $url
-                                $found = @{ text = [string]$response.Content; source = $url }
-                                break
-                            } catch {
-                                if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
-                            }
+                    $reviewed = Get-ReviewedDependencyLicense -LicenseRoot (Join-Path $repo 'licenses') -Package $key -NugetSha512 $meta.sha512 -DeclaredLicense ([string]$metadata.license.InnerText)
+                    if ($reviewed) {
+                        $source = $reviewed.source
+                        [IO.File]::WriteAllText((Join-Path $destination 'UPSTREAM-LICENSE.txt'), $reviewed.text)
+                        $reviewed.review | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $destination 'license-review.json') -Encoding utf8
+                    } else {
+                        $repository = [string]$metadata.repository.url
+                        $commit = [string]$metadata.repository.commit
+                        if ($repository -notmatch '^https://github\.com/([\w.-]+/[\w.-]+?)(?:\.git)?/?$' -or $commit -notmatch '^[0-9a-f]{40}$') {
+                            throw "No embedded license or pinned GitHub license source for $key. Review manually."
                         }
-                        if (-not $found) { throw "Pinned upstream license not found for $key. Review manually." }
-                        $downloadCache[$cacheKey] = $found
+                        # Extract independently because the preceding commit check also uses regex state.
+                        $upstream = ([regex]::Match($repository, '^https://github\.com/(.+?)(?:\.git)?/?$')).Groups[1].Value
+                        $cacheKey = "$upstream/$commit"
+                        if (-not $downloadCache.ContainsKey($cacheKey)) {
+                            $found = $null
+                            foreach ($name in 'LICENSE', 'LICENSE.txt', 'LICENSE.md', 'License.txt', 'LICENSE.TXT') {
+                                $url = "https://raw.githubusercontent.com/$cacheKey/$name"
+                                try {
+                                    $response = Invoke-WebRequest -Uri $url
+                                    $found = @{ text = [string]$response.Content; source = $url }
+                                    break
+                                } catch {
+                                    if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
+                                }
+                            }
+                            if (-not $found) { throw "Pinned upstream license not found for $key. Review manually." }
+                            $downloadCache[$cacheKey] = $found
+                        }
+                        $found = $downloadCache[$cacheKey]
+                        $source = $found.source
+                        [IO.File]::WriteAllText((Join-Path $destination 'UPSTREAM-LICENSE.txt'), $found.text)
                     }
-                    $found = $downloadCache[$cacheKey]
-                    $source = $found.source
-                    [IO.File]::WriteAllText((Join-Path $destination 'UPSTREAM-LICENSE.txt'), $found.text)
                 }
                 $inventory.Add([ordered]@{
                     package = $key; license = [string]$metadata.license.InnerText

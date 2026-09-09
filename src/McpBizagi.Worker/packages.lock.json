@@ -249,7 +249,7 @@
       "mcpbizagi.bizagiadapter": {
         "type": "Project",
         "dependencies": {
-          "McpBizagi.Contracts": "[0.5.0-alpha.1, )",
+          "McpBizagi.Contracts": "[0.6.0-alpha.1, )",
           "Newtonsoft.Json": "[13.0.3, )"
         }
       },

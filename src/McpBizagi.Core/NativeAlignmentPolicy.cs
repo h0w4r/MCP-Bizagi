@@ -9,7 +9,7 @@ public static class NativeAlignmentPolicy
     public static readonly string[] Modes = ["Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly"];
     public static void Validate(NativeAlignmentRequest request)
     {
-        if (request == null || !Modes.Contains(request.Mode) || !Guid.TryParseExact(request.DiagramId, "D", out _))
+        if (request == null || !Modes.Contains(request.Mode) && request.Mode != "Calculated" || !Guid.TryParseExact(request.DiagramId, "D", out _))
             throw new InvalidDataException("Alignment requires a native diagram identity and an explicit supported mode.");
         if (request.SubProcessId != "" && !Guid.TryParseExact(request.SubProcessId, "D", out _)) throw new InvalidDataException("Invalid subprocess identity.");
         if (request.ElementIds == null || request.ElementIds.Length is < 2 or > 1000 || request.ElementIds.Any(id => !Guid.TryParseExact(id, "D", out _)) ||
@@ -17,6 +17,12 @@ public static class NativeAlignmentPolicy
             throw new InvalidDataException("Supply 2-1000 distinct native selection identities.");
         if (request.Mode.EndsWith("Evenly", StringComparison.Ordinal) && request.ElementIds.Length < 3)
             throw new InvalidDataException("Distribution requires at least three selected nodes.");
+        if (request.Placements == null || (request.Mode != "Calculated" && request.Placements.Length != 0))
+            throw new InvalidDataException("Calculated placements cannot be mixed with alignment modes.");
+        if (request.Mode == "Calculated" && (request.Placements.Length != request.ElementIds.Length ||
+            !request.Placements.Select(p => p?.ElementId).SequenceEqual(request.ElementIds) ||
+            request.Placements.Any(p => p == null || new[] { p.X, p.Y }.Any(n => !double.IsFinite(n) || n < 0 || n > 1000000 || n != Math.Truncate(n)))))
+            throw new InvalidDataException("Calculated layout requires one bounded whole-coordinate placement per selected identity, in order.");
     }
 
     public static NativeMutation[] Expected(NativeElement[] before, NativeAlignmentRequest request)
@@ -42,7 +48,13 @@ public static class NativeAlignmentPolicy
         double left = selected.Min(e => e.Geometry!.X), right = selected.Max(e => e.Geometry!.X + e.Geometry.Width);
         double top = selected.Min(e => e.Geometry!.Y), bottom = selected.Max(e => e.Geometry!.Y + e.Geometry.Height);
         var targets = selected.ToDictionary(e => e.Id, e => (X: e.Geometry!.X, Y: e.Geometry.Y));
-        if (request.Mode.EndsWith("Evenly", StringComparison.Ordinal))
+        if (request.Mode == "Calculated")
+        {
+            // The planner supplies position intent before the native editor runs. It is
+            // never derived from the edited output or from an unverified callback.
+            foreach (var position in request.Placements) targets[position.ElementId] = (position.X, position.Y);
+        }
+        else if (request.Mode.EndsWith("Evenly", StringComparison.Ordinal))
         {
             bool horizontal = request.Mode == "HorizontalEvenly";
             var ordered = selected.OrderBy(e => horizontal ? e.Geometry!.X : e.Geometry!.Y).ToArray();
