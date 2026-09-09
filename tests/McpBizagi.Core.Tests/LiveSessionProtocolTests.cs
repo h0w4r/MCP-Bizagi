@@ -18,7 +18,7 @@ public sealed class LiveSessionProtocolTests
     public void UnimplementedOrArbitraryCommandsAreRejected(string action) => Assert.Throws<NotSupportedException>(() => LiveSessionProtocol.Validate(Request(action)));
 
     [Theory]
-    [InlineData("update")][InlineData("undo")][InlineData("redo")]
+    [InlineData("update")][InlineData("undo")][InlineData("redo")][InlineData("checkpoint")]
     public void ChangesRequireAnObservedRevision(string action)
     {
         var request = Request(action); request.ExpectedRevision = "";
@@ -85,6 +85,32 @@ public sealed class LiveSessionProtocolTests
     [Fact]
     public void UnknownProtocolIsNotSilentlyAccepted()
     { var request = Request(); request.ProtocolVersion = 2; Assert.Throws<NotSupportedException>(() => LiveSessionProtocol.Validate(request)); }
+
+    [Fact]
+    public void CheckpointRequiresBothLiveAndDiskRevisions()
+    {
+        var request = Request("checkpoint");
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+        request.ExpectedDiskRevision = new string('a', 64);
+        LiveSessionProtocol.Validate(request);
+        request.ExpectedRevision = "";
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+    }
+
+    [Theory]
+    [InlineData("ABCDEF")][InlineData("not-a-revision")][InlineData(null)]
+    public void CheckpointRejectsMalformedDiskRevisions(string? revision)
+    {
+        var request = Request("checkpoint"); request.ExpectedDiskRevision = revision!;
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+    }
+
+    [Fact]
+    public void DiskPreconditionsCannotBeSilentlyIgnoredByOtherActions()
+    {
+        var request = Request(); request.ExpectedDiskRevision = new string('a', 64);
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+    }
 
     [Fact]
     public void BatchSizeLimitAlsoBoundsAggregateDocumentText()

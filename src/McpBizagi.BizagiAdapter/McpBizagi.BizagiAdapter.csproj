@@ -3,6 +3,7 @@
   <ItemGroup>
     <EmbeddedResource Include="NativeAlignmentBridge.js" />
     <EmbeddedResource Include="NativePortQuery.js" />
+    <EmbeddedResource Include="NativeLiveSynchronization.js" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />

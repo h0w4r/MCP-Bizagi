@@ -17,14 +17,34 @@ from both the operator's Modeler preferences and disposable native workers.
 Engineering tests have exercised actual in-memory editing, stale-revision rejection,
 native undo/redo callbacks and receipt replay over the companion's named pipe.
 These are **native-bridge tests, not the public MCP acceptance gate**. The earlier
-prototype also exercised native saving and fresh-process readback; its direct save
-path is deliberately not exposed in the source companion.
+prototype also exercised native saving and fresh-process readback.
+
+The source companion now synchronizes pending **canvas label text** through the
+installed editor's own `syncPendingChanges` route. The bridge observes native
+callback completion, checks the resulting in-process graph, and retains per-operation
+synchronization evidence. Engineering acceptance created actual pending editor
+text, observed that the native model still had its old name, then read the new name
+through the bridge without saving. This does not certify every property-panel draft
+or interaction surface.
+
+An explicit `checkpoint` action now saves only the session-owned `.bpm` working
+copy. It requires both live and disk revisions, retains the entire previous archive,
+uses native Save without the focus-taking outer toolbar handler, and produces a
+separate durable checkpoint artifact. Native Save clears undo history; this is not
+silently presented as undo-preserving persistence. Stale disk revisions, locked
+files and receipt replay were exercised against the real companion. A separate
+installed-engine worker reopened the saved artifact; the tested multi-diagram
+container passed whole-archive fidelity comparison. The saved dedicated editor also
+closed normally. None of these tests publishes to an operator's original file.
 
 The companion is not yet a supported launch/configuration workflow. Remaining
-integration work includes independent session ownership, complete pending-editor
-synchronization, transactional saving and the real stdio MCP circuit. In particular,
+integration work includes independent session ownership, the remaining pending-editor
+boundaries, guarded destination publication and the real stdio MCP circuit. In particular,
 native autosave can write a document without an MCP save request: the companion
 therefore rejects an initial document outside its owner's staging directory.
+Checkpoint validates that boundary again, including reparse points, in case another
+document was opened later. An explicit checkpoint stops this companion's autosave
+timer; it does not modify the operator's separate Modeler preferences.
 Opening an arbitrary existing `BizagiModeler.exe` process is not implemented by
 this managed-companion route. Do not infer that ability from process discovery.
 

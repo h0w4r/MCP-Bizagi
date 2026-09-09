@@ -2,6 +2,7 @@
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/McpBizagi.BizagiAdapter/NativeSettingsIdentity.cs" Link="AdapterIo/NativeSettingsIdentity.cs" />
+    <Compile Include="../../src/McpBizagi.BizagiAdapter/NativeLivePaths.cs" Link="AdapterIo/NativeLivePaths.cs" />
     <!-- Test the same BCL-only observer source used by the net48 adapter, without loading vendor assemblies. -->
     <Compile Include="../../src/McpBizagi.BizagiAdapter/TransientFileSnapshot.cs" Link="AdapterIo/TransientFileSnapshot.cs" />
     <!-- Link only our non-vendor, non-executing Web directory reader for policy tests. -->

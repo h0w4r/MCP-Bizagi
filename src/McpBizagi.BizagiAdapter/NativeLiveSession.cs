@@ -11,7 +11,7 @@ namespace McpBizagi.BizagiAdapter;
 public sealed partial class NativeEngine
 {
     /// <summary>Serial typed access to the actual open document. Transport disposal does not own its lifetime.</summary>
-    public sealed class LiveSession : IDisposable
+    public sealed partial class LiveSession : IDisposable
     {
         private readonly NativeEngine engine;
         private readonly Form form;
@@ -71,7 +71,7 @@ public sealed partial class NativeEngine
                 }
                 if (receipts.Count >= 10000) return new LiveSessionReply { OperationId = request.OperationId, State = "rejected",
                     Code = "session_receipt_capacity", Message = "Session receipt capacity reached; preserve work and start a new session." };
-                var before = await OnUi(Snapshot, cancellation).ConfigureAwait(false);
+                var before = await SynchronizeAsync(request.OperationId, "before", cancellation).ConfigureAwait(false);
                 if (request.Action != "read" && (uncertain || before.Revision != request.ExpectedRevision))
                     throw new InvalidOperationException(uncertain ? "A previous native operation has an uncertain result; editing is locked for investigation." : "Live revision conflict.");
                 if (request.Action == "read") return Retain(request, fingerprint, before, "completed", "live_read_completed");
@@ -79,6 +79,7 @@ public sealed partial class NativeEngine
                 // Record intent before dispatch. A disconnected client can query the same operation ID.
                 File.WriteAllText(Path.Combine(engine.workRoot, request.OperationId + ".intent.json"), payload);
                 object? undoBefore = null;
+                LiveCheckpoint? checkpoint = null;
                 await OnUi(() =>
                 {
                     // Recheck after admission: native UI callbacks may have run since the first snapshot.
@@ -88,6 +89,12 @@ public sealed partial class NativeEngine
                         object command = PrepareUpdate(request, before);
                         dispatched = true;
                         Call(form, "OnExecutingCommand", command);
+                    }
+                    else if (request.Action == "checkpoint")
+                    {
+                        // A checkpoint saves only the owner-staged working document.
+                        // Publication to an original is a separate guarded transaction.
+                        checkpoint = Checkpoint(request, () => dispatched = true);
                     }
                     else
                     {
@@ -99,7 +106,7 @@ public sealed partial class NativeEngine
                     }
                     return true;
                 }, cancellation).ConfigureAwait(false);
-                if (request.Action != "update")
+                if (request.Action is "undo" or "redo")
                 {
                     // Toolbar undo/redo returns before its Chromium callback. Keep the serial
                     // lease until the actual native history pointer changes. Never kill the editor.
@@ -115,7 +122,7 @@ public sealed partial class NativeEngine
                     bool matches = await OnUi(() => ReferenceEquals(Optional(Get(manager, "UndoList"), request.Action == "undo" ? "RedoCommand" : "UndoCommand"), undoBefore), CancellationToken.None).ConfigureAwait(false);
                     if (!matches) throw new InvalidOperationException("Native history changed concurrently; the requested undo/redo result is uncertain.");
                 }
-                var after = await OnUi(Snapshot, CancellationToken.None).ConfigureAwait(false);
+                var after = await SynchronizeAsync(request.OperationId, "after", CancellationToken.None).ConfigureAwait(false);
                 if (request.Action == "update")
                     foreach (var patch in request.Changes)
                     {
@@ -123,7 +130,13 @@ public sealed partial class NativeEngine
                         if ((patch.Name != null && value.Name != patch.Name) || (patch.Documentation != null && value.Documentation != patch.Documentation))
                             throw new InvalidOperationException("Native batch readback differs from the requested properties.");
                     }
-                return Retain(request, fingerprint, after, "completed", "live_native_command_completed");
+                if (checkpoint != null)
+                {
+                    if (after.Dirty || after.DiskRevision != checkpoint.Revision)
+                        throw new InvalidOperationException("The native working copy changed during checkpoint verification.");
+                    checkpoint.DocumentRevision = after.Revision;
+                }
+                return Retain(request, fingerprint, after, "completed", checkpoint == null ? "live_native_command_completed" : "live_working_copy_checkpointed", checkpoint);
             }
             catch (Exception error)
             {
@@ -139,9 +152,10 @@ public sealed partial class NativeEngine
             finally { serial.Release(); }
         }
 
-        private LiveSessionReply Retain(LiveSessionRequest request, string payload, LiveSessionSnapshot snapshot, string state, string code)
+        private LiveSessionReply Retain(LiveSessionRequest request, string payload, LiveSessionSnapshot snapshot, string state, string code, LiveCheckpoint? checkpoint = null)
         {
-            var reply = new LiveSessionReply { OperationId = request.OperationId, State = state, Code = code, Snapshot = snapshot };
+            var reply = new LiveSessionReply { OperationId = request.OperationId, State = state, Code = code, Snapshot = snapshot, Checkpoint = checkpoint,
+                Warnings = checkpoint == null ? Array.Empty<string>() : new[] { "This saves the managed working copy and clears undo according to native Save behavior. The original destination has not been published or independently verified." } };
             // Persist a receipt before claiming completion; retain every mutating operation identity.
             WriteReceipt(request.OperationId, reply);
             // Keep only compact fingerprints in memory; full model snapshots remain on disk.
