@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extend complete diagram layout with observed offset geometry verified by the
+  installed native layouter before persistence. Query original and proposed
+  points without model commands, retain native port IDs, and require matching
+  fresh-reader geometry and archive fidelity. Reject bin mismatches and changed
+  docking; no invented port-to-coordinate table or universal glyph claim.
+
 - Resolve boundary anchors on resized expanded hosts through the installed
   editor in isolated, non-persisted planning workers. Retain source labels and
   cardinal ports, discard incidental native reflow, then execute the complete
@@ -22,7 +28,7 @@
   cross-pool messages. Persist typed intent through the installed engine and
   require fresh-worker, whole-archive and independent geometry verification.
   Cover blank/single/rich inputs and observed cancellation/recovery through MCP.
-  Unknown surfaces, offset ports and unverified resized-host attachments fail explicitly.
+  Unknown surfaces, unverified port geometry and resized-host attachments fail explicitly.
   This is not full Modeler automation or a change to the immutable 0.6 package.
 
 - Add `native_surface_layout`: server-calculated MSAGL placement for a complete

@@ -38,7 +38,34 @@ public sealed partial class NativeWorkflows
                     interpretation = "Transient native preview; only checked anchor positions enter the final plan. No native preview file was persisted." }));
                 return anchors;
             }
-            var plan = await NativeDiagramLayoutPlanner.CalculateAsync(before.Elements, captured, progress, token, ResolveAnchors);
+            async Task<NativePortGeometryPolicy.Proof[]> ResolvePorts(NativeElement[] proposed)
+            {
+                var originalById = before.Elements.ToDictionary(e => e.Id);
+                var groups = before.Elements.Where(e => e.DiagramId == captured.DiagramId && NativePortGeometryPolicy.NeedsQuery(e))
+                    .GroupBy(e => originalById[e.ParentId].SubProcess != null ? e.ParentId : "").ToArray();
+                var observations = new Dictionary<string, NativePortObservation[]>();
+                foreach (var (phase, graph) in new[] { ("source", before.Elements), ("proposed", proposed) })
+                {
+                    var phaseObservations = new List<NativePortObservation>();
+                    foreach (var group in groups)
+                    {
+                        var query = new NativePortQueryRequest { DiagramId = captured.DiagramId, SubProcessId = group.Key,
+                            Queries = group.Select(e => NativePortGeometryPolicy.Describe(graph, e.Id)).ToArray() };
+                        string queryDirectory = RunDirectory(id, "port-query-" + phase + "-" + (group.Key == "" ? "root" : group.Key));
+                        var response = await Execute(new EngineRequest { OperationId = id, Action = "port_query", InputPath = source, PortQuery = query }, queryDirectory, progress, token);
+                        if (BpmnDocument.Revision(await File.ReadAllBytesAsync(source, token)) != expectedRevision)
+                            throw new InvalidDataException("Port query changed the immutable native input.");
+                        var receipt = response.PortQuery ?? throw new InvalidDataException("Missing actual native port query response.");
+                        NativePortGeometryPolicy.VerifyReceipt(query, receipt);
+                        File.WriteAllText(Path.Combine(queryDirectory, "verified-port-query.json"), JsonSerializer.Serialize(new { query, receipt }));
+                        phaseObservations.AddRange(receipt.Observations);
+                    }
+                    observations.Add(phase, phaseObservations.ToArray());
+                }
+                return observations["source"].Select(o => new NativePortGeometryPolicy.Proof(o,
+                    observations["proposed"].Single(p => p.Query.ConnectionId == o.Query.ConnectionId), NativePortGeometryPolicy.EditorHash)).ToArray();
+            }
+            var plan = await NativeDiagramLayoutPlanner.CalculateAsync(before.Elements, captured, progress, token, ResolveAnchors, ResolvePorts);
             // Intent is retained before dispatch. It is not reverse-engineered from the output.
             File.WriteAllText(Path.Combine(directory, "diagram-layout-plan.json"), JsonSerializer.Serialize(plan));
             token.ThrowIfCancellationRequested();
@@ -50,11 +77,12 @@ public sealed partial class NativeWorkflows
             var fidelity = NativeMutationFidelity.Compare(input.Bytes, File.ReadAllBytes(output), plan.Changes, reopened.Elements, edited.ImageImports, reopened.ImageFiles);
             File.WriteAllText(Path.Combine(directory, "diagram-layout-fidelity.json"), JsonSerializer.Serialize(fidelity));
             if (!fidelity.Preserved) throw new InvalidDataException("Diagram layout changed unrequested native content; original retained.");
-            NativeDiagramLayoutGeometry.Verify(reopened.Elements, captured.DiagramId);
+            NativePortGeometryPolicy.VerifyProofs(before.Elements, reopened.Elements, captured.DiagramId, plan.Ports);
+            NativeDiagramLayoutGeometry.Verify(reopened.Elements, captured.DiagramId, plan.Ports);
             NativeDiagramGroupLayout.Verify(before.Elements, reopened.Elements, captured.DiagramId);
             return new { before, edited, reopened, fidelity, plan, nativeSourceUnmodified = true,
                 outputArtifact = "artifact:" + id + ":edited.bpm", outputRevision = BpmnDocument.Revision(File.ReadAllBytes(output)),
-                interpretationWarning = "Experimental complete selected-diagram planning for represented pool/partition/expanded/anchor/midpoint-port surfaces. Unsupported content fails rather than receiving partial layout. Rectangular geometry checks are not glyph, rounded-curve or desktop GUI accreditation." };
+                interpretationWarning = "Experimental complete selected-diagram planning for represented pool/partition/expanded/anchor/cardinal-and-native-verified-offset-port surfaces. Unsupported content fails rather than receiving partial layout. Rectangular geometry checks are not glyph, rounded-curve or desktop GUI accreditation." };
         });
     }
 }

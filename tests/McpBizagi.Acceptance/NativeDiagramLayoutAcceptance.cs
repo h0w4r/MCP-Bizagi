@@ -6,7 +6,7 @@ internal static class NativeDiagramLayoutAcceptance
 {
     private static string S(JsonElement e, string n) => e.GetProperty(n).GetString()!;
     public static async Task Run(string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
-        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool includeGroups = false, bool includeExpandedAnchors = false)
+        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool includeGroups = false, bool includeExpandedAnchors = false, bool includeOffsetPorts = false)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string tool, Dictionary<string, object?> input, string expected = "completed")
@@ -54,6 +54,20 @@ internal static class NativeDiagramLayoutAcceptance
                 _ => throw new InvalidDataException("Unknown authored port")
             };
             var first = Point(s, sourcePort); var last = Point(t, targetPort);
+            if (includeOffsetPorts && seed.Single(m => m.ElementId == a).EventMode != "Boundary" && seed.Single(m => m.ElementId == b).EventMode != "Boundary")
+            {
+                // Independently authored real native routes: twenty units along
+                // a side, not a fabricated unique coordinate for a bin number.
+                (NativePoint Point, string Port) Offset(NativeGeometry box, string side) => side switch
+                {
+                    "1" => (new() { X = (float)box.X + 20, Y = (float)box.Y }, "9"),
+                    "2" => (new() { X = (float)box.X + 20, Y = (float)(box.Y + box.Height) }, "5"),
+                    "3" => (new() { X = (float)box.X, Y = (float)box.Y + 20 }, "13"),
+                    "4" => (new() { X = (float)(box.X + box.Width), Y = (float)box.Y + 20 }, "17"),
+                    _ => throw new InvalidDataException("Unknown authored side")
+                };
+                (first, sourcePort) = Offset(s, sourcePort); (last, targetPort) = Offset(t, targetPort);
+            }
             NativePoint[] points = a == b
                 ? [first, new() { X = first.X + 40, Y = first.Y }, new() { X = first.X + 40, Y = (float)s.Y - 40 },
                     new() { X = (float)s.X - 40, Y = (float)s.Y - 40 }, new() { X = (float)s.X - 40, Y = last.Y }, last]
@@ -119,6 +133,16 @@ internal static class NativeDiagramLayoutAcceptance
         string path = S(rich, "outputArtifact"), revision = S(rich, "outputRevision");
         graph = rich.GetProperty("reopened").GetProperty("Elements").Deserialize<NativeElement[]>()!;
         File.WriteAllText(Path.Combine(run, "partitioned-before.json"), rich.GetProperty("reopened").GetProperty("Elements").GetRawText());
+        if (includeOffsetPorts)
+        {
+            var flow = graph.First(e => e.SourcePort == "17");
+            var inconsistent = await Op("native_mutate", new() { ["path"] = path, ["expectedRevision"] = revision,
+                ["mutations"] = new[] { new NativeMutation { Operation = "reconnect", ElementId = flow.Id,
+                    SourceId = flow.SourceId, TargetId = flow.TargetId, Points = flow.Points, SourcePort = "18" } } });
+            var denied = await Op("native_diagram_layout", new() { ["path"] = S(inconsistent, "outputArtifact"), ["expectedRevision"] = S(inconsistent, "outputRevision"),
+                ["layout"] = new { DiagramId = diagram, Direction = "Right" } }, "failed");
+            if (!S(denied, "Error").Contains("native port bin", StringComparison.Ordinal)) throw new InvalidDataException("Incorrect inconsistent-port rejection.");
+        }
         if (includeGroups)
         {
             // Native persistence permits a graphical boundary through a task.
@@ -167,7 +191,7 @@ internal static class NativeDiagramLayoutAcceptance
         {
             var view = await call("operation_get", new() { ["operationId"] = cancelId }); string phase = S(view, "Phase");
             if (phase != lastPhase) { Console.WriteLine("diagram cancellation phase=" + phase); lastPhase = phase; }
-            bool observed = includeExpandedAnchors ? phase.StartsWith("native_editor_", StringComparison.Ordinal)
+            bool observed = includeExpandedAnchors || includeOffsetPorts ? phase.StartsWith("native_editor_", StringComparison.Ordinal)
                 : phase.StartsWith("native_diagram_layout_", StringComparison.Ordinal) || phase.StartsWith("native_mutation:", StringComparison.Ordinal) || phase == "native_persist_edited_bpm";
             if (observed) break;
             if (S(view, "State") is "completed" or "failed" or "cancelled" or "interrupted") throw new InvalidDataException("No live diagram planning/writing cancellation phase was observed.");
@@ -209,6 +233,8 @@ internal static class NativeDiagramLayoutAcceptance
     {
         public string Id { get; set; } = ""; public string Kind { get; set; } = ""; public string DiagramId { get; set; } = "";
         public string ParentId { get; set; } = ""; public string SourceId { get; set; } = "";
+        public string TargetId { get; set; } = ""; public string? SourcePort { get; set; } public string? TargetPort { get; set; }
+        public NativePoint[] Points { get; set; } = [];
         public NativeGeometry? Geometry { get; set; } public NativeGeometry? ExpandedGeometry { get; set; }
         public bool? IsMainParticipant { get; set; } public JsonElement SubProcess { get; set; }
     }

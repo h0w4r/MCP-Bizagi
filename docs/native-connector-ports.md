@@ -74,6 +74,8 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release -- D:/MCP-Bizagi --na
 ```
 
 See [execution records](validation.md). Unit policy tests are separate from this
-installed-engine circuit. The global-layout candidate, anchored-event placement,
-all offset-port geometries and independent desktop compatibility have their own
-pending acceptance requirements; they are not accredited by this metadata test.
+installed-engine circuit. [Complete diagram layout](native-diagram-layout.md)
+adds a separate actual native source/proposal classification gate for observed
+offset geometry. That geometry gate is not implied by this metadata test, nor
+does it establish host-relative boundary docking, every port/shape combination
+or independent desktop compatibility.

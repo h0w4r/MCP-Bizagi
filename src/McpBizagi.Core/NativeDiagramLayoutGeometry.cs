@@ -10,7 +10,7 @@ public static class NativeDiagramLayoutGeometry
     private static bool Overlap(NativeGeometry a, NativeGeometry b) => a.X < b.X + b.Width - 0.01 && b.X < a.X + a.Width - 0.01 && a.Y < b.Y + b.Height - 0.01 && b.Y < a.Y + a.Height - 0.01;
     private static bool Contains(NativeGeometry outer, NativeGeometry inner) => inner.X >= outer.X - 0.01 && inner.Y >= outer.Y - 0.01 && inner.X + inner.Width <= outer.X + outer.Width + 0.01 && inner.Y + inner.Height <= outer.Y + outer.Height + 0.01;
 
-    public static void Verify(NativeElement[] graph, string diagram)
+    public static void Verify(NativeElement[] graph, string diagram, NativePortGeometryPolicy.Proof[]? ports = null)
     {
         var selected = graph.Where(e => e.DiagramId == diagram).ToArray();
         var byId = selected.ToDictionary(e => e.Id, StringComparer.Ordinal);
@@ -37,8 +37,10 @@ public static class NativeDiagramLayoutGeometry
             {
                 if (!byId.TryGetValue(flow.SourceId, out var source) || !byId.TryGetValue(flow.TargetId, out var target) || flow.Points.Length < 2)
                     throw new InvalidDataException("Unresolved diagram route.");
-                VerifyPort(flow.Points[0], NativeDiagramSurfacePlanner.Visual(source), flow.SourcePort);
-                VerifyPort(flow.Points[^1], NativeDiagramSurfacePlanner.Visual(target), flow.TargetPort);
+                if (NativePortGeometryPolicy.Offset(flow.SourcePort)) NativePortGeometryPolicy.VerifyEndpoint(flow, source, true, ports ?? []);
+                else VerifyPort(flow.Points[0], NativeDiagramSurfacePlanner.Visual(source), flow.SourcePort);
+                if (NativePortGeometryPolicy.Offset(flow.TargetPort)) NativePortGeometryPolicy.VerifyEndpoint(flow, target, false, ports ?? []);
+                else VerifyPort(flow.Points[^1], NativeDiagramSurfacePlanner.Visual(target), flow.TargetPort);
                 for (int i = 1; i < flow.Points.Length; i++)
                 {
                     var a = flow.Points[i - 1]; var b = flow.Points[i];

@@ -2,6 +2,7 @@
   <PropertyGroup><TargetFramework>net48</TargetFramework></PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="NativeAlignmentBridge.js" />
+    <EmbeddedResource Include="NativePortQuery.js" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <ProjectReference Include="../McpBizagi.Contracts/McpBizagi.Contracts.csproj" />

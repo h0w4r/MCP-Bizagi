@@ -22,8 +22,9 @@ public sealed partial class NativeEngine
         var alignment = request.Alignment ?? throw new InvalidDataException("Missing native alignment request.");
         string mode = alignment.Mode, diagramId = alignment.DiagramId;
         bool preview = request.Action == "anchor_preview" && mode == "AnchorPreview" && request.AnchorResize != null;
-        if ((!preview && !new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly", "Calculated" }.Contains(mode)) ||
-            alignment.ElementIds.Length < (preview ? 1 : 2) || alignment.ElementIds.Length > 1000 || alignment.ElementIds.Distinct().Count() != alignment.ElementIds.Length)
+        bool portQuery = request.Action == "port_query" && mode == "PortQuery" && request.PortQuery != null;
+        if ((!preview && !portQuery && !new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly", "Calculated" }.Contains(mode)) ||
+            alignment.ElementIds.Length < (preview || portQuery ? 1 : 2) || alignment.ElementIds.Length > 1000 || alignment.ElementIds.Distinct().Count() != alignment.ElementIds.Length)
             throw new InvalidDataException("Invalid native alignment selection or mode.");
         if (mode == "Calculated" && (alignment.Placements == null ||
             !alignment.Placements.Select(p => p.ElementId).SequenceEqual(alignment.ElementIds) ||
@@ -102,7 +103,7 @@ public sealed partial class NativeEngine
             EvaluateInNativeBrowser("document.querySelector('bz-process-viewer').showDiagram.emit(" + json + ");");
             Wait("native_editor_api", "String(typeof window.alignSelectedShapes==='function')");
             string[] ids = alignment.ElementIds;
-            if (ids.Length < (preview ? 1 : 2)) throw new InvalidDataException("Missing actual native selection.");
+            if (ids.Length < (preview || portQuery ? 1 : 2)) throw new InvalidDataException("Missing actual native selection.");
             File.WriteAllText(Path.Combine(workRoot, "layout-request.json"), JsonConvert.SerializeObject(new { mode, ids }));
             Wait("native_editor_shapes", "String(" + JsonConvert.SerializeObject(ids) + ".every(id=>document.querySelector('[data-element-id=\"'+id+'\"]')))");
             EvaluateInNativeBrowser("window.__mcpAlignmentSubProcess=" + (alignment.SubProcessId != "" ? "true" : "false") + ";");
@@ -111,6 +112,24 @@ public sealed partial class NativeEngine
             Wait("native_editor_geometry_policy", "String(window.__mcpLayoutPolicy?.installed===true)");
             File.WriteAllText(Path.Combine(workRoot, "native-editor-initial-identities.json"), EvaluateInNativeBrowser("JSON.stringify(window.__mcpLayoutInitial)"));
             bridge.Phase = "requested_alignment";
+            if (portQuery)
+            {
+                // Service queries never select/move objects or execute commands.
+                // A per-connection dispatch emits actual progress and leaves job
+                // cancellation under the existing owned-worker supervisor.
+                using (var script = new StreamReader(typeof(NativeEngine).Assembly.GetManifestResourceStream("McpBizagi.BizagiAdapter.NativePortQuery.js")!))
+                    EvaluateInNativeBrowser(script.ReadToEnd());
+                foreach (var item in request.PortQuery!.Queries)
+                {
+                    progress("native_port_query:" + item.ConnectionId);
+                    EvaluateInNativeBrowser("window.__mcpQueryNativePort(" + JsonConvert.SerializeObject(item) + ")");
+                    File.WriteAllText(Path.Combine(workRoot, "native-port-query.json"), EvaluateInNativeBrowser("JSON.stringify(window.__mcpPortQueryReceipt)"));
+                }
+                if (bridge.RequestedCallbacks != 0) throw new InvalidDataException("Native query emitted an unexpected model command.");
+                receipt.NoOp = true;
+                progress("native_port_query_read_only_complete");
+                return receipt;
+            }
             string command = preview
                 ? "window.__mcpPreviewResizedAnchors(" + JsonConvert.SerializeObject(request.AnchorResize) + ")"
                 : mode == "Calculated"

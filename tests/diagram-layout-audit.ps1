@@ -1,7 +1,8 @@
 #Requires -Version 7.2
 # Audit the complete authored corpus produced by --native --diagram-layout-only.
 param([Parameter(Mandatory)][string]$Run, [ValidateRange(0, 1000)][int]$ExpectedGroups = 0,
-  [ValidateRange(0, 1000)][int]$ExpectedResizedHosts = 0)
+  [ValidateRange(0, 1000)][int]$ExpectedResizedHosts = 0,
+  [ValidateRange(0, 1000)][int]$ExpectedOffsetConnections = 0)
 $ErrorActionPreference='Stop'
 # Independent readback audit: no layout library and no production comparator imports.
 $records=Get-Content (Join-Path $Run 'native-diagram-layout.json') -Raw | ConvertFrom-Json
@@ -14,6 +15,55 @@ $issues=[Collections.Generic.List[string]]::new()
 $nodes=0; $routes=0; $segments=0; $svgEndpoints=0
 $anchors=0; $labels=0
 $resizedHosts=[Collections.Generic.HashSet[string]]::new()
+$offsetConnections=[Collections.Generic.HashSet[string]]::new()
+$portObservations=@{}
+if($ExpectedOffsetConnections -gt 0){
+  # Read raw service receipts from the owned native workers, not the planner's
+  # accepted proof objects or a production geometry helper.
+  foreach($phase in @('source','proposed')){
+    $found=@()
+    $root=Join-Path $Run ('state/runs/'+$appliedRecord.id)
+    foreach($folder in Get-ChildItem -LiteralPath $root -Directory|Where-Object Name -like "port-query-$phase-*"){
+      $raw=Get-Content (Join-Path $folder.FullName 'native-port-query.json') -Raw|ConvertFrom-Json
+      if(-not $raw.RegistryUnchanged){throw 'Native port query modified its registry'}
+      $verified=Get-Content (Join-Path $folder.FullName 'verified-port-query.json') -Raw|ConvertFrom-Json
+      if($verified.receipt.EditorAssetSha256 -ne 'eec7db9e1474632e0e712c5df29ddc5b93aecb765cd8bc93422a1007ad8de1a9'){throw 'Unverified native query asset'}
+      $inventory=Get-Content (Join-Path $folder.FullName 'renderer-assets.json') -Raw|ConvertFrom-Json
+      $asset=@($inventory.assets|Where-Object name -eq 'modeler-bpmn-editor.min.js')
+      if($asset.Count -ne 1 -or $asset[0].sha256 -cne $verified.receipt.EditorAssetSha256){throw 'Actual worker renderer inventory differs from query evidence'}
+      $found+=@($raw.Observations)
+    }
+    if($found.Count -ne $ExpectedOffsetConnections){throw 'Incomplete actual native offset-query corpus'}
+    $portObservations[$phase]=$found
+  }
+}
+function CheckOffset($flow,$endpoint,$isSource){
+  [void]$offsetConnections.Add($flow.Id)
+  $prefix=if($isSource){'Source'}else{'Target'}
+  $boundsProperty=$prefix+'Bounds'; $pointProperty=$prefix+'Point'; $portProperty=$prefix+'Port'; $idProperty=$prefix+'Id'
+  foreach($phase in @('source','proposed')){
+    $evidence=@($portObservations[$phase]|Where-Object {$_.Query.ConnectionId -eq $flow.Id})
+    if($evidence.Count -ne 1){throw 'Missing unique native offset connection query'}
+    $o=$evidence[0]; $q=$o.Query
+    $graph=if($phase -eq 'source'){@($applied.before.Elements)}else{$elements}
+    $edge=@($graph|Where-Object Id -eq $flow.Id)[0]
+    $node=@($graph|Where-Object Id -eq $edge.$idProperty)[0]
+    $box=VisualBox $node; $point=if($isSource){$edge.Points[0]}else{$edge.Points[-1]}
+    if($o.Errors.Count -ne 0 -or $o.Route.Count -lt 2 -or $q.$idProperty -ne $node.Id -or $o.$portProperty -cne $edge.$portProperty){throw 'Native offset query failed or changed bin/identity'}
+    foreach($field in @('X','Y','Width','Height')){if($q.$boundsProperty.$field -ne $box.$field){throw 'Native query used different endpoint geometry'}}
+    $routePoint=if($isSource){$o.Route[0]}else{$o.Route[-1]}
+    foreach($field in @('X','Y')){if([math]::Abs($q.$pointProperty.$field-$point.$field) -gt 0.01 -or [math]::Abs($routePoint.$field-$point.$field) -gt 0.01){throw 'Native offset query changed requested docking'}}
+    if($phase -eq 'source'){$oldBox=$box; $oldPoint=$point}else{$newBox=$box; $newPoint=$point}
+  }
+  # The plan preserves the observed side and fraction, quantized by at most
+  # half a native coordinate unit. No port-number coordinate table is used.
+  $sides=@(@{axis='Y';edge=$oldBox.Y},@{axis='Y';edge=$oldBox.Y+$oldBox.Height},@{axis='X';edge=$oldBox.X},@{axis='X';edge=$oldBox.X+$oldBox.Width})
+  $matches=@(0..3|Where-Object {[math]::Abs($oldPoint.($sides[$_].axis)-$sides[$_].edge) -lt 0.01})
+  if($matches.Count -ne 1){throw 'Ambiguous observed native offset side'}
+  $predictedX=$newBox.X+($oldPoint.X-$oldBox.X)/$oldBox.Width*$newBox.Width
+  $predictedY=$newBox.Y+($oldPoint.Y-$oldBox.Y)/$oldBox.Height*$newBox.Height
+  if([math]::Abs($predictedX-$newPoint.X) -gt 0.501 -or [math]::Abs($predictedY-$newPoint.Y) -gt 0.501){throw 'Offset geometry lost observed perimeter intent'}
+}
 # Independent enclosure checks use global native bounds, not solver receipts.
 $groups=@($before|Where-Object Kind -eq Group)
 if($groups.Count -ne $ExpectedGroups -or @($elements|Where-Object Kind -eq Group).Count -ne $ExpectedGroups){throw 'Incomplete group corpus'}
@@ -112,8 +162,9 @@ foreach($owner in $owners){
     $old=@($before | Where-Object Id -eq $flow.Id)[0]
     if($old.SourcePort -cne $flow.SourcePort -or $old.TargetPort -cne $flow.TargetPort){$issues.Add('port-metadata-changed:'+$flow.Id)}
     # Verify independently against the actual persisted midpoint IDs, not planner receipts.
-    foreach($end in @(@{Shape=$source; Point=$first; Port=$flow.SourcePort},@{Shape=$target; Point=$last; Port=$flow.TargetPort})){
+    foreach($end in @(@{Shape=$source; Point=$first; Port=$flow.SourcePort; IsSource=$true},@{Shape=$target; Point=$last; Port=$flow.TargetPort; IsSource=$false})){
       $g=$end.Shape.Geometry
+      if([int]$end.Port -ge 5 -and [int]$end.Port -le 74){CheckOffset $flow $end.Shape $end.IsSource; continue}
       $xy=switch($end.Port){ '1' {@(($g.X+$g.Width/2),$g.Y)} '2' {@(($g.X+$g.Width/2),($g.Y+$g.Height))} '3' {@($g.X,($g.Y+$g.Height/2))} '4' {@(($g.X+$g.Width),($g.Y+$g.Height/2))} default{throw 'Unsupported persisted port in audit'} }
       if([math]::Abs($end.Point.X-$xy[0]) -gt 0.01 -or [math]::Abs($end.Point.Y-$xy[1]) -gt 0.01){$issues.Add('endpoint-port:'+$flow.Id)}
     }
@@ -182,7 +233,8 @@ if($copies -ne 1){throw 'Opaque payload occurrence count changed'}
 if($renderedGroups.Count -ne $ExpectedGroups){throw 'Native SVG does not contain every expected group identity'}
 # This is an acceptance-corpus assertion, not a production model-size restriction.
 
-$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; nativeResolvedHosts=$resizedHosts.Count; manualLabels=$labels; graphicalGroups=$groups.Count; renderedGroups=$renderedGroups.Count; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
+if($offsetConnections.Count -ne $ExpectedOffsetConnections){throw 'Incomplete persisted offset connection corpus'}
+$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; nativeResolvedHosts=$resizedHosts.Count; nativeOffsetConnections=$offsetConnections.Count; manualLabels=$labels; graphicalGroups=$groups.Count; renderedGroups=$renderedGroups.Count; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
 $report | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $Run 'partitioned-independent-geometry.json')
 $report | ConvertTo-Json -Depth 4
 if($nodes -ne 19+$ExpectedResizedHosts -or $routes -ne 24+$ExpectedResizedHosts -or $anchors -ne 3+$ExpectedResizedHosts -or $labels -ne 17+$ExpectedResizedHosts -or $svgEndpoints -ne 28+$ExpectedResizedHosts){throw 'Incomplete authored corpus; no empty or partial audit success.'}

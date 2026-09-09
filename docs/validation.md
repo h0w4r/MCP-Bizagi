@@ -1,5 +1,72 @@
 # Verification baselines
 
+## Offset ports with resized anchors — extracted candidate, 2026-09-09 UTC
+
+The actual official MCP client ran `--native --diagram-layout-ports-only
+--diagram-layout-anchors-only --package <extracted directory> --discover-worker`
+against a fresh path containing spaces and Unicode. This combined circuit is
+separate from the source-only run below.
+
+| Check | Observed result |
+| --- | --- |
+| Packaged MCP protocol/XML | 48 tools; actual stdio pass `20260909-051156-a4a50c` |
+| Packaged native circuit | `20260909-051208-2207f7`; 18 terminal operations |
+| Outcomes | 14 completed, three expected failures, one actual native editor cancellation and successful recovery |
+| Port classification | 24 completed query workers / 168 actual connection observations |
+| Resized-host integration | Eight completed native previews across the positive and rejected operations; two resized hosts in the audited result |
+| Independent geometry | 21 nodes, 26 routes, 104 segments, 21 offset connections, five boundary anchors and 19 manual labels; no reported issues |
+| Rendering/payload | 30 native SVG endpoint pairs and one byte-identical opaque payload |
+| Cleanup | All 69 workers / 286 owned processes exited |
+| Desktop observations | 2,571 periodic samples; no owned visible window or foreground ownership observed |
+| Package integrity | All 462 manifest entries unchanged before and after execution |
+
+ZIP SHA-256:
+`5c23b9d98bcc7ec22bc1b08d80f3f3f047f5f1e44b23c3ef69c2b534d5f0e981`.
+Native transcript SHA-256:
+`4dc0474d0a257528e41d6ba3119eb27384e179278f5d533fd7c578eb23ba5c88`.
+
+The candidate records **dirty source based on `2526f4e`**, assembled before the
+subsequent source commits. It is not a replacement for immutable 0.6.0-alpha.1.
+A license-download rate limit was resolved by retaining already verified,
+package/hash-bound upstream texts through the existing reviewed-license policy,
+not by skipping licenses or fetching a mutable source. All 49 reviewed entries
+passed checks both from the working files and the committed Git archive.
+
+This gate does not accredit host-relative boundary offset docking, pool endpoint
+routing, every glyph/port combination, live unsaved models, independent desktop
+GUI compatibility or full Modeler automation.
+
+## Observed offset ports — source circuit, 2026-09-09 UTC
+
+Source acceptance `20260909-045127-f44336` used the official MCP stdio client
+against the installed 4.3.0.008 engine. The actual source and proposed endpoint
+classifications preceded durable mutation and a fresh worker readback.
+
+- **18 terminal operations**: 14 completed, three expected failures and one
+  actual `native_editor_component` cancellation followed by successful recovery.
+- The wrong-bin input was rejected rather than automatically normalized.
+- **24 completed native query workers / 168 observed connection queries**
+  covered root and embedded surfaces, resized expanded endpoints, self-loops,
+  cross-pool messages and cardinal/offset coexistence.
+- Independent readback audit: **19 nodes, 24 routes, 94 segments, 21 offset
+  connections, three boundary anchors, 17 manual labels, 28 native SVG endpoint
+  pairs and one exact opaque payload**, with no reported issues.
+- All **61 workers / 235 owned processes** exited. **1,798 periodic desktop
+  samples** observed no owned visible window or foreground ownership.
+- **1,410 unit policy tests**, 18 package-policy tests and eight dependency-license
+  policy tests passed separately; they are not the native acceptance gate.
+
+Transcript SHA-256:
+`d32f88e33148e0745c47e01cc2e9e9daa13d6393ed0ea78400cb85fee0538739`.
+The initial attempt's final geometry query comparison incorrectly included
+optional color fields. The correction projects rectangle-only query arguments;
+native style and whole-archive fidelity checks remain unchanged.
+
+This is observed native port-bin validation, not a universal inverse mapping,
+host-relative boundary offset docking, every glyph/port combination, live
+unsaved editing, independent desktop compatibility or full Modeler automation.
+The immutable 0.6.0-alpha.1 release is unchanged.
+
 ## Resized expanded-host anchors — final extracted candidate, 2026-09-09 UTC
 
 Final extracted candidate `20260909-041202-35b880` passed the same **16 terminal

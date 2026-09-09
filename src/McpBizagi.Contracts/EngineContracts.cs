@@ -19,6 +19,7 @@ public sealed class EngineRequest
     public string[] DiscardScenarioResultDiagrams { get; set; } = System.Array.Empty<string>();
     public NativeAlignmentRequest? Alignment { get; set; }
     public NativeAnchorResizeRequest? AnchorResize { get; set; }
+    public NativePortQueryRequest? PortQuery { get; set; }
     public NativeSelectionCopyRequest? SelectionCopy { get; set; }
     /// <summary>Host-derived independent bounds, never supplied as an arbitrary script or user coordinate override.</summary>
     public NativeMutation[] AlignmentExpected { get; set; } = System.Array.Empty<NativeMutation>();
@@ -190,6 +191,7 @@ public sealed class EngineReply
     public NativeVisioPageReceipt[] VisioPages { get; set; } = System.Array.Empty<NativeVisioPageReceipt>();
     public NativeExtractionReceipt? Extraction { get; set; }
     public NativeAlignmentReceipt? Alignment { get; set; }
+    public NativePortQueryReceipt? PortQuery { get; set; }
     public NativeSelectionCopyReceipt? SelectionCopy { get; set; }
     public string[] Diagrams { get; set; } = System.Array.Empty<string>();
     public NativeElement[] Elements { get; set; } = System.Array.Empty<NativeElement>();

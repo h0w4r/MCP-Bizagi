@@ -131,9 +131,21 @@ internal static class NativeDiagramSurfacePlanner
                 if (matches.Length != 1) throw new InvalidDataException("Unmapped source port is not a unique observed midpoint.");
                 port = matches[0];
             }
-            var expected = Point(oldBox, port);
-            if (Math.Abs(expected.X - oldPoint.X) > 0.01 || Math.Abs(expected.Y - oldPoint.Y) > 0.01) throw new InvalidDataException("Original persisted route disagrees with its explicit port.");
-            var final = Point(visiblePositions[id], port);
+            NativePoint final;
+            if (NativePortGeometryPolicy.Offset(port))
+            {
+                if (!context.AllowPortQueries) throw new NotSupportedException("Offset ports require actual native classification.");
+                // This is proposed observed-perimeter intent, not an accredited
+                // inverse port mapping. Both source and proposed coordinates must
+                // pass the installed service before this plan authorizes a write.
+                final = NativePortGeometryPolicy.Candidate(oldBox, visiblePositions[id], oldPoint);
+            }
+            else
+            {
+                var expected = Point(oldBox, port);
+                if (Math.Abs(expected.X - oldPoint.X) > 0.01 || Math.Abs(expected.Y - oldPoint.Y) > 0.01) throw new InvalidDataException("Original persisted route disagrees with its explicit port.");
+                final = Point(visiblePositions[id], port);
+            }
             // MSAGL's nudger treats a non-null curve as an interval in which a port
             // may slide. A null-curve floating port is the library's fixed-point
             // constraint; register it with the real obstacle to retain membership.

@@ -11,7 +11,7 @@ public static class NativeDiagramLayoutPlanner
 {
     public const int MaximumRecords = 1000;
     public sealed record Plan(string DiagramId, string Direction, string Dependency, string AssemblySha256,
-        string SourceGraphSha256, NativeMutation[] Changes, object[] Pools, object[] Surfaces);
+        string SourceGraphSha256, NativeMutation[] Changes, object[] Pools, object[] Surfaces, NativePortGeometryPolicy.Proof[] Ports);
 
     public static void Validate(NativeDiagramLayoutRequest request)
     {
@@ -24,7 +24,8 @@ public static class NativeDiagramLayoutPlanner
 
     /// <summary>Native resolution awaits isolated workers without blocking the host transport.</summary>
     public static async Task<Plan> CalculateAsync(NativeElement[] source, NativeDiagramLayoutRequest request, Action<string> progress, CancellationToken token,
-        Func<NativeAnchorResizeRequest, Task<NativeMutation[]>>? resolveAnchors = null)
+        Func<NativeAnchorResizeRequest, Task<NativeMutation[]>>? resolveAnchors = null,
+        Func<NativeElement[], Task<NativePortGeometryPolicy.Proof[]>>? resolvePorts = null)
     {
         Validate(request); token.ThrowIfCancellationRequested();
         if (!source.Any(e => e.Id == request.DiagramId && e.Kind == "Collaboration")) throw new InvalidDataException("Unknown native diagram identity.");
@@ -51,18 +52,22 @@ public static class NativeDiagramLayoutPlanner
             if (e.Style?.LabelBounds is { } label && new[] { label.X, label.Y, label.Width, label.Height }.Any(n => !double.IsFinite(n) || Math.Abs(n) > 1000000))
                 throw new InvalidDataException("Invalid native label geometry.");
         }
-        var context = new NativeDiagramLayoutContext(request.Direction, progress, token) { ResolveAnchors = resolveAnchors };
+        var context = new NativeDiagramLayoutContext(request.Direction, progress, token) { ResolveAnchors = resolveAnchors, AllowPortQueries = resolvePorts != null };
         NativeMutation[] changes;
         try { changes = await NativeDiagramPartitionPlanner.PlanAsync(source, request.DiagramId, context).ConfigureAwait(false); }
         catch (Exception) when (token.IsCancellationRequested) { throw new OperationCanceledException(token); }
         token.ThrowIfCancellationRequested();
         NativeEditPlan.Validate(changes);
         var predicted = Predict(source, changes);
-        NativeDiagramLayoutGeometry.Verify(predicted, request.DiagramId);
+        var ports = selected.Any(NativePortGeometryPolicy.NeedsQuery)
+            ? await (resolvePorts ?? throw new NotSupportedException("Offset ports require actual native classification."))(predicted).ConfigureAwait(false)
+            : [];
+        NativePortGeometryPolicy.VerifyProofs(source, predicted, request.DiagramId, ports);
+        NativeDiagramLayoutGeometry.Verify(predicted, request.DiagramId, ports);
         progress("native_diagram_layout_plan_verified");
         return new(request.DiagramId, request.Direction, NativeSurfaceLayoutPlanner.Dependency,
             Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(typeof(LayeredLayout).Assembly.Location))),
-            BpmnDocument.Revision(JsonSerializer.SerializeToUtf8Bytes(source)), changes, context.Pools.ToArray(), context.Surfaces.ToArray());
+            BpmnDocument.Revision(JsonSerializer.SerializeToUtf8Bytes(source)), changes, context.Pools.ToArray(), context.Surfaces.ToArray(), ports);
     }
 
     internal static NativeElement[] Predict(NativeElement[] source, NativeMutation[] changes)
@@ -101,6 +106,7 @@ public static class NativeDiagramLayoutPlanner
 internal sealed class NativeDiagramLayoutContext(string direction, Action<string> progress, CancellationToken token)
 {
     public Func<NativeAnchorResizeRequest, Task<NativeMutation[]>>? ResolveAnchors { get; init; }
+    public bool AllowPortQueries { get; init; }
     public Dictionary<string, NativeSize> ResolvedHosts { get; } = new(StringComparer.Ordinal);
     public string Direction { get; } = direction;
     public CancellationToken Token { get; } = token;

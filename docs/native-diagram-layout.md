@@ -50,13 +50,17 @@ whole-archive comparison, not just the shapes requested by the client.
    Two-dimensional partition constraints retain the original assignments.
 5. MSAGL `RectilinearEdgeRouter` routes against actual visible rectangles,
    external manual labels and, for cross-pool messages, pool header bands.
-   Existing cardinal midpoint ports are fixed using the library's public
+   Cardinal midpoints and proposed observed offset points are fixed using the library's public
    `FloatingPort(null, point)` API and real obstacle membership. Route endpoints
    must agree before dispatch; the result is not patched to disguise drift.
-6. `NativeDiagramLayoutGeometry.Verify` checks predicted geometry independently
+6. Offset connections are queried against the installed native layouter on both
+   their original and proposed endpoint rectangles. The original native bin
+   must match both actual results without error or changed docking. These
+   read-only queries run in isolated workers and precede the native writer.
+7. `NativeDiagramLayoutGeometry.Verify` checks predicted geometry independently
    of MSAGL's success result. The complete typed plan is persisted before the
    installed native `mutate_save` writer executes it.
-7. A separate worker reopens the output. Native graph/containment, image restart,
+8. A separate worker reopens the output. Native graph/containment, image restart,
    entire archive fidelity and independent geometry gates must all pass.
 
 ### Boundary events on resized expanded hosts
@@ -138,6 +142,31 @@ Separate checks cover native save-copy, root/nested SVG endpoints, unknown-owner
 failure, a real inconsistent lane-resize rejection, live cancellation and recovery.
 See [execution evidence](validation.md) for the actual source/package runs.
 
+### Observed offset geometry
+
+Native offset IDs are **bins, not unique coordinates**. Their interpretation
+depends on the installed shape implementation and rectangle dimensions. The
+adapter does not distribute or recreate a vendor port-coordinate table.
+
+`NativePortGeometryPolicy` retains the observed fraction along one unambiguous
+rectangle side, proposing coordinates on the native whole-unit grid. This
+proposal is not authorization to write: the actual installed `layouter` must
+classify the original and proposed points into the same preserved native IDs.
+Even a plausible resized point fails if the native bin changes. A query that
+returns fallback errors or adjusts the requested docking also fails.
+
+The version-pinned `port_query` worker action uses existing connections and
+detached query envelopes. It checks that the renderer registry, native model
+and input file remain unchanged; it issues no modeling command. It is an
+internal bounded contract, not an MCP tool accepting JavaScript or reflection.
+Final readback must match the independently checked rectangle, point and port
+evidence. Style fields do not enter rectangle queries; native styles remain
+protected by the separate whole-archive fidelity gate.
+
+Connections with a boundary-event endpoint and any offset port, and pool
+endpoint routing, still need their own complete surface contracts. A supported integer port value is
+not a promise that every shape/point combination using that value is valid.
+
 These boundaries deliberately reject unsupported work instead of returning
 partial success:
 
@@ -146,7 +175,9 @@ partial success:
   missing geometry, duplicate identities, unresolved or cross-diagram routes.
 - Diagram-owned artifacts other than the represented graphical groups, or other
   surfaces without complete movement rules.
-- Unknown/offset ports, or original endpoints inconsistent with their ports.
+- Unknown ports, original endpoints inconsistent with their ports, ambiguous
+  offset corners, host-relative boundary offset docking, or offset geometry
+  without matching actual native source/proposal classification.
   Unspecified/zero port metadata requires a unique observed cardinal midpoint;
   the original metadata is retained rather than replaced by an invented ID.
 - Resized-host attachments without a matching native preview, unambiguous side,
@@ -170,6 +201,10 @@ dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --nat
 
 # Use the exact evidence directory printed by that successful client.
 ./tests/diagram-layout-audit.ps1 -Run '<printed evidence directory>'
+
+# Root/nested offsets, expanded hosts, cross-pool routes and a rejected wrong bin.
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native --diagram-layout-ports-only
+./tests/diagram-layout-audit.ps1 -Run '<printed evidence directory>' -ExpectedOffsetConnections 21
 ```
 
 For an extracted distribution, append `--package '<extracted directory>'

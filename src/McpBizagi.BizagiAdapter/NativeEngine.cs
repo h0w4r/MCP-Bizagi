@@ -154,7 +154,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "anchor_preview", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "simulation_result_save", "saved_results_read", "documentation_read", "presentation_save", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "anchor_preview", "port_query", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "simulation_result_save", "saved_results_read", "documentation_read", "presentation_save", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -245,6 +245,7 @@ public sealed partial class NativeEngine
             if (request.Action == "what_if") reply.Artifacts = WhatIf(model, request, progress);
             if (request.Action is "simulate" or "what_if") reply.SimulationInputs = VerifySimulationInputs(reply.Artifacts, simulationActivities);
             if (request.Action == "anchor_preview") reply.Alignment = PreviewAnchors(model, persistence, request, progress);
+            if (request.Action == "port_query") reply.PortQuery = QueryPorts(model, persistence, request, progress);
             if (request.Action == "render_svg") reply.Artifacts = Render(model, request, progress);
             if (request.Action == "publish") reply.Artifacts = Publish(model, request, reply, progress);
             if (request.Action == "image_export") reply.Artifacts = new[] { ExportImage(model, request) };
