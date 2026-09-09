@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add `native_diagram_layout`: complete represented-diagram placement and routing
+  with retained lane/milestone membership, bottom-up expanded-body sizing,
+  attached-event/manual-label offsets and fixed native cardinal ports, including
+  cross-pool messages. Persist typed intent through the installed engine and
+  require fresh-worker, whole-archive and independent geometry verification.
+  Cover blank/single/rich inputs and observed cancellation/recovery through MCP.
+  Unknown surfaces, offset ports and resized-host attachments fail explicitly.
+  This is not full Modeler automation or a change to the immutable 0.6 package.
+
 - Add `native_surface_layout`: server-calculated MSAGL placement for a complete
   closed, unpartitioned native process or embedded subprocess, followed by one
   installed-editor grouped move/router transaction. Preserve dimensions,

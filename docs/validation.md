@@ -1,5 +1,72 @@
 # Verification baselines
 
+## Complete represented-diagram layout — source and extracted candidate, 2026-09-09 UTC
+
+The official SDK client called the new `native_diagram_layout` tool through
+stdio, not a direct planner helper. Both runs passed **16 terminal operations:
+13 completed, two expected failures and one observed cancellation**, followed
+by a successful layout recovery. Blank and single-node diagrams were included;
+the rich diagram was laid out Right and then Down using the preceding artifact.
+
+| Circuit | Run | Exited workers / observed owned processes | Periodic desktop samples |
+| --- | --- | --- | --- |
+| Source | `20260909-023538-52bf57` | 34 / 64 | 479 |
+| Extracted private candidate, default worker discovery | `20260909-024335-b07ed8` | 33 / 63 | 467 |
+
+No sampled owned visible window or foreground ownership was observed. Ten output
+artifacts and 111 loaded vendor module contents were rehashed without drift in
+each run. The candidate was extracted into a path containing spaces and Unicode;
+all **413 manifest files** remained unchanged after the native circuit.
+
+The separate production-independent audit passed on both durable results:
+**19 nodes, 24 routes, 96 orthogonal segments, three boundary anchors, 17 manual
+labels, 28 SVG endpoint pairs and one exact opaque file payload**, with no
+reported issues. Thirteen root identities retained their pool/lane/milestone
+assignments; two expanded subprocess bodies contained their fresh-reader children.
+An unrelated second diagram remained under the same archive preservation gate.
+The audit compares retained native port IDs, attached-event timer semantics and
+host-relative offsets, manual-label sizes/offsets, node/route clearance and
+native SVG endpoints. It is not complete rounded-curve, glyph or GUI validation.
+
+Cancellation was requested only after a live diagram-planning phase was observed
+through `operation_get`. It is not an assertion that polling cancelled MSAGL at
+a particular internal iteration. Separate unit tests exercise cancellation from
+actual placement and routing progress callbacks. The two expected native failures
+were an inconsistent pool/lane resize and an unknown selected-diagram identity.
+No failed operation is treated as successful geometry work.
+
+The final build/client checks passed **1,350 unit tests, 18 package-policy tests
+and eight reviewed-license tests**. Separate real XML MCP run
+`20260909-024618-2d7522` passed with **48 registered tools**; that enumeration is
+not 48 native capability accreditations.
+
+Source transcript SHA-256:
+`b0178ed318a2ecbcadd150262c47f00af1f23ea761853a2328849e65d4947d15`.
+Extracted-candidate transcript SHA-256:
+`a9f7efa2767e213a536f769782381582e41cc5397808a531ba1e4c780b449df3`.
+Private candidate ZIP SHA-256:
+`f661e6eb2007171b150b5e3f9f7372ad8047f17b089ad3dbb858e9d52e0f44b1`.
+This is an explicitly dirty-checkout test candidate, not a new public release.
+The default release verifier correctly rejected its dirty provenance; the named
+private-test override checked its exact manifest. The immutable 0.6 ZIP is unchanged.
+
+An earlier source attempt (`20260909-023154-ffea71`) failed because connector
+snapshots' native zero-size graphical placeholders were incorrectly validated
+as node rectangles. Preflight now validates connector point sequences separately;
+node geometry bounds are not weakened. An initial external audit also failed
+because a minimal acceptance DTO omitted event/style/port fields when saving
+its auxiliary JSON. Re-reading the already retained complete native receipts
+resolved that evidence-reader defect; the client now persists full raw before
+and after elements. The public audit reads complete receipts and rejects an
+empty/incomplete corpus. Neither failed observation is counted as a pass.
+
+See the [operator contract](native-diagram-layout.md) and
+[`tests/diagram-layout-audit.ps1`](../tests/diagram-layout-audit.ps1).
+Unrepresented diagram-owned content, unknown/offset ports, resized-host boundary
+anchors, other diagram combinations, live unsaved editing and independent desktop
+compatibility remain separate unfinished capabilities. Full Modeler automation
+is **not** declared complete by this milestone.
+
 ## Acknowledged native progress — extracted candidate, 2026-09-09 UTC
 
 Final private extracted-package run `20260909-014645-71516f` passed the rich

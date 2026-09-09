@@ -211,6 +211,12 @@ try
         await NativeSurfaceLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
         Console.WriteLine("NATIVE_SURFACE_LAYOUT_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--diagram-layout-only"))
+    {
+        if (!native) throw new ArgumentException("Diagram layout requires --native.");
+        await NativeDiagramLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_DIAGRAM_LAYOUT_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--anchored-alignment-only"))
     {
         if (!native) throw new ArgumentException("Anchored alignment requires --native.");
