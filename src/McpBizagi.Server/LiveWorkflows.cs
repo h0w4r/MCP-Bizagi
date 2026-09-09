@@ -5,7 +5,7 @@ using McpBizagi.Core;
 namespace McpBizagi.Server;
 
 /// <summary>Durable MCP-to-native requests. Connection failure is not permission to repeat a mutation.</summary>
-public sealed class LiveWorkflows(LiveSessionClient client, ServerOptions options, Operations operations)
+public sealed partial class LiveWorkflows(LiveSessionClient client, ServerOptions options, Operations operations, NativeWorkflows native, LiveSessionOptions liveOptions)
 {
     public OperationView Execute(string sessionId, string action, string revision = "", string diskRevision = "", LiveElementPatch[]? changes = null)
     {
@@ -29,7 +29,7 @@ public sealed class LiveWorkflows(LiveSessionClient client, ServerOptions option
     public OperationView Reconcile(string operationId)
     {
         var original = operations.Get(operationId);
-        if (!original.Kind.StartsWith("live_", StringComparison.Ordinal) || original.Kind == "live_reconcile" || original.State is "running" or "cancelling")
+        if (original.Kind is not ("live_read" or "live_update" or "live_undo" or "live_redo" or "live_checkpoint") || original.State is "running" or "cancelling")
             throw new InvalidOperationException("Reconciliation requires a terminal original live operation.");
         var request = JsonSerializer.Deserialize<LiveSessionRequest>(new WorkspaceFiles(DirectoryFor(operationId)).Read("request.json"))
             ?? throw new InvalidDataException("The original durable live request is unavailable.");

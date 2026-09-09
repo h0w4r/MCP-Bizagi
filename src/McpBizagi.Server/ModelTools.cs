@@ -41,10 +41,11 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
             nativeMutationTypes = NativeEditPlan.CreatableTypes,
             nativeSubProcessKinds = NativeSubProcessPolicy.Kinds,
             nativeEventPayloadKinds = NativeEventPayloadPolicy.Kinds,
-            nativeLiveSession = new { tools = new[] { "live_read", "live_apply", "live_history", "live_checkpoint", "live_reconcile" },
+            nativeLiveSession = new { tools = new[] { "live_read", "live_apply", "live_history", "live_checkpoint", "live_reconcile", "live_publish" },
                 requires = "independently_running_managed_companion_in_operator_configured_registry", automaticLaunch = false,
-                originalDestinationPublication = false, arbitraryExistingProcessAttachment = false,
-                scope = "experimental_stdio_native_in_memory_properties_history_working_copy_checkpoints_and_receipts_not_complete_live_release_acceptance" },
+                originalDestinationPublication = true, arbitraryExistingProcessAttachment = false,
+                publicationScope = "explicit_checkpoint_with_whole_archive_fidelity_backup_and_native_readback",
+                scope = "experimental_stdio_native_in_memory_properties_history_checkpoints_guarded_publication_and_receipts_not_complete_live_release_acceptance" },
             nativeArtifactTextKinds = new[] { "TextAnnotation", "FormattedTextArtifact" },
             nativeXpdl = new { version = "2.2", tools = new[] { "native_xpdl_import", "native_xpdl_export" }, maximumDocuments = 100,
                 scope = "explicit_interchange_projection_with_differences_not_native_backup_or_visual_equivalence" },
@@ -200,7 +201,7 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
     public CallToolResult CommitNative(string path, string expectedRevision, string destinationPath, string? expectedDestinationRevision = null) =>
         Guard(() => native.CommitNative(path, expectedRevision, destinationPath, expectedDestinationRevision));
 
-    [McpServerTool(Name = "native_commit_reconcile", Destructive = false, OpenWorld = false), Description("Observe a terminal native_commit intent, destination, stage and backup; never replay, roll back or delete model files. Distinguishes applied, not_applied, ambiguous, conflict, unreadable and missing_intent. Applied content must pass another real native reader. Original interrupted/cancelled status remains unchanged. Poll operation_get for the separate reconciliation result.")]
+    [McpServerTool(Name = "native_commit_reconcile", Destructive = false, OpenWorld = false), Description("Observe a terminal native_commit or live_publish intent, destination, stage and backup; never replay, roll back or delete model files. Distinguishes applied, not_applied, ambiguous, conflict, unreadable and missing_intent. Applied content must pass another real native reader. Original interrupted/cancelled status remains unchanged. Poll operation_get for the separate reconciliation result.")]
     public CallToolResult ReconcileNativeCommit(string operationId) => Guard(() => native.ReconcileNativeCommit(operationId));
 
     [McpServerTool(Name = "native_diagrams_get"), Description("Inspect native diagram identities and names plus the persisted ordered OpenedItems preferences. Filesystem/ZIP enumeration order is not desktop tab order. Poll operation_get.")]

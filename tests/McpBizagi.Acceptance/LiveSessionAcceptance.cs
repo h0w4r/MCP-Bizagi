@@ -46,14 +46,18 @@ internal static class LiveSessionAcceptance
         static string Revision(JsonElement snapshot) => snapshot.GetProperty("Revision").GetString()!;
         static string Name(JsonElement snapshot, string id) => snapshot.GetProperty("Elements").EnumerateArray()
             .Single(e => e.GetProperty("Id").GetString() == id).GetProperty("Name").GetString()!;
-        string editedRevision, elementId, diskRevision, updateId;
+        string editedRevision, elementId, diskRevision, updateId, publicationId = "", checkpointId = "", checkpointHash = "";
+        string destination = Path.Combine(run, "Original model Ω.bpm");
         string name = "MCP live unsaved Ω " + Guid.NewGuid().ToString("N")[..8];
+        string documentation = "Retained live documentation Ω " + Guid.NewGuid().ToString("N")[..8];
         await using (var client = await McpClient.CreateAsync(Transport()))
         {
             await Call(client, "live_read", new() { ["sessionId"] = "../not-a-session" }, true);
             await Call(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = "not-dispatched", ["action"] = "execute" }, true);
             await Call(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = "not-dispatched", ["expectedDiskRevision"] = "bad-hash" }, true);
             var before = Snapshot(await Execute(client, "live_read", new() { ["sessionId"] = sessionId }));
+            // Create the disposable operator-original before any live edits. Production publication must adopt the checkpoint itself.
+            File.Copy(before.GetProperty("Path").GetString()!, destination);
             elementId = before.GetProperty("Elements").EnumerateArray().First(e => e.GetProperty("Kind").GetString() == "CallActivity" &&
                 e.GetProperty("DiagramId").GetString() == before.GetProperty("ActiveDiagramId").GetString()).GetProperty("Id").GetString()!;
             // Exercise native documentation notification independently, then undo it
@@ -65,7 +69,7 @@ internal static class LiveSessionAcceptance
             before = Snapshot(await Execute(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(documented), ["action"] = "undo" }));
             string previousName = Name(before, elementId); diskRevision = before.GetProperty("DiskRevision").GetString()!;
             var update = await Execute(client, "live_apply", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(before),
-                ["changes"] = new[] { new { ElementId = elementId, Name = name } } });
+                ["changes"] = new[] { new { ElementId = elementId, Name = name, Documentation = documentation } } });
             updateId = update.GetProperty("OperationId").GetString()!;
             var after = Snapshot(update);
             if (Name(after, elementId) != name || after.GetProperty("DiskRevision").GetString() != diskRevision) throw new InvalidOperationException("MCP did not produce a real unsaved native edit.");
@@ -90,6 +94,9 @@ internal static class LiveSessionAcceptance
             var saved = await Execute(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = editedRevision, ["expectedDiskRevision"] = diskRevision });
             if (Snapshot(saved).GetProperty("Dirty").GetBoolean()) throw new InvalidOperationException("Native checkpoint remained dirty.");
             var checkpoint = saved.GetProperty("Result").GetProperty("Checkpoint");
+            checkpointHash = checkpoint.GetProperty("Revision").GetString()!;
+            var laterUnsaved = Snapshot(await Execute(client, "live_apply", new() { ["sessionId"] = sessionId,
+                ["expectedRevision"] = Revision(Snapshot(saved)), ["changes"] = new[] { new { ElementId = elementId, Name = name + " later unsaved" } } }));
             string artifact = checkpoint.GetProperty("ArtifactPath").GetString()!;
             // Workspace adoption is not publication: a private byte copy allows a
             // second real MCP tool to invoke its independent installed-engine worker.
@@ -99,12 +106,54 @@ internal static class LiveSessionAcceptance
             if (reread.GetProperty("Elements").EnumerateArray().Single(e => e.GetProperty("Id").GetString() == elementId).GetProperty("Name").GetString() != name)
                 throw new InvalidOperationException("Fresh MCP native reader lost the live edit.");
             string previous = Path.Combine(run, "before-checkpoint.bpm"); File.Copy(checkpoint.GetProperty("PreviousArtifactPath").GetString()!, previous);
-            var fidelity = await Call(client, "native_compare", new() { ["path"] = previous, ["otherPath"] = copy,
-                ["expectedNames"] = new[] { new { ElementId = elementId, Name = name } } });
-            if (!fidelity.GetProperty("Preserved").GetBoolean()) throw new InvalidOperationException("Whole-archive live checkpoint fidelity failed.");
+            checkpointId = saved.GetProperty("OperationId").GetString()!;
+            var expectedChanges = new[] { new { ElementId = elementId, Name = name, Documentation = documentation } };
+            // Simulate a real external replacement of this disposable original, then verify conflict preserves all evidence.
+            byte[] originalBytes = File.ReadAllBytes(destination); File.Copy(copy, destination, true);
+            await Call(client, "live_publish", new() { ["checkpointOperationId"] = checkpointId, ["destinationPath"] = destination,
+                ["expectedDestinationRevision"] = diskRevision, ["expectedChanges"] = expectedChanges }, true);
+            if (!File.ReadAllBytes(destination).SequenceEqual(File.ReadAllBytes(copy))) throw new InvalidOperationException("Conflict overwrote the external replacement.");
+            File.WriteAllBytes(destination, originalBytes); // Restore only our disposable acceptance original.
+            await Execute(client, "live_publish", new() { ["checkpointOperationId"] = checkpointId, ["destinationPath"] = destination,
+                ["expectedDestinationRevision"] = diskRevision, ["expectedChanges"] = Array.Empty<object>() }, "failed");
+            if (!File.ReadAllBytes(destination).SequenceEqual(originalBytes)) throw new InvalidOperationException("Fidelity rejection changed the destination.");
+            var publication = await Execute(client, "live_publish", new() { ["checkpointOperationId"] = checkpointId, ["destinationPath"] = destination,
+                ["expectedDestinationRevision"] = diskRevision, ["expectedChanges"] = expectedChanges });
+            publicationId = publication.GetProperty("OperationId").GetString()!;
+            var published = publication.GetProperty("Result");
+            var fidelity = published.GetProperty("fidelity");
+            string backup = published.GetProperty("commit").GetProperty("BackupPath").GetString()!;
+            if (!fidelity.GetProperty("Preserved").GetBoolean() || !File.ReadAllBytes(backup).SequenceEqual(originalBytes) ||
+                !File.ReadAllBytes(destination).SequenceEqual(File.ReadAllBytes(copy))) throw new InvalidOperationException("Live publication fidelity, backup or exact bytes failed.");
+            if (reread.GetProperty("Elements").EnumerateArray().Single(e => e.GetProperty("Id").GetString() == elementId).GetProperty("Documentation").GetString() != documentation)
+                throw new InvalidOperationException("Fresh native reader lost live documentation.");
+            var stillUnsaved = Snapshot(await Execute(client, "live_read", new() { ["sessionId"] = sessionId }));
+            if (Revision(stillUnsaved) != Revision(laterUnsaved) || Name(stillUnsaved, elementId) != name + " later unsaved" ||
+                !stillUnsaved.GetProperty("Dirty").GetBoolean() || stillUnsaved.GetProperty("DiskRevision").GetString() != checkpointHash)
+                throw new InvalidOperationException("Checkpoint publication altered later unsaved editor state.");
+            // Undo only the acceptance edit after proving publication did not consume it, then retain a clean disposable working copy.
+            var restored = Snapshot(await Execute(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(stillUnsaved), ["action"] = "undo" }));
+            await Execute(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(restored), ["expectedDiskRevision"] = checkpointHash });
             File.WriteAllText(Path.Combine(run, "live-mcp-result.json"), JsonSerializer.Serialize(new { sessionId, elementId, name,
-                saved, readback, fidelity, stdioRestartPreservedUnsaved = true, originalDestinationPublished = false, managedLaunchAccredited = false }));
-            Console.WriteLine("LIVE_STDIO_MCP_EDIT_HISTORY_RESTART_RECEIPT_CHECKPOINT_NATIVE_READER_PASS");
+                documentation, saved, readback, fidelity, publication, laterUnsavedPreserved = true, stdioRestartPreservedUnsaved = true, originalDestinationPublished = true, managedLaunchAccredited = false }));
+            Console.WriteLine("LIVE_STDIO_MCP_EDIT_HISTORY_RESTART_RECEIPT_CHECKPOINT_PUBLICATION_PASS");
+        }
+        // Simulate loss of only our MCP reply journal; the native checkpoint receipt remains authoritative.
+        string missingReply = Path.Combine(run, "state", "runs", checkpointId, "live", "reply.json");
+        File.Move(missingReply, missingReply + ".retained-test-copy");
+        await using (var client = await McpClient.CreateAsync(Transport()))
+        {
+            var reconciliation = await Execute(client, "native_commit_reconcile", new() { ["operationId"] = publicationId });
+            var result = reconciliation.GetProperty("Result");
+            if (result.GetProperty("observedState").GetString() != "applied" || result.GetProperty("writeReplayed").GetBoolean() ||
+                !result.GetProperty("nativeReadbackVerified").GetBoolean()) throw new InvalidOperationException("Restarted host did not reconcile live publication without replay.");
+            File.WriteAllText(Path.Combine(run, "live-publication-reconciliation.json"), reconciliation.GetRawText());
+            Console.WriteLine("LIVE_PUBLICATION_RESTART_RECONCILIATION_PASS");
+            var recovered = await Execute(client, "live_publish", new() { ["checkpointOperationId"] = checkpointId, ["destinationPath"] = destination,
+                ["expectedDestinationRevision"] = checkpointHash, ["expectedChanges"] = Array.Empty<object>() });
+            if (!recovered.GetProperty("Result").GetProperty("destinationPublished").GetBoolean()) throw new InvalidOperationException("Native receipt fallback did not publish the retained checkpoint.");
+            File.WriteAllText(Path.Combine(run, "live-publication-native-receipt.json"), recovered.GetRawText());
+            Console.WriteLine("LIVE_PUBLICATION_NATIVE_RECEIPT_FALLBACK_PASS");
         }
     }
 }

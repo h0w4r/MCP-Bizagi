@@ -46,8 +46,8 @@ public sealed partial class NativeWorkflows
     public OperationView ReconcileNativeCommit(string operationId)
     {
         var original = operations.Get(operationId);
-        if (original.Kind != "native_commit" || original.State is "running" or "cancelling")
-            throw new InvalidOperationException("Reconciliation requires a terminal native_commit operation from this state directory.");
+        if (original.Kind is not ("native_commit" or "live_publish") || original.State is "running" or "cancelling")
+            throw new InvalidOperationException("Reconciliation requires a terminal native_commit or live_publish operation from this state directory.");
         return operations.Start("native_commit_reconcile", async (id, progress, token) =>
         {
             string directory = CreateArtifactDirectory(id);

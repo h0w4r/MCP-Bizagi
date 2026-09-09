@@ -39,4 +39,8 @@ public sealed class LiveTools(LiveWorkflows live)
 
     [McpServerTool(Name = "live_reconcile", Destructive = false, OpenWorld = false), Description("Query the native retained receipt of a terminal live operation after cancellation, disconnect or MCP restart. Never dispatches the original request again. An unknown receipt is not proof that a write did not happen. The same native session must still be running. Poll operation_get.")]
     public CallToolResult Reconcile(string operationId) => Guard(() => live.Reconcile(operationId));
+
+    [McpServerTool(Name = "live_publish", Destructive = true, OpenWorld = false), Description("Publish an exact retained native checkpoint to an existing workspace .bpm using its expected destination SHA-256. Supply the complete expected Name/Documentation differences from that destination; empty changes requires semantic equivalence. Rejects unexplained whole-archive differences, preserves a backup, and verifies through fresh native readers. Never changes the live editor or publishes later unsaved edits. Poll operation_get; after interruption use native_commit_reconcile, not another write.")]
+    public CallToolResult Publish(string checkpointOperationId, string destinationPath, string expectedDestinationRevision, LiveElementPatch[] expectedChanges)
+        => Guard(() => live.Publish(checkpointOperationId, destinationPath, expectedDestinationRevision, expectedChanges));
 }

@@ -1,5 +1,9 @@
 # Native file adoption and recovery
 
+`native_commit_reconcile` also accepts terminal `live_publish` operations. Live
+checkpoint publication uses this same durable intent, replacement, backup and
+fresh-reader contract; see [live checkpoint publication](live-sessions.md#publish-a-retained-checkpoint-safely).
+
 `native_commit` publishes byte-exact native model content into the configured
 workspace. Use it after reviewing a verified edit artifact, or to save an existing
 native model under a new path. It does not turn `.bpm` into BPMN, reserialize the
