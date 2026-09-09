@@ -6,7 +6,7 @@ internal static class NativeDiagramLayoutAcceptance
 {
     private static string S(JsonElement e, string n) => e.GetProperty(n).GetString()!;
     public static async Task Run(string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
-        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool includeGroups = false)
+        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool includeGroups = false, bool includeExpandedAnchors = false)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string tool, Dictionary<string, object?> input, string expected = "completed")
@@ -91,6 +91,13 @@ internal static class NativeDiagramLayoutAcceptance
         string sibling = Node("UserTask", outer, 50, 470); Edge(outer, inner, sibling);
         Edge(firstProcess, roots[0], outer);
         Boundary(inner, t2, t3);
+        if (includeExpandedAnchors)
+        {
+            // Exercise real native anchor resolution at root and embedded levels.
+            // Both hosts are resized by the actual bottom-up layout, not a fixture resolver.
+            Boundary(firstProcess, outer, roots[0]);
+            Boundary(outer, inner, sibling);
+        }
         // Actual diagram-owned message flows connect separate native pools in both directions.
         Edge(diagram, roots[0], roots[1], "2", "1"); seed[^1].ElementType = "MessageFlow";
         Edge(diagram, roots[1], roots[0], "4", "4"); seed[^1].ElementType = "MessageFlow";
@@ -151,7 +158,8 @@ internal static class NativeDiagramLayoutAcceptance
         var original = await Op("native_inspect", new() { ["path"] = path });
         if (S(original, "sourceRevision") != revision) throw new InvalidDataException("Original input changed.");
         File.WriteAllText(Path.Combine(run, "partition-membership.json"), JsonSerializer.Serialize(new { beforeMembership, afterMembership }));
-        // Cancel only at an observed planning/writing phase of this actual tool.
+        // The anchor corpus cancels the actual installed editor preview; the
+        // base/group corpus retains its independent solver/writer cancellation.
         string cancelId = S(await call("native_diagram_layout", new() { ["path"] = path, ["expectedRevision"] = revision,
             ["layout"] = new { DiagramId = diagram, Direction = "Right" } }), "OperationId");
         string lastPhase = "";
@@ -159,12 +167,14 @@ internal static class NativeDiagramLayoutAcceptance
         {
             var view = await call("operation_get", new() { ["operationId"] = cancelId }); string phase = S(view, "Phase");
             if (phase != lastPhase) { Console.WriteLine("diagram cancellation phase=" + phase); lastPhase = phase; }
-            if (phase.StartsWith("native_diagram_layout_", StringComparison.Ordinal) || phase.StartsWith("native_mutation:", StringComparison.Ordinal) || phase == "native_persist_edited_bpm") break;
+            bool observed = includeExpandedAnchors ? phase.StartsWith("native_editor_", StringComparison.Ordinal)
+                : phase.StartsWith("native_diagram_layout_", StringComparison.Ordinal) || phase.StartsWith("native_mutation:", StringComparison.Ordinal) || phase == "native_persist_edited_bpm";
+            if (observed) break;
             if (S(view, "State") is "completed" or "failed" or "cancelled" or "interrupted") throw new InvalidDataException("No live diagram planning/writing cancellation phase was observed.");
             await Task.Delay(100);
         }
         await call("operation_cancel", new() { ["operationId"] = cancelId });
-        var cancelled = await wait(cancelId, "cancelled"); exited(cancelId); receipts.Add(new { tool = "operation_cancel", id = cancelId, state = cancelled });
+        var cancelled = await wait(cancelId, "cancelled"); exited(cancelId); receipts.Add(new { tool = "operation_cancel", id = cancelId, state = cancelled, observedPhase = lastPhase });
         await Op("native_diagram_layout", new() { ["path"] = path, ["expectedRevision"] = revision,
             ["layout"] = new { DiagramId = diagram, Direction = "Right" } });
     }

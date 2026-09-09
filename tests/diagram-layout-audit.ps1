@@ -1,16 +1,19 @@
 #Requires -Version 7.2
 # Audit the complete authored corpus produced by --native --diagram-layout-only.
-param([Parameter(Mandatory)][string]$Run, [ValidateRange(0, 1000)][int]$ExpectedGroups = 0)
+param([Parameter(Mandatory)][string]$Run, [ValidateRange(0, 1000)][int]$ExpectedGroups = 0,
+  [ValidateRange(0, 1000)][int]$ExpectedResizedHosts = 0)
 $ErrorActionPreference='Stop'
 # Independent readback audit: no layout library and no production comparator imports.
 $records=Get-Content (Join-Path $Run 'native-diagram-layout.json') -Raw | ConvertFrom-Json
-$applied=@($records | Where-Object {$_.tool -eq 'native_diagram_layout' -and $_.state.State -eq 'completed' -and $_.state.Result.plan.Direction -eq 'Down'})[-1].state.Result
+$appliedRecord=@($records | Where-Object {$_.tool -eq 'native_diagram_layout' -and $_.state.State -eq 'completed' -and $_.state.Result.plan.Direction -eq 'Down'})[-1]
+$applied=$appliedRecord.state.Result
 $elements=@($applied.reopened.Elements)
 $before=@(($records | Where-Object tool -eq 'native_presentation_apply')[0].state.Result.reopened.Elements)
 if (-not $applied -or $before.Count -eq 0) { throw 'Missing complete native layout receipts; empty evidence cannot pass.' }
 $issues=[Collections.Generic.List[string]]::new()
 $nodes=0; $routes=0; $segments=0; $svgEndpoints=0
 $anchors=0; $labels=0
+$resizedHosts=[Collections.Generic.HashSet[string]]::new()
 # Independent enclosure checks use global native bounds, not solver receipts.
 $groups=@($before|Where-Object Kind -eq Group)
 if($groups.Count -ne $ExpectedGroups -or @($elements|Where-Object Kind -eq Group).Count -ne $ExpectedGroups){throw 'Incomplete group corpus'}
@@ -46,9 +49,31 @@ foreach($item in $elements){
   if($item.Kind -eq 'BoundaryEvent'){
     $anchors++
     if(($old.Event|ConvertTo-Json -Depth 20 -Compress) -cne ($item.Event|ConvertTo-Json -Depth 20 -Compress)){$issues.Add('boundary-semantics:'+$item.Id)}
-    $hostNow=@($elements|Where-Object Id -eq $item.Event.AttachedToActivityId)[0].Geometry
-    $hostOld=@($before|Where-Object Id -eq $old.Event.AttachedToActivityId)[0].Geometry
-    if([math]::Abs(($item.Geometry.X-$hostNow.X)-($old.Geometry.X-$hostOld.X)) -gt 0.01 -or [math]::Abs(($item.Geometry.Y-$hostNow.Y)-($old.Geometry.Y-$hostOld.Y)) -gt 0.01){$issues.Add('boundary-offset:'+$item.Id)}
+    $hostNow=VisualBox @($elements|Where-Object Id -eq $item.Event.AttachedToActivityId)[0]
+    $hostOld=VisualBox @($before|Where-Object Id -eq $old.Event.AttachedToActivityId)[0]
+    $offsetX=$old.Geometry.X-$hostOld.X; $offsetY=$old.Geometry.Y-$hostOld.Y
+    if($hostNow.Width -ne $hostOld.Width -or $hostNow.Height -ne $hostOld.Height){
+      [void]$resizedHosts.Add($item.Event.AttachedToActivityId)
+      # Independently read the actual native callback, not the solver's accepted mutations.
+      $preview=Join-Path $Run ('state/runs/'+$appliedRecord.id+'/anchor-preview-'+$item.Event.AttachedToActivityId)
+      $callbacks=@(Get-Content (Join-Path $preview 'actual-cef-callbacks.jsonl')|ForEach-Object{$_|ConvertFrom-Json}|Where-Object method -eq UpdateElementShape)
+      if($callbacks.Count -ne 1){throw 'Missing unique native anchor callback'}
+      $dtos=@(($callbacks[0].payload|ConvertFrom-Json)|ForEach-Object{$_.element|ConvertFrom-Json})
+      $nativeAnchor=@($dtos|Where-Object id -eq $item.Id); $nativeHost=@($dtos|Where-Object id -eq $item.Event.AttachedToActivityId)
+      if($nativeAnchor.Count -ne 1 -or $nativeHost.Count -ne 1){throw 'Missing native anchor or host callback geometry'}
+      if($nativeHost[0].width -ne $hostNow.Width -or $nativeHost[0].height -ne $hostNow.Height -or $nativeAnchor[0].attachedToRefId -ne $item.Event.AttachedToActivityId){throw 'Native anchor request mismatch'}
+      $offsetX=$nativeAnchor[0].x-$nativeHost[0].x; $offsetY=$nativeAnchor[0].y-$nativeHost[0].y
+      # Callback agreement alone is insufficient if a resize changes host side.
+      function SideOf($a,$h){
+        $x=$a.X+$a.Width/2; $y=$a.Y+$a.Height/2
+        $distances=@([math]::Abs($y-$h.Y),[math]::Abs($y-$h.Y-$h.Height),[math]::Abs($x-$h.X),[math]::Abs($x-$h.X-$h.Width))
+        $sides=@(0..3|Where-Object{$distances[$_] -lt 0.01})
+        if($sides.Count -ne 1 -or $x -lt $h.X -or $x -gt $h.X+$h.Width -or $y -lt $h.Y -or $y -gt $h.Y+$h.Height){throw 'Ambiguous or detached native boundary side'}
+        return $sides[0]
+      }
+      if((SideOf $old.Geometry $hostOld) -ne (SideOf $item.Geometry $hostNow) -or $old.Geometry.Width -ne $item.Geometry.Width -or $old.Geometry.Height -ne $item.Geometry.Height){throw 'Native boundary side or dimensions changed'}
+    }
+    if([math]::Abs(($item.Geometry.X-$hostNow.X)-$offsetX) -gt 0.01 -or [math]::Abs(($item.Geometry.Y-$hostNow.Y)-$offsetY) -gt 0.01){$issues.Add('boundary-offset:'+$item.Id)}
   }
   $label=$item.Style.LabelBounds; $oldLabel=$old.Style.LabelBounds
   if($oldLabel -and ($oldLabel.X -ne 0 -or $oldLabel.Y -ne 0 -or $oldLabel.Width -ne 0 -or $oldLabel.Height -ne 0)){
@@ -56,6 +81,7 @@ foreach($item in $elements){
     if($label.Width -ne $oldLabel.Width -or $label.Height -ne $oldLabel.Height -or [math]::Abs(($label.X-$item.Geometry.X)-($oldLabel.X-$old.Geometry.X)) -gt 0.01 -or [math]::Abs(($label.Y-$item.Geometry.Y)-($oldLabel.Y-$old.Geometry.Y)) -gt 0.01){$issues.Add('manual-label:'+$item.Id)}
   }
 }
+if($resizedHosts.Count -ne $ExpectedResizedHosts){throw 'Incomplete resized-host anchor corpus'}
 $owners=@($elements | Where-Object {$_.Kind -in 'Process','Collaboration' -or $_.SubProcess})
 foreach($owner in $owners){
   $parentIds=@($owner.Id)
@@ -155,8 +181,9 @@ try{
 if($copies -ne 1){throw 'Opaque payload occurrence count changed'}
 if($renderedGroups.Count -ne $ExpectedGroups){throw 'Native SVG does not contain every expected group identity'}
 # This is an acceptance-corpus assertion, not a production model-size restriction.
-if($nodes -ne 19 -or $routes -ne 24 -or $anchors -ne 3 -or $labels -ne 17 -or $svgEndpoints -ne 28){throw 'Incomplete authored corpus; no empty or partial audit success.'}
-$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; manualLabels=$labels; graphicalGroups=$groups.Count; renderedGroups=$renderedGroups.Count; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
+
+$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; nativeResolvedHosts=$resizedHosts.Count; manualLabels=$labels; graphicalGroups=$groups.Count; renderedGroups=$renderedGroups.Count; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
 $report | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $Run 'partitioned-independent-geometry.json')
 $report | ConvertTo-Json -Depth 4
+if($nodes -ne 19+$ExpectedResizedHosts -or $routes -ne 24+$ExpectedResizedHosts -or $anchors -ne 3+$ExpectedResizedHosts -or $labels -ne 17+$ExpectedResizedHosts -or $svgEndpoints -ne 28+$ExpectedResizedHosts){throw 'Incomplete authored corpus; no empty or partial audit success.'}
 if($issues.Count -ne 0){throw 'Candidate geometry audit failed; preserve the original and inspect recorded identities'}

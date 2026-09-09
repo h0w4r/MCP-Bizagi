@@ -18,6 +18,7 @@ public sealed class EngineRequest
     public NativeScenarioTransfer[] ScenarioTransfers { get; set; } = System.Array.Empty<NativeScenarioTransfer>();
     public string[] DiscardScenarioResultDiagrams { get; set; } = System.Array.Empty<string>();
     public NativeAlignmentRequest? Alignment { get; set; }
+    public NativeAnchorResizeRequest? AnchorResize { get; set; }
     public NativeSelectionCopyRequest? SelectionCopy { get; set; }
     /// <summary>Host-derived independent bounds, never supplied as an arbitrary script or user coordinate override.</summary>
     public NativeMutation[] AlignmentExpected { get; set; } = System.Array.Empty<NativeMutation>();

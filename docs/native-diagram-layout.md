@@ -35,13 +35,15 @@ whole-archive comparison, not just the shapes requested by the client.
 
 1. `NativeWorkflows.LayoutDiagram` captures and revision-checks the source,
    writes a staging copy, and opens it with the installed native reader.
-2. `NativeDiagramLayoutPlanner.Calculate` validates identifiers, complete record
+2. `NativeDiagramLayoutPlanner.CalculateAsync` validates identifiers, complete record
    coverage, coordinates, ports and the 1,000-record selected-diagram bound.
    Native connector snapshots have zero-size graphical placeholders: their
    actual geometry is the point sequence, not a movable node rectangle.
 3. `NativeDiagramPartitionPlanner` records source pool/lane/milestone membership
    before changing any size. It plans embedded bodies bottom-up and sizes
    expanded bounds from child rectangles, route points and manual labels.
+   Changed expanded hosts with boundary events await the isolated native anchor
+   resolver described below before packing their parent surface.
 4. `NativeDiagramSurfacePlanner` uses pinned **Msagl 1.2.1** `LayeredLayout`
    with seed 17, layer separation 100 and node separation 70. Host packing
    envelopes include attached events and manually positioned labels.
@@ -56,6 +58,38 @@ whole-archive comparison, not just the shapes requested by the client.
    installed native `mutate_save` writer executes it.
 7. A separate worker reopens the output. Native graph/containment, image restart,
    entire archive fidelity and independent geometry gates must all pass.
+
+### Boundary events on resized expanded hosts
+
+`NativeAnchorResizeRequest` is an internal planning contract, not an additional
+MCP tool or a request to resize a user's open document. For each changed expanded
+host, a separate worker loads the immutable input and calls the installed
+editor's `modeling.resizeShape`/attachment support with the calculated size.
+The worker executes the real native callback commands in a disposable model;
+it does not persist that model or use its incidental routes as final output.
+
+The pinned 4.3 editor's later participant/lane reflow can move an attached event
+again and detach it. A narrowly scoped event-bus hook stops that lower-priority
+post-execution phase for the exact preview host, after native expanded-size
+bookkeeping and attachment positioning. Normal alignment modes are unaffected.
+The installed asset fingerprint and actual hook/Task acknowledgment are checked.
+No installed JavaScript or DLL is modified or redistributed.
+
+`NativeAnchorResolutionPolicy` independently checks the retained callback hash,
+exact host size and origin, native identities, attachment semantics, event size,
+unambiguous original side and matching callback/command coordinates. Only those
+anchor positions enter the layout graph. Manual label dimensions and offsets
+come from the original model, not the editor's replacement label rectangles.
+Pool, lane, neighbor, port and route changes from the preview are discarded.
+The input file hash must remain unchanged after each preview.
+
+The normal complete-diagram planner then packs the updated host/event/label
+envelopes and routes around external labels with the original cardinal port
+metadata. Final acceptance still requires actual native persistence, fresh-process
+reading, full-archive fidelity and independent route/label checks. Native anchor
+preview success alone does not accredit the resulting diagram or a general
+standalone native-resize operation. Corner-ambiguous attachments and unsupported
+port mappings fail rather than receiving proportional or guessed positions.
 
 ### Graphical group enclosures
 
@@ -115,8 +149,8 @@ partial success:
 - Unknown/offset ports, or original endpoints inconsistent with their ports.
   Unspecified/zero port metadata requires a unique observed cardinal midpoint;
   the original metadata is retained rather than replaced by an invented ID.
-- Attached events on an expanded host whose dimensions must change, until an
-  explicit anchor-resize contract is available.
+- Resized-host attachments without a matching native preview, unambiguous side,
+  exact requested bounds, complete identity coverage or callback evidence.
 - Non-line solver curves, unrepresentable geometry or a result rejected by the
   installed engine, fresh reader or unknown-content fidelity policy.
 
@@ -158,3 +192,11 @@ It includes nested whole-pool groups, single-task and multi-task/boundary subset
 an empty group, and a real saved partial-group rejection. The audit checks all
 six native SVG identities, source membership, all four margins and empty bounds
 without importing the production planner.
+
+The resized-host corpus uses `--native --diagram-layout-anchors-only` and
+`./tests/diagram-layout-audit.ps1 -Run '<printed evidence directory>' -ExpectedResizedHosts 2`.
+It adds connected noninterrupting timers on both root and embedded expanded
+hosts. The audit reads native callbacks independently, verifies host-relative
+anchor positions and sides, and checks final manual-label and route clearance.
+The client also requests cancellation during an observed native editor preview
+and requires a subsequent complete layout to succeed.

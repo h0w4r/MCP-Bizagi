@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Resolve boundary anchors on resized expanded hosts through the installed
+  editor in isolated, non-persisted planning workers. Retain source labels and
+  cardinal ports, discard incidental native reflow, then execute the complete
+  diagram plan with real persistence and fresh-reader fidelity checks.
+  Include root and nested hosts, connected timers and independent callback,
+  label/route and native SVG endpoint checks. This is not live-document editing
+  or independent desktop GUI accreditation.
+
 - Extend native diagram layout to graphical groups: retain original enclosure
   membership, asymmetric margins, empty bounds and group nesting/overlap
   relationships through native persistence and fresh-reader verification.
@@ -14,7 +22,7 @@
   cross-pool messages. Persist typed intent through the installed engine and
   require fresh-worker, whole-archive and independent geometry verification.
   Cover blank/single/rich inputs and observed cancellation/recovery through MCP.
-  Unknown surfaces, offset ports and resized-host attachments fail explicitly.
+  Unknown surfaces, offset ports and unverified resized-host attachments fail explicitly.
   This is not full Modeler automation or a change to the immutable 0.6 package.
 
 - Add `native_surface_layout`: server-calculated MSAGL placement for a complete

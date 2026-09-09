@@ -6,7 +6,7 @@ namespace McpBizagi.Core;
 /// <summary>Bottom-up container planning and complete diagram-owned route coverage.</summary>
 internal static class NativeDiagramPartitionPlanner
 {
-    public static NativeMutation[] Plan(NativeElement[] source, string diagram, NativeDiagramLayoutContext context)
+    public static async Task<NativeMutation[]> PlanAsync(NativeElement[] source, string diagram, NativeDiagramLayoutContext context)
     {
         context.Token.ThrowIfCancellationRequested();
         var graph = JsonSerializer.Deserialize<NativeElement[]>(JsonSerializer.Serialize(source))!;
@@ -21,13 +21,13 @@ internal static class NativeDiagramPartitionPlanner
                 if (!updates.TryAdd(change.ElementId, change)) throw new InvalidDataException("Duplicate candidate geometry ownership.");
             }
         }
-        void Nested(string owner)
+        async Task Nested(string owner)
         {
             context.Token.ThrowIfCancellationRequested();
             if (!stack.Add(owner) || stack.Count > 100) throw new InvalidDataException("Cyclic or excessively deep subprocess layout.");
             foreach (var sub in graph.Where(e => e.ParentId == owner && e.SubProcess != null))
             {
-                Nested(sub.Id);
+                await Nested(sub.Id).ConfigureAwait(false);
                 var children = NativeDiagramSurfacePlanner.Surface(graph, sub.Id, 60, 60, context, original: source);
                 Accept(children);
                 if (children.Length == 0) continue;
@@ -45,6 +45,27 @@ internal static class NativeDiagramPartitionPlanner
                 var size = new NativeSize { Width = Math.Ceiling(Math.Max(right + 60, sub.Geometry!.Width + 60)), Height = Math.Ceiling(Math.Max(bottom + 60, sub.Geometry.Height + 60)) };
                 sizes.Add(sub.Id, size);
                 if (sub.ExpandedGeometry == null) throw new InvalidDataException("Native expanded-size evidence missing.");
+                var attached = graph.Where(e => e.Kind == "BoundaryEvent" && e.Event?.AttachedToActivityId == sub.Id).ToArray();
+                if (sub.Geometry.Expanded && attached.Length != 0 &&
+                    (sub.ExpandedGeometry.Width != size.Width || sub.ExpandedGeometry.Height != size.Height))
+                {
+                    var resolve = context.ResolveAnchors ?? throw new NotSupportedException("Resized expanded anchors require an actual native resolver.");
+                    var resolved = await resolve(new() { DiagramId = diagram, HostId = sub.Id, Size = size }).ConfigureAwait(false);
+                    context.Token.ThrowIfCancellationRequested();
+                    if (!resolved.Select(c => c.ElementId).Order().SequenceEqual(attached.Select(e => e.Id).Order()))
+                        throw new InvalidDataException("Native anchor resolution must cover the exact source attachment set.");
+                    // Only anchor geometry enters packing. Native preview pool reflow,
+                    // neighbor movement, port changes and label damage are discarded.
+                    foreach (var change in resolved)
+                    {
+                        var anchor = working[change.ElementId];
+                        anchor.Geometry = change.Geometry ?? throw new InvalidDataException("Missing resolved anchor rectangle.");
+                        if (change.Style?.LabelBounds is { } label)
+                            anchor.Style!.LabelBounds = new() { X = label.X!.Value, Y = label.Y!.Value, Width = label.Width!.Value, Height = label.Height!.Value };
+                    }
+                    context.ResolvedHosts.Add(sub.Id, size);
+                    context.Surfaces.Add(new { nativeAnchorHost = sub.Id, requestedSize = size, resolvedAnchors = resolved });
+                }
                 sub.ExpandedGeometry.Width = size.Width; sub.ExpandedGeometry.Height = size.Height;
             }
             stack.Remove(owner);
@@ -73,7 +94,7 @@ internal static class NativeDiagramPartitionPlanner
                     throw new InvalidDataException("Ambiguous or out-of-pool source partition membership; no implicit reassignment: " + shape.Id);
                 membership.Add(shape.Id, (laneMatches[0], stageMatches[0]));
             }
-            Nested(process.Id);
+            await Nested(process.Id).ConfigureAwait(false);
             var rowHeights = Enumerable.Repeat(180d, rows).ToArray(); var columnWidths = Enumerable.Repeat(240d, columns).ToArray();
             var cellBounds = new Dictionary<(int Row, int Column), (double X, double Y)>();
             var finalPool = new NativeGeometry { X = oldPool.X, Y = cursorY, Width = oldPool.Width, Height = oldPool.Height };

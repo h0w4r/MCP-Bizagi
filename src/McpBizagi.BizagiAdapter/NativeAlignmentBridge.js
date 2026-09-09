@@ -9,6 +9,30 @@
         throw new Error('Unsupported native editor component contract: no unique process diagram.');
     }
     const eventBus = diagrams[0].eventBus;
+    // Planning-only native resize: the worker applies real commands to a disposable
+    // model. Only independently checked anchor positions can enter a final plan.
+    window.__mcpPreviewResizedAnchors = request => {
+        const shape = diagrams[0].elementRegistry.get(request.HostId);
+        const modeling = diagrams[0].diagram.get('modeling');
+        if (!shape || !shape.attachers || !shape.attachers.length || !modeling || typeof modeling.resizeShape !== 'function')
+            throw new Error('Installed native anchor resize API or host is unavailable.');
+        window.__mcpNativeAnchorPreview = true;
+        window.__mcpPreviewHostId = request.HostId;
+        try {
+            modeling.resizeShape(shape, { x: shape.x, y: shape.y, width: request.Size.Width, height: request.Size.Height },
+                undefined, { autoResize: false });
+        } finally { window.__mcpNativeAnchorPreview = false; window.__mcpPreviewHostId = null; }
+    };
+    // On the pinned editor, expanded-size bookkeeping runs at priority 500 and
+    // participant/lane/neighbor reflow at 400. The latter may move an attachment
+    // twice and detach it. A planning-only resize needs native attachSupport,
+    // not a second layout of the surrounding diagram. Stop this lower-priority
+    // post-execution phase only for the requested disposable preview host.
+    eventBus.on('commandStack.shape.resize.postExecuted', 450, event => {
+        if (!window.__mcpAlignmentActive || !window.__mcpNativeAnchorPreview || event.context.shape.id !== window.__mcpPreviewHostId) return;
+        window.__mcpLayoutPolicy.suppressedPreviewReflow = { hostId: event.context.shape.id, priority: 450 };
+        event.stopPropagation();
+    });
     // One installed elements.align command groups all calculated moves and their
     // dependent native routes into the normal single UpdateElementShape callback.
     // This adapter entry point is private to the worker, not an arbitrary script tool.
@@ -74,7 +98,7 @@
     // behavior otherwise assigns a root-canvas participant from absolute coordinates.
     // Reuse the editor's own move hint to preserve this explicit surface ownership.
     eventBus.on('commandStack.elements.move.preExecute', 2000, event => {
-        if (window.__mcpAlignmentActive && (window.__mcpAlignmentSubProcess || window.__mcpCalculatedLayout)) {
+        if (window.__mcpAlignmentActive && (window.__mcpAlignmentSubProcess || window.__mcpCalculatedLayout || window.__mcpNativeAnchorPreview)) {
             event.context.hints = { ...event.context.hints, avoidUpdateParent: true };
         }
     });
@@ -85,14 +109,14 @@
     // transaction. Use the installed hint, not a callback/output ownership fixup.
     for (const command of ['connection.layout', 'connection.updateWaypoints', 'connection.move']) {
         eventBus.on(`commandStack.${command}.preExecute`, 2100, event => {
-            if (!window.__mcpAlignmentActive || !window.__mcpCalculatedLayout) return;
+            if (!window.__mcpAlignmentActive || (!window.__mcpCalculatedLayout && !window.__mcpNativeAnchorPreview)) return;
             event.context.hints = { ...event.context.hints, avoidUpdateParent: true };
             window.__mcpLayoutPolicy.preservedCalculatedOwnership.push({ command, connectionId: event.context.connection.id });
         });
     }
 
     eventBus.on('commandStack.connection.layout.preExecute', 2050, event => {
-        if (!window.__mcpAlignmentActive || !window.__mcpCalculatedLayout) return;
+        if (!window.__mcpAlignmentActive || (!window.__mcpCalculatedLayout && !window.__mcpNativeAnchorPreview)) return;
         const c = event.context, source = c.connection.source;
         if (!source || !source.host) return;
         const side = boundarySides.get(source.id);

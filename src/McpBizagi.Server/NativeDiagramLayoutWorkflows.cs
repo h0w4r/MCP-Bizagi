@@ -17,7 +17,28 @@ public sealed partial class NativeWorkflows
             string directory = CreateArtifactDirectory(id), source = Path.Combine(directory, "input.bpm"), output = Path.Combine(directory, "edited.bpm");
             await File.WriteAllBytesAsync(source, input.Bytes, token);
             var before = await Execute(new EngineRequest { OperationId = id, Action = "exchange_read", InputPath = source }, RunDirectory(id, "source-reader"), progress, token);
-            var plan = NativeDiagramLayoutPlanner.Calculate(before.Elements, captured, progress, token);
+            async Task<NativeMutation[]> ResolveAnchors(NativeAnchorResizeRequest resize)
+            {
+                string previewDirectory = RunDirectory(id, "anchor-preview-" + resize.HostId);
+                var preview = await Execute(new EngineRequest { OperationId = id, Action = "anchor_preview", InputPath = source,
+                    AnchorResize = resize }, previewDirectory, progress, token);
+                if (BpmnDocument.Revision(await File.ReadAllBytesAsync(source, token)) != expectedRevision)
+                    throw new InvalidDataException("Planning preview changed the immutable native input.");
+                var policy = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(Path.Combine(previewDirectory, "native-layout-policy.json")));
+                if (!policy.GetProperty("installed").GetBoolean() || !policy.GetProperty("acknowledged").GetBoolean())
+                    throw new InvalidDataException("Native anchor preview lacks actual command acknowledgment.");
+                if (!policy.TryGetProperty("suppressedPreviewReflow", out var isolated) || isolated.GetProperty("hostId").GetString() != resize.HostId ||
+                    isolated.GetProperty("priority").GetInt32() != 450)
+                    throw new InvalidDataException("Native anchor preview did not isolate the pinned container reflow phase.");
+                var callbacks = File.ReadLines(Path.Combine(previewDirectory, "actual-cef-callbacks.jsonl"))
+                    .Select(line => JsonSerializer.Deserialize<JsonElement>(line)).Where(e => e.GetProperty("method").GetString() == "UpdateElementShape").ToArray();
+                if (callbacks.Length != 1) throw new InvalidDataException("Native anchor preview must produce one actual callback.");
+                var anchors = NativeAnchorResolutionPolicy.Resolve(before.Elements, resize, preview, callbacks[0].GetProperty("payload").GetString()!);
+                File.WriteAllText(Path.Combine(previewDirectory, "anchor-resolution.json"), JsonSerializer.Serialize(new { resize, preview, anchors,
+                    interpretation = "Transient native preview; only checked anchor positions enter the final plan. No native preview file was persisted." }));
+                return anchors;
+            }
+            var plan = await NativeDiagramLayoutPlanner.CalculateAsync(before.Elements, captured, progress, token, ResolveAnchors);
             // Intent is retained before dispatch. It is not reverse-engineered from the output.
             File.WriteAllText(Path.Combine(directory, "diagram-layout-plan.json"), JsonSerializer.Serialize(plan));
             token.ThrowIfCancellationRequested();

@@ -1,5 +1,77 @@
 # Verification baselines
 
+## Resized expanded-host anchors — final extracted candidate, 2026-09-09 UTC
+
+Final extracted candidate `20260909-041202-35b880` passed the same **16 terminal
+operations: 13 completed, two expected failures and one actual native-editor
+preview cancellation followed by complete recovery**. The client observed
+`native_editor_component` before requesting cancellation through MCP; process
+cleanup was verified before the next layout. This is separate from the earlier
+source circuit's solver-phase cancellation.
+
+The operator circuit used the official SDK, stdio, default sibling-worker
+discovery and an extracted path with spaces and Unicode. Both directions passed
+native writing, fresh-worker reading, full-archive fidelity and the independent
+audit: **21 nodes, 26 routes, 102 segments, five boundary events, two resized
+hosts, 19 manual labels, 30 SVG endpoint pairs and one exact opaque payload**.
+All six completed anchor previews retained actual callback/acknowledgment
+evidence; no issue was reported by the independent audit.
+
+- **40 workers and 116 owned processes** exited; **692 periodic desktop samples**
+  recorded no owned visible window or foreground observation.
+- All **414 manifest entries** verified before and after execution. Source and
+  extracted server/core/adapter/worker executable hashes matched.
+- The final source passed **1,377 unit tests**, **18 package-policy cases** and
+  **eight dependency-license cases**. These do not replace the native circuit.
+- Actual packaged MCP XML acceptance also passed with **48 tools** in
+  `20260909-041156-36d7ed`; that separate run did not execute native operations.
+- Native transcript SHA-256:
+  `288ffb5eed2410a33ee02507bdaaa23f7c420474abe3af3f8c2bb06e6c8c1d34`.
+- Candidate ZIP SHA-256:
+  `2a1777d83de4b5cd08b778894dce73e428bd94d4bb3995457a9c0ca61529337d`.
+
+This was an explicitly dirty-checkout private candidate based on `66c4f9c`,
+not a replacement for the immutable 0.6.0-alpha.1 release. It validates the
+tested file-based anchor/layout circuit, not arbitrary resize behavior,
+offset-port mapping, live unsaved documents or independent desktop compatibility.
+
+## Resized expanded-host anchors — source circuit, 2026-09-09 UTC
+
+Source circuit `20260909-035550-27a2c6` passed **16 terminal operations:
+13 completed, two expected failures and one observed solver cancellation with
+successful recovery**. The official SDK client used MCP stdio, actual worker
+RPC and installed Modeler 4.3.0.008, rather than direct adapter calls.
+
+The corpus adds connected noninterrupting timer events to the existing root
+and embedded expanded subprocesses. Right planning requested inner/outer sizes
+838×352 and 1180×527; Down requested 527×588 and 925×935. All six completed
+native anchor previews, including recovery, retained actual callbacks and
+command acknowledgments. Only checked anchor positions entered the final
+MSAGL plan; preview files were not persisted as user models.
+
+Independent audit: **21 nodes, 26 routes, 102 orthogonal segments, five boundary
+events, two resized hosts, 19 manual labels, 30 native SVG endpoint pairs and
+one byte-exact opaque presentation payload**, with no reported issues.
+Both directions passed actual native saving, fresh-process reading and the
+whole-archive fidelity gate. The audit separately read native callbacks to
+verify host-relative anchor positions, source side and unchanged event size.
+
+Process evidence recorded **40 exited workers, 107 exited owned processes and
+1,137 periodic desktop samples**, with no owned visible window or foreground
+observation. Transcript SHA-256:
+`5ff8d7f5cc78f887a1c877398713bbde3f0deb8e42906f51fa4d4307e33eab6f`.
+
+Earlier real attempts were rejected before publishing output because native
+lane/milestone reflow moved the outer boundary again and detached it. The
+version-pinned planning hook isolates that phase; it does not relax the
+attachment or fidelity checks. Raw native resize also overwrote manual labels
+and could route through their preserved rectangles. These diagnostics are why
+native preview success is not treated as final diagram acceptance.
+
+This record does not accredit arbitrary native resize, offset ports, live
+unsaved documents, every shape combination or independent Modeler GUI
+compatibility. See the [anchor contract](native-diagram-layout.md#boundary-events-on-resized-expanded-hosts).
+
 ## Graphical group layout — six-group extracted candidate, 2026-09-09 UTC
 
 Final extracted-package circuit `20260909-030451-106d71` passed **18 terminal

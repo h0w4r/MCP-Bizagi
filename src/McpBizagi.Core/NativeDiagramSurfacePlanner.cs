@@ -46,9 +46,12 @@ internal static class NativeDiagramSurfacePlanner
         foreach (var boundary in boundaries)
         {
             if (!byId.TryGetValue(boundary.Event?.AttachedToActivityId ?? "", out var host)) throw new InvalidDataException("Unresolved source boundary host.");
-            // Resized-host attachment positioning needs an explicit side/offset contract; do not move it accidentally.
+            // Resize is permitted only after the native resolver has supplied the
+            // complete attachment set for this exact bottom-up host size.
             var old = Visual(originalById[host.Id]); var now = Visual(host);
-            if (old.Width != now.Width || old.Height != now.Height) throw new NotSupportedException("Boundary attached to resized expanded host needs a separate anchor-resize contract.");
+            if ((old.Width != now.Width || old.Height != now.Height) &&
+                (!context.ResolvedHosts.TryGetValue(host.Id, out var resolved) || resolved.Width != now.Width || resolved.Height != now.Height))
+                throw new NotSupportedException("Boundary attached to resized expanded host requires verified native anchor resolution.");
         }
         string Host(string id) => byId.ContainsKey(id) ? id : boundaries.SingleOrDefault(b => b.Id == id)?.Event?.AttachedToActivityId
             ?? throw new NotSupportedException("Cross-surface connector cannot be silently omitted.");

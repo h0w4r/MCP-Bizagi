@@ -20,6 +20,11 @@ public static class NativeDiagramLayoutPlanner
     }
 
     public static Plan Calculate(NativeElement[] source, NativeDiagramLayoutRequest request, Action<string> progress, CancellationToken token)
+        => CalculateAsync(source, request, progress, token).GetAwaiter().GetResult();
+
+    /// <summary>Native resolution awaits isolated workers without blocking the host transport.</summary>
+    public static async Task<Plan> CalculateAsync(NativeElement[] source, NativeDiagramLayoutRequest request, Action<string> progress, CancellationToken token,
+        Func<NativeAnchorResizeRequest, Task<NativeMutation[]>>? resolveAnchors = null)
     {
         Validate(request); token.ThrowIfCancellationRequested();
         if (!source.Any(e => e.Id == request.DiagramId && e.Kind == "Collaboration")) throw new InvalidDataException("Unknown native diagram identity.");
@@ -46,9 +51,9 @@ public static class NativeDiagramLayoutPlanner
             if (e.Style?.LabelBounds is { } label && new[] { label.X, label.Y, label.Width, label.Height }.Any(n => !double.IsFinite(n) || Math.Abs(n) > 1000000))
                 throw new InvalidDataException("Invalid native label geometry.");
         }
-        var context = new NativeDiagramLayoutContext(request.Direction, progress, token);
+        var context = new NativeDiagramLayoutContext(request.Direction, progress, token) { ResolveAnchors = resolveAnchors };
         NativeMutation[] changes;
-        try { changes = NativeDiagramPartitionPlanner.Plan(source, request.DiagramId, context); }
+        try { changes = await NativeDiagramPartitionPlanner.PlanAsync(source, request.DiagramId, context).ConfigureAwait(false); }
         catch (Exception) when (token.IsCancellationRequested) { throw new OperationCanceledException(token); }
         token.ThrowIfCancellationRequested();
         NativeEditPlan.Validate(changes);
@@ -95,6 +100,8 @@ public static class NativeDiagramLayoutPlanner
 /// <summary>Per-call diagnostics and cooperative cancellation; no shared layout state.</summary>
 internal sealed class NativeDiagramLayoutContext(string direction, Action<string> progress, CancellationToken token)
 {
+    public Func<NativeAnchorResizeRequest, Task<NativeMutation[]>>? ResolveAnchors { get; init; }
+    public Dictionary<string, NativeSize> ResolvedHosts { get; } = new(StringComparer.Ordinal);
     public string Direction { get; } = direction;
     public CancellationToken Token { get; } = token;
     public List<object> Pools { get; } = [];

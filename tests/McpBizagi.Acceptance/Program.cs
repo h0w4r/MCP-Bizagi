@@ -211,10 +211,11 @@ try
         await NativeSurfaceLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
         Console.WriteLine("NATIVE_SURFACE_LAYOUT_PASS evidence=" + run); return 0;
     }
-    if (args.Contains("--diagram-layout-only") || args.Contains("--diagram-layout-groups-only"))
+    if (args.Contains("--diagram-layout-only") || args.Contains("--diagram-layout-groups-only") || args.Contains("--diagram-layout-anchors-only"))
     {
         if (!native) throw new ArgumentException("Diagram layout requires --native.");
-        await NativeDiagramLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, args.Contains("--diagram-layout-groups-only"));
+        await NativeDiagramLayoutAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit,
+            args.Contains("--diagram-layout-groups-only"), args.Contains("--diagram-layout-anchors-only"));
         Console.WriteLine("NATIVE_DIAGRAM_LAYOUT_PASS evidence=" + run); return 0;
     }
     if (args.Contains("--anchored-alignment-only"))

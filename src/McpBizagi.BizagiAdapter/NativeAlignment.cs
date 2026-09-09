@@ -21,8 +21,9 @@ public sealed partial class NativeEngine
     {
         var alignment = request.Alignment ?? throw new InvalidDataException("Missing native alignment request.");
         string mode = alignment.Mode, diagramId = alignment.DiagramId;
-        if (!new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly", "Calculated" }.Contains(mode) ||
-            alignment.ElementIds.Length < 2 || alignment.ElementIds.Length > 1000 || alignment.ElementIds.Distinct().Count() != alignment.ElementIds.Length)
+        bool preview = request.Action == "anchor_preview" && mode == "AnchorPreview" && request.AnchorResize != null;
+        if ((!preview && !new[] { "Top", "Bottom", "Left", "Right", "Horizontal", "Vertical", "HorizontalEvenly", "VerticalEvenly", "Calculated" }.Contains(mode)) ||
+            alignment.ElementIds.Length < (preview ? 1 : 2) || alignment.ElementIds.Length > 1000 || alignment.ElementIds.Distinct().Count() != alignment.ElementIds.Length)
             throw new InvalidDataException("Invalid native alignment selection or mode.");
         if (mode == "Calculated" && (alignment.Placements == null ||
             !alignment.Placements.Select(p => p.ElementId).SequenceEqual(alignment.ElementIds) ||
@@ -101,7 +102,7 @@ public sealed partial class NativeEngine
             EvaluateInNativeBrowser("document.querySelector('bz-process-viewer').showDiagram.emit(" + json + ");");
             Wait("native_editor_api", "String(typeof window.alignSelectedShapes==='function')");
             string[] ids = alignment.ElementIds;
-            if (ids.Length < 2) throw new InvalidDataException("Alignment requires at least two actual native nodes.");
+            if (ids.Length < (preview ? 1 : 2)) throw new InvalidDataException("Missing actual native selection.");
             File.WriteAllText(Path.Combine(workRoot, "layout-request.json"), JsonConvert.SerializeObject(new { mode, ids }));
             Wait("native_editor_shapes", "String(" + JsonConvert.SerializeObject(ids) + ".every(id=>document.querySelector('[data-element-id=\"'+id+'\"]')))");
             EvaluateInNativeBrowser("window.__mcpAlignmentSubProcess=" + (alignment.SubProcessId != "" ? "true" : "false") + ";");
@@ -110,7 +111,9 @@ public sealed partial class NativeEngine
             Wait("native_editor_geometry_policy", "String(window.__mcpLayoutPolicy?.installed===true)");
             File.WriteAllText(Path.Combine(workRoot, "native-editor-initial-identities.json"), EvaluateInNativeBrowser("JSON.stringify(window.__mcpLayoutInitial)"));
             bridge.Phase = "requested_alignment";
-            string command = mode == "Calculated"
+            string command = preview
+                ? "window.__mcpPreviewResizedAnchors(" + JsonConvert.SerializeObject(request.AnchorResize) + ")"
+                : mode == "Calculated"
                 ? "window.__mcpApplyCalculatedLayout(" + JsonConvert.SerializeObject(alignment.Placements) + ")"
                 : "alignSelectedShapes(" + JsonConvert.SerializeObject(mode) + ")";
             EvaluateInNativeBrowser("selectElementsById(" + JsonConvert.SerializeObject(ids) + ");window.__mcpAlignmentActive=true;try{" + command + ";}finally{window.__mcpAlignmentActive=false;}");
@@ -135,6 +138,9 @@ public sealed partial class NativeEngine
             {
                 // Marshal the actual callback onto this engine's owning execution thread.
                 // Never run native model commands on a CEF callback thread.
+                // Retain native transition evidence even when the independent command
+                // gate rejects the callback before any model mutation is applied.
+                File.WriteAllText(Path.Combine(workRoot, "native-layout-policy-before-commands.json"), EvaluateInNativeBrowser("JSON.stringify(window.__mcpLayoutPolicy)"));
                 receipt.Changes = ApplyAlignmentCallback(model, diagram, persistence, serializer, bridge.PendingValue!, alignment, request.AlignmentExpected, progress);
                 receipt.CallbackSha256 = AlignmentHash(System.Text.Encoding.UTF8.GetBytes(bridge.PendingValue!));
                 receipt.AutomaticLabelsPreserved = JsonConvert.DeserializeObject<string[]>(File.ReadAllText(Path.Combine(workRoot, "automatic-labels-preserved.json")))!;
