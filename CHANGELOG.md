@@ -2,6 +2,10 @@
 
 ## 0.7.0-alpha.1 — 2026-09-09
 
+- Preserve pre-dispatch diagnostics when a dependency failure ends the native
+  worker before Windows job assignment. Distinguish that startup race from a pipe
+  deadline, retain loader stderr and verify recovery with the intact worker.
+
 - Add `live_open` and `live_sessions_list` with a production independent Windows
   owner, on-demand current-user activation, no recurring trigger or elevation,
   owned-job cleanup and exact launch-task removal. Actual MCP process-tree death

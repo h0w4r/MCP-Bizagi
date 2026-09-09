@@ -286,6 +286,8 @@ or creating a second model in the worker does not satisfy these requirements.
 Neither window clicks nor foreground activation are substitutes. The experimental
 tools do not attach to arbitrary operator-owned Modeler processes.
 
-Independent verification **inside Modeler** is another open gate. The installed
-offscreen renderer and a fresh persistence worker establish different facts and
-must not be relabeled as desktop compatibility evidence.
+The managed-lifetime acceptance runs the actual installed Modeler editor and
+checks its native document, commands and lifecycle. This is distinct from
+independent pixel-level inspection of its appearance, which remains unaccredited
+and outside the current bounded release. Offscreen rendering and fresh persistence
+readback establish their own facts; neither is relabeled as a visual inspection.

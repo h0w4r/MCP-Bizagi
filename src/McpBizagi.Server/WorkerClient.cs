@@ -69,7 +69,20 @@ public sealed class WorkerClient(ServerOptions options)
         try
         {
             // Assign before sending native work; the worker is only waiting for its pipe at this point.
-            job.Assign(process);
+            try { job.Assign(process); }
+            catch (Exception error)
+            {
+                // A missing managed dependency can end the worker before Windows
+                // admits it to the job. Preserve this pre-dispatch stage rather
+                // than obscuring the native loader error as a bare access denial.
+                File.WriteAllText(Path.Combine(directory, "worker-connection-error.json"), System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    stage = "job_assignment", requestDispatched = false, exceptionType = error.GetType().Name,
+                    message = error.Message, operationCancellationRequested = token.IsCancellationRequested,
+                    workerExited = process.HasExited
+                }));
+                throw new IOException("Worker ownership failed before any engine request was dispatched; inspect startup evidence and worker.stderr.log.", error);
+            }
             ObserveOwnedTree();
             File.WriteAllText(Path.Combine(directory, "worker-process.json"), System.Text.Json.JsonSerializer.Serialize(new
             { pid = process.Id, startedAt = process.StartTime.ToUniversalTime(), createNoWindow = true, jobObject = true }));

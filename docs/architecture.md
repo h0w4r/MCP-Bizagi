@@ -80,6 +80,12 @@ elapsed time, owned-job CPU/I/O counters and `requestDispatched: false`. The
 operation journal reports `cancelled` only when its own cancellation token was
 requested. No connection failure automatically replays a write.
 
+A managed dependency can fail before the child is assigned to its Windows job.
+That separate `job_assignment` startup stage also records `requestDispatched: false`,
+the original exception type/message and observed worker state. Its loader stderr
+and eventual exit remain available. It is not mislabeled as a pipe timeout or an
+uncertain model write, and recovery never replays the failed engine request.
+
 ## Explicitly not implemented
 
 No generic AI agent framework, hosted inference dependency, network API or UI

@@ -196,8 +196,11 @@ try
                 throw new InvalidDataException("The initial connection failure lost its pre-dispatch diagnosis.");
             string root = Path.Combine(stateRoot, "runs", id);
             var connection = JsonDocument.Parse(File.ReadAllText(Directory.GetFiles(root, "worker-connection-error.json", SearchOption.AllDirectories).Single())).RootElement;
-            if (connection.GetProperty("requestDispatched").GetBoolean() || connection.GetProperty("operationCancellationRequested").GetBoolean() ||
-                connection.GetProperty("exceptionType").GetString() != "TimeoutException") throw new InvalidDataException("An initial deadline was misreported as operator cancellation.");
+            string stage = connection.GetProperty("stage").GetString()!, exceptionType = connection.GetProperty("exceptionType").GetString()!;
+            bool expectedFailure = stage == "pipe_connection" && exceptionType == "TimeoutException" ||
+                stage == "job_assignment" && exceptionType is "Win32Exception" or "InvalidOperationException";
+            if (connection.GetProperty("requestDispatched").GetBoolean() || connection.GetProperty("operationCancellationRequested").GetBoolean() || !expectedFailure)
+                throw new InvalidDataException("Initial worker failure was not classified at its actual pre-dispatch stage.");
             foreach (string exit in Directory.GetFiles(root, "worker-exit.json", SearchOption.AllDirectories))
                 if (!JsonDocument.Parse(File.ReadAllText(exit)).RootElement.GetProperty("exited").GetBoolean()) throw new InvalidDataException("Faulted worker did not exit.");
             string stderr = File.ReadAllText(Directory.GetFiles(root, "worker.stderr.log", SearchOption.AllDirectories).Single());
