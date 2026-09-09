@@ -7,7 +7,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <!-- Use the explicit net48 reference package on both developer machines and CI runners. -->
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
-    <Version>0.6.0-alpha.1</Version>
+    <Version>0.7.0-alpha.1</Version>
     <Authors>h0w4r</Authors>
     <RepositoryUrl>https://github.com/h0w4r/MCP-Bizagi</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

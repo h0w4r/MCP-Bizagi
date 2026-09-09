@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0-alpha.1 — 2026-09-09
 
 - Add `live_open` and `live_sessions_list` with a production independent Windows
   owner, on-demand current-user activation, no recurring trigger or elevation,

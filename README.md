@@ -8,8 +8,8 @@
 ![Status: experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-0078D4)
 ![Host: .NET 10](https://img.shields.io/badge/host-.NET%2010-512BD4)
-[![Source version](https://img.shields.io/badge/source-0.6.0--alpha.1-orange)](Directory.Build.props)
-[![Verified package](https://img.shields.io/badge/package-0.6.0--alpha.1-blue)](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1)
+[![Source version](https://img.shields.io/badge/source-0.7.0--alpha.1-orange)](Directory.Build.props)
+[![Published package](https://img.shields.io/github/v/release/h0w4r/MCP-Bizagi?include_prereleases&label=package)](https://github.com/h0w4r/MCP-Bizagi/releases)
 [![License: custom attribution](https://img.shields.io/badge/license-custom%20attribution-blue)](LICENSE)
 
 A local **Model Context Protocol server for Bizagi Modeler**.
@@ -31,10 +31,10 @@ foreground-window automation, or redistributing Bizagi binaries.
 > their own [acceptance records](docs/validation.md), not a blanket fidelity claim.
 > The 0.6 package passed [274 terminal native operations across twenty circuits](docs/validation-package-0.6.md).
 >
-> **Packaged milestone: [0.6.0-alpha.1](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1).**
-> Reparenting, selection copying, native alignment and nested-body VDX exchange
-> join the consolidated Windows ZIP. All 392 manifest entries remained unchanged
-> through real MCP/native acceptance, including failure and recovery cases.
+> **Windows packages: [releases and version-specific verification](https://github.com/h0w4r/MCP-Bizagi/releases).**
+> Source 0.7 adds independent managed sessions and consolidates the newer modeling
+> workflows. Every archive identifies its exact source commit and file hashes;
+> operational evidence belongs to that archive, not merely to a green build.
 > Earlier archives remain immutable. Check each contract and the
 > [capability ledger](docs/capabilities.md) before relying on a feature;
 > package acceptance is not full automation or GUI compatibility.
