@@ -1,6 +1,6 @@
 #Requires -Version 7.2
 # Audit the complete authored corpus produced by --native --diagram-layout-only.
-param([Parameter(Mandatory)][string]$Run)
+param([Parameter(Mandatory)][string]$Run, [ValidateRange(0, 1000)][int]$ExpectedGroups = 0)
 $ErrorActionPreference='Stop'
 # Independent readback audit: no layout library and no production comparator imports.
 $records=Get-Content (Join-Path $Run 'native-diagram-layout.json') -Raw | ConvertFrom-Json
@@ -11,6 +11,36 @@ if (-not $applied -or $before.Count -eq 0) { throw 'Missing complete native layo
 $issues=[Collections.Generic.List[string]]::new()
 $nodes=0; $routes=0; $segments=0; $svgEndpoints=0
 $anchors=0; $labels=0
+# Independent enclosure checks use global native bounds, not solver receipts.
+$groups=@($before|Where-Object Kind -eq Group)
+if($groups.Count -ne $ExpectedGroups -or @($elements|Where-Object Kind -eq Group).Count -ne $ExpectedGroups){throw 'Incomplete group corpus'}
+function ContainsBox($a,$b){return $b.X -ge $a.X-0.01 -and $b.Y -ge $a.Y-0.01 -and $b.X+$b.Width -le $a.X+$a.Width+0.01 -and $b.Y+$b.Height -le $a.Y+$a.Height+0.01}
+function VisualBox($item){if($item.Geometry.Expanded -and $item.ExpandedGeometry){return $item.ExpandedGeometry}; return $item.Geometry}
+function MemberMargins($box,$items){
+  $bounds=@($items|ForEach-Object {VisualBox $_})
+  $left=($bounds.X|Measure-Object -Minimum).Minimum; $top=($bounds.Y|Measure-Object -Minimum).Minimum
+  $right=($bounds|ForEach-Object {$_.X+$_.Width}|Measure-Object -Maximum).Maximum
+  $bottom=($bounds|ForEach-Object {$_.Y+$_.Height}|Measure-Object -Maximum).Maximum
+  return @(($left-$box.X),($top-$box.Y),($box.X+$box.Width-$right),($box.Y+$box.Height-$bottom))
+}
+foreach($group in $groups){
+  $next=@($elements|Where-Object Id -eq $group.Id)[0]
+  $processes=@($before|Where-Object {$_.Kind -eq 'Process' -and $_.DiagramId -eq $group.DiagramId}|ForEach-Object Id)
+  $oldAnchors=@($before|Where-Object {$_.DiagramId -eq $group.DiagramId -and (($_.Kind -eq 'Participant' -and $_.IsMainParticipant -eq $false) -or ($_.ParentId -in $processes -and $_.Kind -notin @('Lane','Milestone','SequenceFlow','MessageFlow','Association')))})
+  $newAnchors=@($elements|Where-Object {$_.Id -in @($oldAnchors|ForEach-Object Id)})
+  $oldMembers=@($oldAnchors|Where-Object {ContainsBox $group.Geometry (VisualBox $_)}|ForEach-Object Id|Sort-Object)
+  $newMembers=@($newAnchors|Where-Object {ContainsBox $next.Geometry (VisualBox $_)}|ForEach-Object Id|Sort-Object)
+  if(($oldMembers -join ',') -cne ($newMembers -join ',') -or -not $next.Geometry.Expanded -or $next.ParentId -ne $group.ParentId){$issues.Add('group-membership:'+$group.Id)}
+  if($oldMembers.Count -gt 0){
+    $oldMargins=MemberMargins $group.Geometry @($oldAnchors|Where-Object Id -in $oldMembers)
+    $newMargins=MemberMargins $next.Geometry @($newAnchors|Where-Object Id -in $newMembers)
+    for($m=0;$m -lt 4;$m++){if([math]::Abs($oldMargins[$m]-$newMargins[$m]) -gt 0.01){$issues.Add('group-margin:'+$group.Id)}}
+  }elseif($group.Geometry.X -ne $next.Geometry.X -or $group.Geometry.Y -ne $next.Geometry.Y -or $group.Geometry.Width -ne $next.Geometry.Width -or $group.Geometry.Height -ne $next.Geometry.Height){$issues.Add('empty-group-geometry:'+$group.Id)}
+  foreach($other in $groups|Where-Object Id -ne $group.Id){
+    $afterOther=@($elements|Where-Object Id -eq $other.Id)[0]
+    if((ContainsBox $group.Geometry $other.Geometry) -ne (ContainsBox $next.Geometry $afterOther.Geometry)){$issues.Add('group-nesting:'+$group.Id)}
+  }
+}
 foreach($item in $elements){
   $old=@($before | Where-Object Id -eq $item.Id)[0]
   if($item.Kind -eq 'BoundaryEvent'){
@@ -78,11 +108,16 @@ foreach($owner in $owners){
     }
   }
 }
+$renderedGroups=[Collections.Generic.HashSet[string]]::new()
 foreach($render in $records | Where-Object tool -eq native_render_svg){
   $file=@($render.state.Result.result.Artifacts | Where-Object {$_ -like '*.svg'})[0]
   $settings=[Xml.XmlReaderSettings]::new(); $settings.DtdProcessing=[Xml.DtdProcessing]::Prohibit; $settings.XmlResolver=$null
   $reader=[Xml.XmlReader]::Create($file,$settings)
   try{$xml=[Xml.XmlDocument]::new(); $xml.Load($reader)}finally{$reader.Dispose()}
+  foreach($shape in $xml.SelectNodes("//*[local-name()='g' and contains(@class,'djs-shape') and @data-element-id]")){
+    $shapeId=$shape.GetAttribute('data-element-id')
+    if($shapeId -in @($groups|ForEach-Object Id)){[void]$renderedGroups.Add($shapeId)}
+  }
   foreach($group in $xml.SelectNodes("//*[local-name()='g' and contains(@class,'djs-connection') and @data-element-id]")){
     $id=$group.GetAttribute('data-element-id'); $flow=@($elements | Where-Object Id -eq $id)
     if($flow.Count -ne 1){throw 'SVG has an unknown or duplicate native connector identity'}
@@ -118,9 +153,10 @@ try{
   }
 }finally{$zip.Dispose()}
 if($copies -ne 1){throw 'Opaque payload occurrence count changed'}
+if($renderedGroups.Count -ne $ExpectedGroups){throw 'Native SVG does not contain every expected group identity'}
 # This is an acceptance-corpus assertion, not a production model-size restriction.
 if($nodes -ne 19 -or $routes -ne 24 -or $anchors -ne 3 -or $labels -ne 17 -or $svgEndpoints -ne 28){throw 'Incomplete authored corpus; no empty or partial audit success.'}
-$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; manualLabels=$labels; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
+$report=[ordered]@{nodes=$nodes; routes=$routes; segments=$segments; boundaryAnchors=$anchors; manualLabels=$labels; graphicalGroups=$groups.Count; renderedGroups=$renderedGroups.Count; svgEndpointPairs=$svgEndpoints; opaqueCopies=$copies; issues=@($issues); scope='Independent persisted geometry and SVG endpoint audit only; not complete rendered layout quality, desktop compatibility or full automation'}
 $report | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $Run 'partitioned-independent-geometry.json')
 $report | ConvertTo-Json -Depth 4
 if($issues.Count -ne 0){throw 'Candidate geometry audit failed; preserve the original and inspect recorded identities'}

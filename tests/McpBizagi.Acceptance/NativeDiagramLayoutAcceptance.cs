@@ -6,7 +6,7 @@ internal static class NativeDiagramLayoutAcceptance
 {
     private static string S(JsonElement e, string n) => e.GetProperty(n).GetString()!;
     public static async Task Run(string run, Func<string, Dictionary<string, object?>, Task<JsonElement>> call,
-        Func<string, string, Task<JsonElement>> wait, Action<string> exited)
+        Func<string, string, Task<JsonElement>> wait, Action<string> exited, bool includeGroups = false)
     {
         var receipts = new List<object>();
         async Task<JsonElement> Op(string tool, Dictionary<string, object?> input, string expected = "completed")
@@ -96,12 +96,33 @@ internal static class NativeDiagramLayoutAcceptance
         Edge(diagram, roots[1], roots[0], "4", "4"); seed[^1].ElementType = "MessageFlow";
         foreach (var task in seed.Where(m => m.ElementType is "UserTask" or "ManualTask" or "ServiceTask"))
             task.Style = new() { LabelBounds = new() { X = task.Geometry!.X + 5, Y = task.Geometry.Y + 10, Width = 95, Height = 35 } };
+        if (includeGroups)
+        {
+            // Groups retain graphical enclosure relationships; they never own the
+            // enclosed BPMN nodes. Include nested, per-pool, task-subset and empty enclosures.
+            foreach (var g in new[] { Bounds(20, 20, 2570, 1820, true), Bounds(20, 2020, 2570, 1820, true),
+                         Bounds(10, 10, 2590, 3840, true), Bounds(5000, 5000, 100, 100, true),
+                         Bounds(240, 100, 140, 90, true), Bounds(1590, 1120, 320, 240, true) })
+                seed.Add(new() { Operation = "create", ElementId = Guid.NewGuid().ToString(), ParentId = diagram,
+                    ElementType = "Group", Name = "Graphical enclosure Ω", Geometry = g });
+        }
         var seeded = await Op("native_mutate", new() { ["path"] = S(created, "outputArtifact"), ["expectedRevision"] = S(created, "outputRevision"), ["mutations"] = seed });
         var rich = await Op("native_presentation_apply", new() { ["path"] = S(seeded, "outputArtifact"), ["expectedRevision"] = S(seeded, "outputRevision"),
             ["changes"] = new[] { new { Action = new { DiagramId = diagram, ElementId = t1, Type = "File", Content = "action-file:Keep exact Ω.bin" }, DataBase64 = Convert.ToBase64String(new byte[] { 0, 255, 19, 28, 0, 13 }) } } });
         string path = S(rich, "outputArtifact"), revision = S(rich, "outputRevision");
         graph = rich.GetProperty("reopened").GetProperty("Elements").Deserialize<NativeElement[]>()!;
         File.WriteAllText(Path.Combine(run, "partitioned-before.json"), rich.GetProperty("reopened").GetProperty("Elements").GetRawText());
+        if (includeGroups)
+        {
+            // Native persistence permits a graphical boundary through a task.
+            // Layout must reject that ambiguous enclosure before writing a result.
+            string partialId = seed.Single(m => m.ElementType == "Group" && m.Geometry!.X == 240).ElementId;
+            var partial = await Op("native_mutate", new() { ["path"] = path, ["expectedRevision"] = revision,
+                ["mutations"] = new[] { new NativeMutation { Operation = "update", ElementId = partialId, Geometry = Bounds(260, 100, 120, 90, true) } } });
+            var denied = await Op("native_diagram_layout", new() { ["path"] = S(partial, "outputArtifact"), ["expectedRevision"] = S(partial, "outputRevision"),
+                ["layout"] = new { DiagramId = diagram, Direction = "Right" } }, "failed");
+            if (!S(denied, "Error").Contains("Group boundary cuts", StringComparison.Ordinal)) throw new InvalidDataException("Unexpected partial-group rejection.");
+        }
         var rejected = await Op("native_mutate", new() { ["path"] = path, ["expectedRevision"] = revision,
             ["mutations"] = new[] { new NativeMutation { Operation = "update", ElementId = firstPool, Geometry = Bounds(30, 30, 3000, 1800) } } }, "failed");
         if (!S(rejected, "Error").Contains("Lane partitions", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Incorrect rejection reason.");

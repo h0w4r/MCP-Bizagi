@@ -138,6 +138,11 @@ internal static class NativeDiagramPartitionPlanner
                 original: source, routeOnly: true, barriers: headers);
             Accept(routed.Where(c => c.Operation == "reconnect"));
         }
+        // Groups are graphical enclosures, not filled route obstacles or native
+        // process owners. Recalculate their bounds from the original membership.
+        var grouped = NativeDiagramGroupLayout.Calculate(source, NativeDiagramLayoutPlanner.Predict(source, updates.Values.ToArray()), diagram, context.Token);
+        Accept(grouped.Changes);
+        context.Surfaces.AddRange(grouped.Receipts);
         var uncovered = graph.Where(e => e.DiagramId == diagram && (e.Geometry != null || e.SourceId != "") && e.Kind is not "Collaboration" and not "Process" and not "Participant" && !updates.ContainsKey(e.Id)).ToArray();
         if (uncovered.Length != 0) throw new NotSupportedException("Diagram layout has no complete constraint for: " + string.Join(",", uncovered.Select(e => e.Kind + ":" + e.Id)));
         context.Pools.AddRange(evidence);

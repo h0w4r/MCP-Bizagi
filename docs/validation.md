@@ -1,5 +1,78 @@
 # Verification baselines
 
+## Graphical group layout — six-group extracted candidate, 2026-09-09 UTC
+
+Final extracted-package circuit `20260909-030451-106d71` passed **18 terminal
+operations: 14 completed, three expected failures and one observed cancellation
+followed by successful recovery**. The official-SDK client used stdio and default
+sibling-worker discovery from an extracted path containing spaces and Unicode.
+
+The extended corpus includes six native diagram-owned groups: two whole-pool
+enclosures, an outer enclosure around both, an empty group, a single-task group
+and a two-task/boundary-event subset inside a pool. Both Right and subsequent
+Down layouts preserved the original enclosed identities and all four margins.
+The independent audit checked nesting, unchanged empty bounds and **all six
+actual SVG group identities**. It also passed the existing 19-node, 24-route,
+96-segment, three-boundary, 17-label, 28-SVG-endpoint and exact opaque-file checks.
+
+The client first persisted a genuine partial-group edit through `native_mutate`.
+`native_diagram_layout` then rejected that saved file with `Group boundary cuts
+a visible root element`; the original rich input remained available for the
+successful layouts. The other expected failures were an inconsistent lane
+partition resize and an unknown diagram identity. Cancellation was requested
+after `operation_get` exposed a live placement phase at ratio zero; this does
+not assert cancellation at a specific internal solver iteration.
+
+- **36 workers / 66 observed owned processes** exited. **481 periodic desktop
+  samples** observed no owned visible window or foreground ownership.
+- Eleven successful outputs and 111 loaded vendor module contents were rehashed
+  without drift. All **414 extracted manifest files** remained unchanged.
+- The final local build passed **1,357 unit tests**, **18 package-policy tests**
+  and **eight reviewed-license tests**. The separate XML MCP circuit
+  `20260909-030440-1b24e7` passed with 48 registered tools, not 48 native gates.
+- Native transcript SHA-256:
+  `26ba99051412bd1d6a50446c5213abd6b0675a348968132118d727fc3751b10f`.
+- Private candidate ZIP SHA-256:
+  `e93c959fc37663902d753752e9109ce86186bc307c3a296317401750c6f4d80e`.
+
+This is a dirty-checkout acceptance candidate, not a replacement for the
+immutable 0.6.0-alpha.1 release. Group membership here means observed graphical
+enclosure, not BPMN execution ownership. Partial cuts or arrangements whose
+membership/nesting cannot be retained are rejected. Independent desktop
+compatibility and full Modeler automation remain unaccredited.
+
+## Native graphical group layout — source after 0.6, 2026-09-09 UTC
+
+Source circuit `20260909-025803-7d62d9` passed **16 terminal operations: 13
+completed, two expected failures and one observed cancellation with recovery**.
+It called `native_diagram_layout` through the official SDK and stdio on a real
+native corpus containing four graphical groups: one around each pool, a larger
+nested enclosure around both pools, and an empty group.
+
+The groups remained native diagram-owned `Group` artifacts. Their bounds were
+calculated from observed root/pool enclosure membership, retaining all four
+original margins. They were not converted into process owners or filled routing
+obstacles. Fresh workers and whole-archive fidelity checked the durable result.
+The independent audit verified all four enclosure identity sets, margins,
+nesting, empty bounds and the four actual native SVG group identities, alongside
+19 nodes, 24 routes, 96 segments, three boundary anchors, 17 manual labels,
+28 SVG endpoint pairs and one exact opaque file. No audit issue was reported.
+
+All **34 workers / 65 observed owned processes** exited. **509 periodic desktop
+samples** observed no owned visible window or foreground ownership. Ten output
+artifacts and 111 loaded vendor module contents were independently rehashed
+without drift. Source transcript SHA-256:
+`50276e107c7c892e63e95514e1eb38e281bbc691e06a75de16064030e6601606`.
+
+This source circuit predates the expanded six-group acceptance corpus; it is
+not evidence for that additional coverage. The group unit tests use the actual
+solver and independent geometry checks, but are not native acceptance by
+themselves. A border cutting a root shape or recalculated bounds changing the
+observed membership/nesting still requires rejection, not a partial-success
+claim. Graphical containment is not BPMN execution membership. Independent
+Modeler GUI compatibility, arbitrary group arrangements and the full automation
+objective remain open. See [the group contract](native-diagram-layout.md#graphical-group-enclosures).
+
 ## Complete represented-diagram layout — source and extracted candidate, 2026-09-09 UTC
 
 The official SDK client called the new `native_diagram_layout` tool through

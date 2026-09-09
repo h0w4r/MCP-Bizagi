@@ -30,6 +30,7 @@ public sealed partial class NativeWorkflows
             File.WriteAllText(Path.Combine(directory, "diagram-layout-fidelity.json"), JsonSerializer.Serialize(fidelity));
             if (!fidelity.Preserved) throw new InvalidDataException("Diagram layout changed unrequested native content; original retained.");
             NativeDiagramLayoutGeometry.Verify(reopened.Elements, captured.DiagramId);
+            NativeDiagramGroupLayout.Verify(before.Elements, reopened.Elements, captured.DiagramId);
             return new { before, edited, reopened, fidelity, plan, nativeSourceUnmodified = true,
                 outputArtifact = "artifact:" + id + ":edited.bpm", outputRevision = BpmnDocument.Revision(File.ReadAllBytes(output)),
                 interpretationWarning = "Experimental complete selected-diagram planning for represented pool/partition/expanded/anchor/midpoint-port surfaces. Unsupported content fails rather than receiving partial layout. Rectangular geometry checks are not glyph, rounded-curve or desktop GUI accreditation." };

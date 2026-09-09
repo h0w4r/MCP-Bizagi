@@ -2,7 +2,8 @@
 
 `native_diagram_layout` calculates a complete represented diagram on the MCP
 server. Unlike `native_surface_layout`, it coordinates visible pools, lane and
-milestone partitions, nested expanded subprocess bodies and cross-pool messages.
+milestone partitions, nested expanded subprocess bodies, graphical groups and
+cross-pool messages.
 It is an experimental source addition after the immutable 0.6.0-alpha.1 package,
 not a claim of complete Modeler or live-document automation.
 
@@ -56,6 +57,30 @@ whole-archive comparison, not just the shapes requested by the client.
 7. A separate worker reopens the output. Native graph/containment, image restart,
    entire archive fidelity and independent geometry gates must all pass.
 
+### Graphical group enclosures
+
+`NativeDiagramGroupLayout` treats native `Group` records as diagram-owned
+graphical enclosures, not filled routing obstacles or process ownership.
+It observes which root visible shapes and complete pools the original rectangle
+contains. Embedded local-coordinate children are represented by their visible
+subprocess bounds, not mistaken for global positions.
+
+After planning the enclosed elements, each nonempty group retains its original
+left, top, right and bottom margins around those elements' union. Empty groups
+retain their bounds. Nested/overlapping group relationships and enclosed identity
+sets must remain unchanged; the same checks run on the fresh native reader.
+Unrequested group text, color and metadata remain under full-archive fidelity.
+The installed adapter persists the native intrinsic expanded group and its
+derived dimensions, rather than introducing a new grouping format.
+
+A group whose border cuts through a root shape is ambiguous and explicitly
+rejected. A pool band crossing is not itself an error: graphical groups may
+enclose only a subset of a pool's activities. If recalculated rectangular bounds
+would acquire another shape or alter another group's enclosure relationship,
+the operation fails rather than silently changing the grouping. These constraints
+do not turn BPMN graphical grouping into execution semantics or prove that all
+overlapping arrangements can be laid out.
+
 No vendor binaries are redistributed, vendor library is patched, generic
 reflection tool is exposed, saved XML is rewritten, or desktop input is sent.
 This tool's routing is calculated by MSAGL and persisted by Bizagi; it must not
@@ -85,7 +110,8 @@ partial success:
 - More than 1,000 selected diagram records or subprocess nesting over 100.
 - No visible native pool, ambiguous/out-of-bounds source partition membership,
   missing geometry, duplicate identities, unresolved or cross-diagram routes.
-- Diagram-owned artifacts or other surfaces without complete movement rules.
+- Diagram-owned artifacts other than the represented graphical groups, or other
+  surfaces without complete movement rules.
 - Unknown/offset ports, or original endpoints inconsistent with their ports.
   Unspecified/zero port metadata requires a unique observed cardinal midpoint;
   the original metadata is retained rather than replaced by an invented ID.
@@ -125,3 +151,10 @@ clearance, SVG path endpoints and exact embedded bytes. Its corpus-size checks
 prevent empty or incomplete evidence from passing. These are acceptance checks,
 not runtime restrictions on operator models. Public CI does not run these
 native tests on an operator's machine or execute untrusted PR code there.
+
+The extended group corpus uses `--native --diagram-layout-groups-only` and
+`./tests/diagram-layout-audit.ps1 -Run '<printed evidence directory>' -ExpectedGroups 6`.
+It includes nested whole-pool groups, single-task and multi-task/boundary subsets,
+an empty group, and a real saved partial-group rejection. The audit checks all
+six native SVG identities, source membership, all four margins and empty bounds
+without importing the production planner.

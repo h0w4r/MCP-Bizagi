@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extend native diagram layout to graphical groups: retain original enclosure
+  membership, asymmetric margins, empty bounds and group nesting/overlap
+  relationships through native persistence and fresh-reader verification.
+  Group boundaries do not become process owners or filled routing obstacles.
+  Ambiguous cuts and accidental membership changes reject before publication.
+
 - Add `native_diagram_layout`: complete represented-diagram placement and routing
   with retained lane/milestone membership, bottom-up expanded-body sizing,
   attached-event/manual-label offsets and fixed native cardinal ports, including
