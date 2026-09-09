@@ -205,6 +205,12 @@ try
         await NativeConnectorPortAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_CONNECTOR_PORTS_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--anchored-alignment-only"))
+    {
+        if (!native) throw new ArgumentException("Anchored alignment requires --native.");
+        await NativeAnchoredAlignmentAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit);
+        Console.WriteLine("NATIVE_ANCHORED_ALIGNMENT_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--presentation-only"))
     {
         if (!native) throw new ArgumentException("Presentation acceptance requires --native.");

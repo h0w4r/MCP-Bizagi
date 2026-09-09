@@ -20,6 +20,91 @@ public sealed class NativeAlignmentTests
     ];
     private static NativeAlignmentRequest Request(string mode = "Bottom") => new() { DiagramId = Id(1), Mode = mode, ElementIds = [Id(4), Id(5)] };
 
+    private static NativeElement[] WithAnchors() => Graph().Concat(new NativeElement[]
+    {
+        new() { Id = Id(9), Kind = "BoundaryEvent", ParentId = Id(3), DiagramId = Id(1),
+            Geometry = new() { X = 59, Y = 79, Width = 22, Height = 22 }, Event = new() { Mode = "Boundary", AttachedToActivityId = Id(4), IsInterrupting = false } },
+        new() { Id = Id(10), Kind = "BoundaryEvent", ParentId = Id(3), DiagramId = Id(1),
+            Geometry = new() { X = 249, Y = 129, Width = 22, Height = 22 }, Event = new() { Mode = "Boundary", AttachedToActivityId = Id(5) } },
+        new() { Id = Id(11), Kind = "SequenceFlow", ParentId = Id(3), DiagramId = Id(1), SourceId = Id(9), TargetId = Id(6) }
+    }).ToArray();
+
+    [Fact]
+    public void HostTranslationIncludesOnlyItsMovedAttachedEvents()
+    {
+        var graph = WithAnchors(); var changes = NativeAlignmentPolicy.Expected(graph, Request());
+        Assert.Equal(2, changes.Length);
+        var boundary = changes.Single(c => c.ElementId == Id(9));
+        Assert.Equal((59d, 129d, 22d, 22d), (boundary.Geometry!.X, boundary.Geometry.Y, boundary.Geometry.Width, boundary.Geometry.Height));
+        Assert.DoesNotContain(changes, c => c.ElementId == Id(10));
+        Assert.Null(boundary.EventProperties); Assert.Null(boundary.EventPayloads);
+        Assert.False(graph.Single(e => e.Id == Id(9)).Event!.IsInterrupting);
+    }
+
+    [Fact]
+    public void BoundaryManualLabelFollowsTheSameHostDelta()
+    {
+        var graph = WithAnchors(); graph.Single(e => e.Id == Id(9)).Style = new() { LabelBounds = new() { X = 40, Y = 100, Width = 80, Height = 30 } };
+        var boundary = NativeAlignmentPolicy.Expected(graph, Request()).Single(c => c.ElementId == Id(9));
+        Assert.Equal(40, boundary.Style!.LabelBounds!.X); Assert.Equal(150, boundary.Style.LabelBounds.Y);
+        Assert.Equal(80, boundary.Style.LabelBounds.Width); Assert.Equal(30, boundary.Style.LabelBounds.Height);
+    }
+
+    [Theory]
+    [InlineData("owner")] [InlineData("diagram")] [InlineData("bounds")]
+    public void MalformedAttachedContextCannotBecomeAnImplicitMove(string defect)
+    {
+        var graph = WithAnchors(); var boundary = graph.Single(e => e.Id == Id(9));
+        if (defect == "owner") boundary.ParentId = Id(90);
+        if (defect == "diagram") boundary.DiagramId = Id(90);
+        if (defect == "bounds") boundary.Geometry!.X = double.NaN;
+        Assert.Throws<InvalidDataException>(() => NativeAlignmentPolicy.Expected(graph, Request()));
+    }
+
+    [Fact]
+    public void CallbackMayRouteAnAttachedEventButNotMoveAnotherHostsEvent()
+    {
+        var callback = JsonSerializer.Serialize(new[] { Update(Id(9), attached: Id(4)), Update(Id(11), Id(9), Id(6)) });
+        var changes = NativeAlignmentPolicy.CallbackIntent(WithAnchors(), Request(), callback);
+        Assert.Contains(changes, c => c.ElementId == Id(9) && c.Operation == "update");
+        Assert.Contains(changes, c => c.ElementId == Id(11) && c.Operation == "reconnect");
+        var unrelated = JsonSerializer.Serialize(new[] { Update(Id(10), attached: Id(5)) });
+        Assert.Throws<InvalidDataException>(() => NativeAlignmentPolicy.CallbackIntent(WithAnchors(), Request(), unrelated));
+    }
+
+    [Theory]
+    [InlineData(null)] [InlineData("")] [InlineData("00000000-0000-4000-8000-000000000005")]
+    public void CallbackCannotDetachOrReassignAnImplicitBoundary(string? attachment)
+    {
+        var callback = JsonSerializer.Serialize(new[] { Update(Id(9), attached: attachment) });
+        Assert.Throws<InvalidDataException>(() => NativeAlignmentPolicy.CallbackIntent(WithAnchors(), Request(), callback));
+    }
+
+    [Theory]
+    [InlineData("{\"sourcePort\":4,\"targetPort\":\"3\"}", "4", "3")]
+    [InlineData("{}", "", "")]
+    [InlineData("null", "", "")]
+    [InlineData("{\"sourcePort\":null,\"targetPort\":0}", "", "0")]
+    public void CallbackPortIntentIsCapturedIndependently(string graphics, string source, string target)
+    {
+        string element = JsonSerializer.Serialize(new { id = Id(8), sourceRef = Id(4), targetRef = Id(5),
+            waypoints = new[] { new { x = 120, y = 80 }, new { x = 220, y = 120 } }, graphicalElementProperties = JsonSerializer.Deserialize<JsonElement>(graphics) });
+        string callback = JsonSerializer.Serialize(new[] { new { element } });
+        var route = NativeAlignmentPolicy.CallbackIntent(WithFlow(), Request(), callback).Single(c => c.Operation == "reconnect");
+        Assert.Equal(source, route.SourcePort); Assert.Equal(target, route.TargetPort);
+    }
+
+    [Theory]
+    [InlineData("{\"sourcePort\":true}")] [InlineData("{\"sourcePort\":75}")]
+    [InlineData("{\"sourcePort\":\"04\"}")] [InlineData("{\"sourcePort\":4.0}")] [InlineData("[]")]
+    public void MalformedCallbackPortsAreNotSilentlyAccepted(string graphics)
+    {
+        string element = JsonSerializer.Serialize(new { id = Id(8), sourceRef = Id(4), targetRef = Id(5),
+            waypoints = new[] { new { x = 120, y = 80 }, new { x = 220, y = 120 } }, graphicalElementProperties = JsonSerializer.Deserialize<JsonElement>(graphics) });
+        string callback = JsonSerializer.Serialize(new[] { new { element } });
+        Assert.Throws<InvalidDataException>(() => NativeAlignmentPolicy.CallbackIntent(WithFlow(), Request(), callback));
+    }
+
     [Theory]
     [InlineData("Top", 20, 30, 220, 30)]
     [InlineData("Bottom", 20, 80, 220, 100)]
@@ -152,9 +237,9 @@ public sealed class NativeAlignmentTests
 
     private static NativeElement[] WithFlow() => Graph().Append(new NativeElement
         { Id = Id(8), Kind = "SequenceFlow", ParentId = Id(3), DiagramId = Id(1), SourceId = Id(4), TargetId = Id(5) }).ToArray();
-    private static object Update(string id, string? source = null, string? target = null, string? action = null) => new
+    private static object Update(string id, string? source = null, string? target = null, string? action = null, string? attached = null) => new
     {
-        element = JsonSerializer.Serialize(new { id, sourceRef = source, targetRef = target, waypoints = new[] { new { x = 120, y = 80 }, new { x = 220, y = 120 } } }),
+        element = JsonSerializer.Serialize(new { id, sourceRef = source, targetRef = target, attachedToRefId = attached, waypoints = new[] { new { x = 120, y = 80 }, new { x = 220, y = 120 } } }),
         changed = action, @params = new { }
     };
 

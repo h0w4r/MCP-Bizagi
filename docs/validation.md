@@ -1,5 +1,55 @@
 # Verification baselines
 
+## Host-attached native alignment — source after 0.6, 2026-09-09 UTC
+
+Final official-SDK stdio run `20260909-000654-aba082` passed **11 terminal native
+operations: ten completed and one expected direct-boundary selection failure**.
+The following host selection succeeded. No UI input or foreground takeover was
+used; the actual installed editor and native commands performed the movement.
+
+- Root Bottom and nested Right alignment preserved three attached Timer/Signal
+  events, both interruption modes, configured timer/signal payloads, dimensions,
+  exact host-relative offsets and manual-label offsets. A no-op, native save copy,
+  root/subprocess render and fresh original-source inspection completed.
+- An independent audit checked **six boundary observations, three callback/persisted
+  port observations and three native SVG endpoint pairs**. One native attachment
+  guard application prevented the nested undocking path. The opaque action file
+  remained a single byte-exact `00FF07001380` payload in the actual archive.
+- All **23 workers / 54 owned processes** exited. **381 periodic desktop samples**
+  observed no owned visible window or foreground ownership. Seven earlier output
+  artifacts, five captured inputs and 111 loaded vendor module contents were
+  rehashed without drift.
+- The full unit suite passed **1,313 tests**. Synthetic geometry/callback tests
+  cover independent attachment and port intent validation, not native execution.
+
+Transcript SHA-256:
+`ee03d250e1252f884553049cbc2b0f3f662e8767924bde5faaa7b649870ccbad`.
+Independent native receipt SHA-256:
+`82d04309e942dcf9628c2844a5f1e7cb4ec761c47c29725e124f85ed27eb9a0a`.
+
+The first nested native trial failed fresh-worker verification because the editor
+undocked the event while updating an unchanged connection. Diagnostic replay
+confirmed the extra half-size move and lost host. The fix applies an existing
+native target-docking hint before command consumption; the fidelity gate was not
+relaxed. A prior seed request also rejected an incorrectly typed timer-name
+payload; the final corpus uses the native timer-cycle contract instead.
+
+The separate existing rich-alignment regression `20260909-001223-f6e673` passed
+eight completed operations and one explicitly requested active-CEF cancellation,
+including successful recovery. All 21 workers / 43 owned processes exited;
+265 periodic samples observed no owned visible window or foreground takeover.
+Seven prior outputs, one captured input and 111 loaded vendor module contents
+were rechecked unchanged. Transcript SHA-256:
+`dce2932aca30abccb6a768d991d3ee4b7f89c36362d95d272dd89879801fa2c1`.
+The real XML/MCP circuit and 18 independent package-policy checks also passed;
+they are not counted as native acceptance or a new package release.
+
+See the [attached-event contract](native-layout.md#attached-boundary-events--source-after-06).
+This is not resized/expanded-host layout, every alignment/shape combination,
+global automatic layout, complete rendered route quality, desktop GUI
+compatibility or a new packaged release.
+
+
 ## Native connector port lifecycle — source after 0.6, 2026-09-08 UTC
 
 The official-SDK stdio circuit `20260908-233637-3d8c8f` passed **10 terminal

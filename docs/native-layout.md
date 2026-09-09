@@ -31,6 +31,53 @@ native persistence/readback, but does not invent a mutation callback. Semantic
 endpoint changes, participant reassignment, unsupported selection shapes and
 unrepresented archive losses fail the transaction rather than reduce its scope.
 
+## Attached boundary events — source after 0.6
+
+Select the **host activities**, not their boundary events. When a selected host
+moves, its existing attached boundary events now follow the same displacement.
+Their native dimensions, exact host-relative offsets, interruption flags,
+definitions, payloads and manual-label offsets remain unchanged. Unmoved hosts'
+events remain untouched. Direct selection of boundary events is still rejected
+because the installed alignment service filters those shapes; it is not silently
+accepted as a partial selection.
+
+This operation does not resize hosts or choose a new attachment side. Expanded
+host resizing and global graph layout require separate contracts. Aggregate
+mutation/callback bounds still apply to the selected and dependent elements.
+
+The host independently derives the attached-event deltas before invoking the
+editor. The worker executes the actual installed movement and connector commands.
+Both sides separately interpret callback port metadata; missing/null callback
+ports mean the native command's absent value, not permission to retain a different
+stored value. Endpoint identities and event attachment identities must not change.
+The durable graph and full native archive must then match this exact intent.
+
+An actual nested-surface trial exposed an editor command interaction: after
+moving an attached event correctly, waypoint handling interpreted its unchanged
+source as a new docking request, detached the event and shifted it by half its
+size. Fresh-worker verification rejected that result. The adapter now uses the
+installed **target-docking hint**, only for unchanged endpoints with an existing
+source host, to prevent that optional source-undocking path. It does not patch
+the vendor bundle or correct a bad archive after saving. The native route and
+movement services remain in use, with recorded command evidence.
+
+`editorPolicy.preservedBoundaryAttachments` records applications of that guard.
+The bounded attachment trace records native command transitions and explicitly
+reports truncation; diagnostic limits do not cancel a valid operation. Neither
+this trace nor a successful render proves desktop GUI compatibility or complete
+route-quality/obstacle avoidance.
+
+The independent `--anchored-alignment-only` circuit authors interrupting and
+noninterrupting Timer/Signal events with configured definitions, native ports,
+manual labels, an opaque action file, two diagrams and a nested editing surface.
+It checks root Bottom and nested Right movement, direct-boundary rejection,
+recovery, no-op save/readback and root/nested render endpoints. This corpus does
+not establish every mode/shape/offset-port combination. See [execution records](validation.md).
+
+```powershell
+dotnet run --project tests/McpBizagi.Acceptance -c Release --no-build -- . --native --anchored-alignment-only
+```
+
 ## Production MCP evidence
 
 Run `20260908-075431-883ad3` completed **13 native operations** and one expected

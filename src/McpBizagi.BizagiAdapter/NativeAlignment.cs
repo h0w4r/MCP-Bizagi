@@ -156,6 +156,7 @@ public sealed partial class NativeEngine
         var updates = JArray.Load(reader, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
         if (updates.Count > 1000) throw new InvalidDataException("Native layout callback has too many element changes.");
         var changes = new List<NativeMutation>(expected);
+        var affected = new HashSet<string>(alignment.ElementIds.Concat(expected.Select(c => c.ElementId)), StringComparer.Ordinal);
         if (updates.Count == 0) throw new InvalidDataException("Empty native editor callback.");
         var nativeType = Type("Bizagi.ProcessModeler.BusinessEntities.dll", "Bizagi.ProcessModeler.BusinessEntities.ModelerProcessEditor.BaseEditorElement");
         var elements = (IList)New(typeof(List<>).MakeGenericType(nativeType));
@@ -172,6 +173,8 @@ public sealed partial class NativeEngine
             var original = known[Text(native, "Id")];
             var dto = JObject.Parse((string)update["element"]!);
             var observation = Describe(original);
+            if (observation.Kind == "BoundaryEvent" && Text(native, "AttachedToRefId") != observation.Event?.AttachedToActivityId)
+                throw new InvalidDataException("Native layout callback changed the boundary attachment.");
             if (observation.Style?.LabelBounds is { } label && label.X == 0 && label.Y == 0 && label.Width == 0 && label.Height == 0)
             {
                 object graphics = Get(original.Value, "GraphicalProperties");
@@ -202,13 +205,17 @@ public sealed partial class NativeEngine
             }
             if (observation.Kind is "SequenceFlow" or "MessageFlow" or "Association")
             {
-                if (!alignment.ElementIds.Contains(observation.SourceId) && !alignment.ElementIds.Contains(observation.TargetId))
+                if (!affected.Contains(observation.SourceId) && !affected.Contains(observation.TargetId))
                     throw new InvalidDataException("Native layout changed an unrelated connection.");
                 changes.Add(new NativeMutation { Operation = "reconnect", ElementId = observation.Id, SourceId = observation.SourceId, TargetId = observation.TargetId,
+                    // Read the actual deserialized command properties. The host separately
+                    // parses the original callback JSON and compares the complete intent.
+                    SourcePort = Text(Get(native, "GraphicalElementProperties"), "SourcePort"),
+                    TargetPort = Text(Get(native, "GraphicalElementProperties"), "TargetPort"),
                     Points = ((JArray?)dto["waypoints"] ?? throw new InvalidDataException("Native route callback has no waypoints.")).Select(p => new NativePoint
                     { X = (double)p["x"]!, Y = (double)p["y"]! }).ToArray() });
             }
-            else if (!alignment.ElementIds.Contains(observation.Id)) throw new InvalidDataException("Native layout changed an unselected shape.");
+            else if (!affected.Contains(observation.Id)) throw new InvalidDataException("Native layout changed an unrelated shape.");
             elements.Add(native);
         }
         progress("native_editor_translate_commands");
