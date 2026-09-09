@@ -11,11 +11,12 @@ using StreamJsonRpc;
 namespace McpBizagi.Server;
 
 /// <summary>Operator-configured live endpoints. MCP callers cannot choose executable or registry paths.</summary>
-public sealed record LiveSessionOptions(string Root, string Executable)
+public sealed record LiveSessionOptions(string Root, string Executable, string OwnerExecutable = "")
 {
     public static LiveSessionOptions FromEnvironment(ServerOptions options) => new(
         Environment.GetEnvironmentVariable("MCP_BIZAGI_LIVE_ROOT") ?? Path.Combine(options.State, "live"),
-        Environment.GetEnvironmentVariable("MCP_BIZAGI_LIVE_HOST") ?? Path.Combine(AppContext.BaseDirectory, "live", "McpBizagi.LiveHost.exe"));
+        Environment.GetEnvironmentVariable("MCP_BIZAGI_LIVE_HOST") ?? Path.Combine(AppContext.BaseDirectory, "live", "McpBizagi.LiveHost.exe"),
+        Environment.GetEnvironmentVariable("MCP_BIZAGI_LIVE_OWNER") ?? Path.Combine(AppContext.BaseDirectory, "owner", "McpBizagi.LiveOwner.exe"));
 }
 
 /// <summary>A connection record is a locator, not evidence that the document is ready or the pipe belongs to it.</summary>
@@ -69,9 +70,12 @@ public sealed partial class LiveSessionClient(LiveSessionOptions live, ServerOpt
         if (actual != descriptor.ProcessId || process.HasExited) throw new InvalidOperationException("Live pipe server process does not match the pinned native editor.");
         using var rpc = new JsonRpc(pipe, pipe); rpc.StartListening();
         progress("live_connected_identity_verified");
+        // Pin the independent owner before dispatching Close. An absent PID after
+        // the fact cannot substitute for this identity or an owned-job exit journal.
+        using var owner = parameter is LiveSessionRequest { Action: "close" } ? PinCloseOwner(files, descriptor) : null;
         var invocation = rpc.InvokeWithCancellationAsync<LiveSessionReply>(method, [parameter], token);
         if (parameter is LiveSessionRequest { Action: "close" } close)
-            return await ObserveClose(close, descriptor, process, invocation, progress, token);
+            return await ObserveClose(close, descriptor, process, owner, invocation, progress, token);
         // Evidence files track actual native phases/callbacks, not an invented percentage.
         // Inactivity only disconnects our request; it never terminates the live editor.
         string previous = ""; var inactivity = Stopwatch.StartNew();

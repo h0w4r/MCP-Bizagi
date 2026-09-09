@@ -59,6 +59,8 @@ if (-not $AllowDirtyCheckout -and $provenance.dirtyCheckout) { throw 'Release ve
 if ($ExpectedCommit -and $provenance.commit -cne $ExpectedCommit) { throw 'Package source commit does not match the expected commit.' }
 foreach ($required in 'McpBizagi.Server.dll', 'McpBizagi.Server.deps.json', 'McpBizagi.Server.runtimeconfig.json',
     'worker/McpBizagi.Worker.exe', 'worker/McpBizagi.Worker.exe.config', 'worker/McpBizagi.BizagiAdapter.dll',
+    'live/McpBizagi.LiveHost.exe', 'live/McpBizagi.LiveHost.exe.config', 'live/McpBizagi.BizagiAdapter.dll',
+    'owner/McpBizagi.LiveOwner.exe', 'owner/McpBizagi.LiveOwner.dll', 'owner/McpBizagi.LiveOwner.runtimeconfig.json',
     'LICENSE', 'ATTRIBUTION.md', 'THIRD-PARTY-NOTICES.md', 'dependencies.json') {
     if (-not $expected.Contains($required)) { throw "Required distribution file is missing: $required" }
 }

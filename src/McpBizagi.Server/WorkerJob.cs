@@ -23,6 +23,12 @@ internal sealed partial class WorkerJob : IDisposable
     }
     public void Dispose() => handle.Dispose();
 
+    // Live owners use this only after their editor has already exited, so cleanup can be observed before disposing the handle.
+    public void TerminateRemaining()
+    {
+        if (!TerminateJobObject(handle, 0)) throw new Win32Exception(Marshal.GetLastPInvokeError());
+    }
+
     public int[] ProcessIds()
     {
         int capacity = 32;
@@ -90,6 +96,9 @@ internal sealed partial class WorkerJob : IDisposable
     }
     [LibraryImport("kernel32.dll", EntryPoint = "CreateJobObjectW", SetLastError = true)]
     private static partial nint CreateJobObjectW(nint attributes, nint name);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool TerminateJobObject(SafeFileHandle job, uint exitCode);
     [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetInformationJobObject(SafeFileHandle job, int informationClass, ref ExtendedLimits information, uint length);

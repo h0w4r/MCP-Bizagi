@@ -20,6 +20,15 @@ internal static class Program
         if (!Directory.Exists(root)) throw new DirectoryNotFoundException("The session owner must prepare its private directory.");
         using var diagnostics = new StreamWriter(Path.Combine(root, "live-host.log"), append: true) { AutoFlush = true };
         Console.SetOut(diagnostics); Console.SetError(diagnostics);
+        // The vendor catches this startup failure and opens a modal. Preserve the
+        // actual cause so MCP does not misreport an indefinitely initializing canvas.
+        AppDomain.CurrentDomain.FirstChanceException += (_, observed) =>
+        {
+            if (observed.Exception is ApplicationException && observed.Exception.Message == "Timeout error ocurred loading the page.")
+                try { File.WriteAllText(Path.Combine(root, "native-page-load-error.txt"), observed.Exception.ToString()); }
+                catch (IOException) { /* Diagnostics cannot replace the native failure. */ }
+                catch (UnauthorizedAccessException) { /* The editor lifetime remains independent. */ }
+        };
         try
         {
             if (args.Length != 1 || !File.Exists(args[0]) || !Path.GetExtension(args[0]).Equals(".bpm", StringComparison.OrdinalIgnoreCase))

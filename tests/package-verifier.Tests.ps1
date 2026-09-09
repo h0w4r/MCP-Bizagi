@@ -23,8 +23,11 @@ function Write-Manifest([string]$Directory) {
 function New-Fixture([string]$Name) {
     $directory = Join-Path $root $Name
     New-Item -ItemType Directory -Path (Join-Path $directory 'worker') | Out-Null
+    foreach ($subdirectory in 'live', 'owner') { New-Item -ItemType Directory -Path (Join-Path $directory $subdirectory) | Out-Null }
     foreach ($file in 'McpBizagi.Server.dll', 'McpBizagi.Server.deps.json', 'McpBizagi.Server.runtimeconfig.json',
         'worker/McpBizagi.Worker.exe', 'worker/McpBizagi.Worker.exe.config', 'worker/McpBizagi.BizagiAdapter.dll',
+        'live/McpBizagi.LiveHost.exe', 'live/McpBizagi.LiveHost.exe.config', 'live/McpBizagi.BizagiAdapter.dll',
+        'owner/McpBizagi.LiveOwner.exe', 'owner/McpBizagi.LiveOwner.dll', 'owner/McpBizagi.LiveOwner.runtimeconfig.json',
         'LICENSE', 'ATTRIBUTION.md', 'THIRD-PARTY-NOTICES.md', 'dependencies.json') {
         [IO.File]::WriteAllText((Join-Path $directory $file), 'Policy fixture only; never executed: ' + $file)
     }
@@ -51,6 +54,7 @@ Check 'changed-bytes' { param($d) Add-Content -LiteralPath (Join-Path $d 'LICENS
 Check 'extra-file' { param($d) Set-Content -LiteralPath (Join-Path $d 'extra.txt') -Value 'unexpected' }
 Check 'missing-file' { param($d) Remove-Item -LiteralPath (Join-Path $d 'LICENSE') }
 Check 'missing-required-even-with-valid-manifest' { param($d) Remove-Item -LiteralPath (Join-Path $d 'LICENSE'); Write-Manifest $d }
+Check 'missing-live-owner-even-with-valid-manifest' { param($d) Remove-Item -LiteralPath (Join-Path $d 'owner/McpBizagi.LiveOwner.exe'); Write-Manifest $d }
 Check 'duplicate-case-spelling' { param($d)
     $path = Join-Path $d 'manifest.sha256.json'; $rows = @(Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable)
     $rows += @{ path = $rows[0].path.ToUpperInvariant(); sha256 = $rows[0].sha256 }

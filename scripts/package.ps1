@@ -34,6 +34,12 @@ try {
     # Enumerating bin would also distribute unrelated stale DLLs left by local probes.
     & dotnet publish src/McpBizagi.Worker -c Release --no-restore -p:CopyOutputSymbolsToPublishDirectory=false -o $worker
     if ($LASTEXITCODE) { throw 'Worker publish failed.' }
+    & dotnet publish src/McpBizagi.LiveHost -c Release --no-restore -p:CopyOutputSymbolsToPublishDirectory=false -o (Join-Path $output 'live')
+    if ($LASTEXITCODE) { throw 'Native live companion publish failed.' }
+    # Scheduler activation requires the owner's own apphost executable. Unlike the
+    # stdio host it must not inherit a client process or require a shell launcher.
+    & dotnet publish src/McpBizagi.LiveOwner -c Release --no-restore -p:UseAppHost=true -p:CopyOutputSymbolsToPublishDirectory=false -o (Join-Path $output 'owner')
+    if ($LASTEXITCODE) { throw 'Independent live owner publish failed.' }
     # Project-reference PDBs can still be copy-local under net48. Remove only symbol
     # files from this newly created package; never clean the source build directory.
     Get-ChildItem -LiteralPath $output -Filter '*.pdb' -File -Recurse |
@@ -52,7 +58,7 @@ try {
     $downloadCache = @{}
     $inventory = [Collections.Generic.List[object]]::new()
     . (Join-Path $repo 'scripts/dependency-license.ps1')
-    foreach ($project in 'McpBizagi.Server', 'McpBizagi.Worker') {
+    foreach ($project in 'McpBizagi.Server', 'McpBizagi.Worker', 'McpBizagi.LiveHost', 'McpBizagi.LiveOwner') {
         $assets = Get-Content -LiteralPath "src/$project/obj/project.assets.json" -Raw | ConvertFrom-Json -AsHashtable
         foreach ($target in $assets.targets.Values) {
             foreach ($key in $target.Keys) {

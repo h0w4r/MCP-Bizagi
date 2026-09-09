@@ -82,9 +82,27 @@ requested. No connection failure automatically replays a write.
 
 ## Explicitly not implemented
 
-No generic AI agent framework, hosted inference dependency, network API, UI
-automation fallback or live unsaved-document synchronization is silently included.
+No generic AI agent framework, hosted inference dependency, network API or UI
+automation fallback is silently included. Managed live-document synchronization
+uses the explicit lifecycle below; it is not inferred from saved-file operations.
 Simulation, offscreen rendering, structural edits and local publication use explicit
 experimental tools with separate acceptance boundaries. Publication retains the
 installed generators and parsers. The Excel adapter excludes the native launcher's
 desktop-opening step while retaining native mapping, generation and persistence.
+
+## Independent live owner
+
+The stdio server registers an on-demand, interactive-current-user Windows task
+whose only action is the configured `McpBizagi.LiveOwner` executable. It has no
+time trigger, recurring schedule, password or elevation. The owner acquires the
+account's exclusive live slot and owns `McpBizagi.LiveHost` plus native descendants
+in a Windows job, independent of the stdio client's ancestry. A launcher crash
+does not implicitly close an already running editor.
+
+Versioned launch/start/exit journals bind session UUID, source hash, staged copy,
+executables, process IDs and creation times. The native host authenticates local
+pipe access; the MCP client also verifies the actual pipe-server process. Native
+commands execute on the real editor's STA thread after its initialization barrier.
+The owner's job-empty evidence and exact task removal complement—not replace—
+native clean-checkpoint admission and OS exit observation. See the
+[session contract](live-sessions.md) and [source acceptance](validation-live-owner.md).

@@ -7,7 +7,6 @@
     <ApplicationManifest>../McpBizagi.Worker/app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="../McpBizagi.Worker/App.config" Link="App.config" />
     <Reference Include="System.Windows.Forms" /><Reference Include="System.Security" />
     <ProjectReference Include="../McpBizagi.BizagiAdapter/McpBizagi.BizagiAdapter.csproj" />
     <PackageReference Include="StreamJsonRpc" />

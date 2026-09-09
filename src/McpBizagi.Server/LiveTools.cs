@@ -10,6 +10,12 @@ namespace McpBizagi.Server;
 [McpServerToolType]
 public sealed class LiveTools(LiveWorkflows live)
 {
+    [McpServerTool(Name = "live_open", OpenWorld = false), Description("Open an existing workspace .bpm in a dedicated visible native editor using a staged copy and an independent current-user Windows owner. Requires source SHA-256. Creates an on-demand Task Scheduler definition, no password, elevation or recurring trigger. Waits for real native readiness. Cancellation does not close the independent editor; inspect live_sessions_list before retrying launch. Poll operation_get.")]
+    public CallToolResult Open(string path, string expectedRevision) => Guard(() => live.Open(path, expectedRevision));
+
+    [McpServerTool(Name = "live_sessions_list", ReadOnly = true, Destructive = false, OpenWorld = false), Description("List retained managed session launch identities and observed lifecycle status in the configured registry. Never attach to arbitrary Modeler processes or relaunch interrupted sessions. Running process presence alone is not document readiness.")]
+    public CallToolResult Sessions() => Guard(live.ListSessions);
+
     private static CallToolResult Guard(Func<object> action)
     {
         object result; bool error = false;
@@ -44,7 +50,7 @@ public sealed class LiveTools(LiveWorkflows live)
     public CallToolResult Publish(string checkpointOperationId, string destinationPath, string expectedDestinationRevision, LiveElementPatch[] expectedChanges)
         => Guard(() => live.Publish(checkpointOperationId, destinationPath, expectedDestinationRevision, expectedChanges));
 
-    [McpServerTool(Name = "live_close", Destructive = true, OpenWorld = false), Description("Close only the managed native editor after validating a current clean checkpoint, live revision and disk SHA-256. Requires the checkpoint MCP operation ID. Refuses dirty/stale/unretained state, uses native closing and verifies actual editor process exit plus retained file hashes. Does not publish to the original, force-kill or certify owner child cleanup. Poll operation_get; reconcile interruptions instead of replaying close.")]
+    [McpServerTool(Name = "live_close", Destructive = true, OpenWorld = false), Description("Close only the managed native editor after validating a current clean checkpoint, live revision and disk SHA-256. Requires the checkpoint MCP operation ID. Refuses dirty/stale/unretained state, uses native closing and verifies actual editor exit and retained file hashes. Sessions from live_open also require independent-owner job cleanup and task removal. Does not publish to the original or force-kill the editor. Poll operation_get; reconcile interruptions instead of replaying close.")]
     public CallToolResult Close(string sessionId, string expectedRevision, string expectedDiskRevision, string checkpointOperationId) => Guard(() =>
     {
         if (!Guid.TryParseExact(checkpointOperationId, "N", out var id) || id == Guid.Empty) throw new ArgumentException("A checkpoint MCP operation ID is required.");

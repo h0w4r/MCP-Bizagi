@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Add `live_open` and `live_sessions_list` with a production independent Windows
+  owner, on-demand current-user activation, no recurring trigger or elevation,
+  owned-job cleanup and exact launch-task removal. Actual MCP process-tree death
+  preserves unsaved native edits. Guard initial form/document/script readiness;
+  retain real native page-load errors and tolerate telemetry sharing races.
+- Extend `live_close` with pinned-owner exit and native descendant cleanup proof.
+  Recover a missing MCP close observation from the independent native/owner
+  journals without replay. Include the live companion and owner in Windows
+  packaging and exercise packaged sibling discovery through the actual MCP client.
+  See [source live acceptance](docs/validation-live-owner.md).
+
 - Extend complete diagram layout with observed offset geometry verified by the
   installed native layouter before persistence. Query original and proposed
   points without model commands, retain native port IDs, and require matching

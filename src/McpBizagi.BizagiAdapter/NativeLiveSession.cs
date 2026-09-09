@@ -27,11 +27,15 @@ public sealed partial class NativeEngine
         private long epoch;
         private bool uncertain;
         private volatile bool disposed;
+        private bool nativeFormShown;
 
         internal LiveSession(NativeEngine engine, Form form, string sessionId)
         {
             if (!Guid.TryParseExact(sessionId, "D", out var id) || id == Guid.Empty) throw new ArgumentException("Invalid session identity.");
             this.engine = engine; this.form = form; this.sessionId = sessionId;
+            // Native OnLoad pumps messages while opening the document. Reentrant
+            // RPC callbacks must not evaluate or mutate a half-initialized editor.
+            form.Shown += OnNativeShown;
             manager = form.GetType().GetField("_elementManager", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(form)!;
             commandEvent = manager.GetType().GetEvent("CommandExecuted")!;
             commandHandler = Delegate.CreateDelegate(commandEvent.EventHandlerType!, this,
@@ -41,6 +45,7 @@ public sealed partial class NativeEngine
 
         // Epoch prevents ABA: changing A->B->A still invalidates an old revision.
         private void OnNativeCommand(object sender, object args) => Interlocked.Increment(ref epoch);
+        private void OnNativeShown(object sender, EventArgs args) => nativeFormShown = true;
 
         public async Task<LiveSessionReply> ExecuteAsync(LiveSessionRequest request, CancellationToken cancellation)
         {
@@ -282,6 +287,7 @@ public sealed partial class NativeEngine
                 pending.Clear();
             }
             commandEvent.RemoveEventHandler(manager, commandHandler);
+            form.Shown -= OnNativeShown;
         }
     }
 }

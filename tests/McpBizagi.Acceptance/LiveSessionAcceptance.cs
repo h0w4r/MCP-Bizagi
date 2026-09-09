@@ -1,21 +1,31 @@
 using System.Text.Json;
+using System.Diagnostics;
+using System.Security.Cryptography;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
 /// <summary>Actual stdio MCP calls into an independently launched native companion, never server implementation calls.</summary>
 internal static class LiveSessionAcceptance
 {
-    internal static async Task Run(string repo, string sessionId, string liveRoot, string run)
+    internal static async Task Run(string repo, string sessionId, string liveRoot, string run, string? managedModel = null, string? package = null)
     {
         var env = new Dictionary<string, string?>
         {
             ["MCP_BIZAGI_ROOT"] = run, ["MCP_BIZAGI_STATE"] = Path.Combine(run, "state"),
             ["MCP_BIZAGI_LIVE_ROOT"] = liveRoot, ["MCP_BIZAGI_EXPERIMENTAL_NATIVE"] = "1",
+            ["MCP_BIZAGI_LIVE_OWNER"] = Path.Combine(repo, "src", "McpBizagi.LiveOwner", "bin", "Release", "net10.0-windows", "McpBizagi.LiveOwner.exe"),
             ["MCP_BIZAGI_LIVE_HOST"] = Path.Combine(repo, "src", "McpBizagi.LiveHost", "bin", "Release", "net48", "McpBizagi.LiveHost.exe"),
             ["MCP_BIZAGI_WORKER"] = Path.Combine(repo, "src", "McpBizagi.Worker", "bin", "Release", "net48", "McpBizagi.Worker.exe")
         };
+        if (package != null)
+        {
+            // Exercise production sibling discovery, not hidden source overrides.
+            foreach (string key in new[] { "MCP_BIZAGI_LIVE_OWNER", "MCP_BIZAGI_LIVE_HOST", "MCP_BIZAGI_WORKER" })
+            { env.Remove(key); Environment.SetEnvironmentVariable(key, null, EnvironmentVariableTarget.Process); }
+        }
         StdioClientTransport Transport() => new(new StdioClientTransportOptions { Name = "MCP-Bizagi live acceptance", Command = "dotnet",
-            Arguments = [Path.Combine(repo, "src", "McpBizagi.Server", "bin", "Release", "net10.0-windows", "McpBizagi.Server.dll")], EnvironmentVariables = env });
+            Arguments = [package == null ? Path.Combine(repo, "src", "McpBizagi.Server", "bin", "Release", "net10.0-windows", "McpBizagi.Server.dll")
+                : Path.Combine(package, "McpBizagi.Server.dll")], EnvironmentVariables = env });
         var transcript = new List<object>();
         async Task<JsonElement> Call(McpClient client, string tool, Dictionary<string, object?> input, bool expectError = false)
         {
@@ -54,6 +64,17 @@ internal static class LiveSessionAcceptance
         string documentation = "Retained live documentation Ω " + Guid.NewGuid().ToString("N")[..8];
         await using (var client = await McpClient.CreateAsync(Transport()))
         {
+            if (managedModel != null)
+            {
+                string input = Path.Combine(run, "launch input Ω.bpm"); File.Copy(managedModel, input);
+                string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(input))).ToLowerInvariant();
+                var opened = await Execute(client, "live_open", new() { ["path"] = input, ["expectedRevision"] = hash });
+                sessionId = opened.GetProperty("Result").GetProperty("sessionId").GetString()!;
+                File.WriteAllText(Path.Combine(run, "managed-open.json"), opened.GetRawText());
+                var listed = await Call(client, "live_sessions_list", new());
+                if (!listed.GetProperty("sessions").EnumerateArray().Any(s => s.GetProperty("SessionId").GetString() == sessionId))
+                    throw new InvalidOperationException("The managed native launch was not recoverable from the registry.");
+            }
             await Call(client, "live_read", new() { ["sessionId"] = "../not-a-session" }, true);
             await Call(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = "not-dispatched", ["action"] = "execute" }, true);
             await Call(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = "not-dispatched", ["expectedDiskRevision"] = "bad-hash" }, true);
@@ -82,6 +103,16 @@ internal static class LiveSessionAcceptance
             var redo = Snapshot(await Execute(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(undo), ["action"] = "redo" }));
             if (Name(redo, elementId) != name) throw new InvalidOperationException("MCP native redo mismatch.");
             editedRevision = Revision(redo);
+            if (managedModel != null)
+            {
+                var capability = await Call(client, "capabilities_get", new());
+                using var host = Process.GetProcessById(capability.GetProperty("hostProcessId").GetInt32());
+                _ = host.SafeHandle;
+                if (host.Id == Environment.ProcessId || host.HasExited) throw new InvalidOperationException("Unexpected MCP test process identity.");
+                // Kill the entire actual MCP tree while native work is unsaved. The scheduler owner must not be a descendant.
+                host.Kill(entireProcessTree: true); await host.WaitForExitAsync();
+                File.WriteAllText(Path.Combine(run, "mcp-tree-terminated.json"), JsonSerializer.Serialize(new { host.Id, host.ExitCode, nativeUnsavedRevision = editedRevision }));
+            }
         }
         Console.WriteLine("FIRST_STDIO_MCP_HOST_DISPOSED_WITH_UNSAVED_NATIVE_EDIT");
         // A fresh MCP process must see the original session and retained receipt.
@@ -168,11 +199,20 @@ internal static class LiveSessionAcceptance
             closedOperationId = closed.GetProperty("OperationId").GetString()!;
             var exit = closed.GetProperty("Result").GetProperty("EditorExit");
             if (exit.GetProperty("ExitCode").GetInt32() != 0) throw new InvalidOperationException("Managed native close did not verify a normal editor exit.");
+            if (managedModel != null && !exit.GetProperty("OwnedTreeVerified").GetBoolean())
+                throw new InvalidOperationException("Managed Close did not verify independent-owner process-tree cleanup.");
             var closeReceipt = await Execute(client, "live_reconcile", new() { ["operationId"] = closed.GetProperty("OperationId").GetString() });
             if (closeReceipt.GetProperty("Result").GetProperty("receipt").GetProperty("Code").GetString() != "live_editor_exit_verified")
                 throw new InvalidOperationException("Retained close reconciliation did not work after editor exit.");
             File.WriteAllText(Path.Combine(run, "live-close-result.json"), JsonSerializer.Serialize(new { closed, closeReceipt }));
             Console.WriteLine("LIVE_CLOSE_DIRTY_AND_UNRETAINED_REJECTED_NATIVE_EXIT_RECONCILIATION_PASS");
+        }
+        if (managedModel != null)
+        {
+            // Withhold only this disposable test's MCP observer file. The native
+            // admission and independent-owner OS/job observations remain genuine.
+            string observation = Path.Combine(liveRoot, sessionId, Guid.Parse(closedOperationId).ToString("D") + ".close-exit.json");
+            File.Move(observation, observation + ".withheld-for-recovery-test");
         }
         // Neither the old MCP host nor the native process is alive: recovery must use durable exit observation only.
         await using (var client = await McpClient.CreateAsync(Transport()))
@@ -182,6 +222,19 @@ internal static class LiveSessionAcceptance
                 throw new InvalidOperationException("Restarted MCP host lost retained native exit evidence.");
             File.WriteAllText(Path.Combine(run, "live-close-restart.json"), recovered.GetRawText());
             Console.WriteLine("LIVE_CLOSE_MCP_RESTART_RECONCILIATION_PASS");
+            if (managedModel != null)
+            {
+                var listed = await Call(client, "live_sessions_list", new());
+                File.WriteAllText(Path.Combine(run, "managed-final-registry.json"), listed.GetRawText());
+                string root = Path.Combine(liveRoot, sessionId);
+                // live_close already waited for the pinned owner to finish. A missing
+                // journal now is a failure, not an unbounded polling opportunity.
+                var ownerExit = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(Path.Combine(root, "owner-exit.json")));
+                if (!ownerExit.GetProperty("AllOwnedExited").GetBoolean() || ownerExit.GetProperty("ExitCode").GetInt32() != 0)
+                    throw new InvalidOperationException("Production owner failed native process-tree cleanup.");
+                File.WriteAllText(Path.Combine(run, "managed-owner-exit.json"), ownerExit.GetRawText());
+                Console.WriteLine("MANAGED_LAUNCH_MCP_TREE_DEATH_UNSAVED_SURVIVAL_CLOSE_OWNER_CLEANUP_PASS");
+            }
         }
     }
 }

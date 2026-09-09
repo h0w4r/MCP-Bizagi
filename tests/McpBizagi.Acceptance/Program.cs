@@ -10,6 +10,13 @@ int packageArgument = Array.IndexOf(args, "--package");
 string? package = packageArgument >= 0 ? Path.GetFullPath(args[packageArgument + 1]) : null;
 string run = Path.Combine(repo, ".local", "acceptance", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..6]);
 Directory.CreateDirectory(run);
+int managedArgument = Array.IndexOf(args, "--managed-live");
+if (managedArgument >= 0)
+{
+    if (managedArgument + 1 >= args.Length) throw new ArgumentException("--managed-live requires an owned native acceptance model.");
+    await LiveSessionAcceptance.Run(repo, "", Path.Combine(run, "live-registry"), run, Path.GetFullPath(args[managedArgument + 1]), package);
+    return 0;
+}
 int liveArgument = Array.IndexOf(args, "--live-session");
 if (liveArgument >= 0)
 {

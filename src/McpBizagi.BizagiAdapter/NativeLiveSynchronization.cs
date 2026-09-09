@@ -81,6 +81,7 @@ public sealed partial class NativeEngine
         {
             var evaluation = await OnUi(() =>
             {
+                if (!nativeFormShown) throw new LiveEditorNotReadyException("native-document-load");
                 // These version-pinned fields identify the actual editor browser, not
                 // a second renderer, another tab or an arbitrary client-selected object.
                 object editor = Optional(form, "ActiveDiagramEditor") ?? throw new LiveEditorNotReadyException();
@@ -88,6 +89,12 @@ public sealed partial class NativeEngine
                 object? browser = view.GetType().GetField("_webView", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(view);
                 if (browser == null || !(bool)Get(browser, "IsBrowserInitialized") || (bool)Get(browser, "IsDisposed") || (bool)Get(browser, "Disposing"))
                     throw new LiveEditorNotReadyException();
+                // Browser initialization precedes both the native page-load event
+                // and creation of the main-frame JavaScript context. The vendor's
+                // EvaluateScript error logger can itself throw during that interval.
+                if (!(bool)view.GetType().GetField("_isPageLoaded", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(view)!)
+                    throw new LiveEditorNotReadyException("document-load");
+                if (!(bool)Get(browser, "CanExecuteJavascriptInMainFrame")) throw new LiveEditorNotReadyException("script-context");
                 return (Task<string>)Call(view, "EvaluateScript", script)!;
             }, cancellation).ConfigureAwait(false);
             string result = await evaluation.ConfigureAwait(false);

@@ -20,10 +20,11 @@ foreground-window automation, or redistributing Bizagi binaries.
 
 </div>
 
-> **Experimental—not full Modeler automation yet.** Native operations are opt-in,
+> **Experimental—bounded modeling workflows, not universal Modeler parity.** Native operations are opt-in,
 > version-gated integrations with the installed Modeler **4.3.0.008** engine.
-> An experimental stdio bridge now reaches a separately running managed live editor.
-> Independent managed launch, owner cleanup and GUI compatibility remain open.
+> Saved-file modeling and managed live-editor workflows use the real installed engine.
+> `live_open` launches a dedicated editor; unsaved work survives termination of the MCP
+> process tree. Arbitrary existing-window attachment and exhaustive GUI parity are deferred.
 >
 > **Real execution, explicit boundaries.** Native persistence, structural edits,
 > documentation, configured simulation, offscreen rendering and recovery have
@@ -104,7 +105,7 @@ every operation into a BPMN XML export.
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
 | Native Web publication | Experimental source after 0.6 | Selected root/subprocess pages, native search, byte-verified PNGs and tested embedded file; browser quality remains partial; [contract](docs/native-web-publication.md) |
 | Extended attributes and embedded files | Experimental current source | Explicit native XML, complete element values, tables and byte transactions; [contract](docs/native-attributes.md) |
-| Live unsaved Modeler sessions | Experimental source bridge | Managed companion read/property batches, native history, checkpoints, guarded publication and clean-editor close with OS exit observation; independent launch/owner cleanup remain open; [boundary](docs/live-sessions.md) |
+| Live unsaved Modeler sessions | Experimental source managed workflow | Dedicated launch/discovery, revision-guarded Name/Documentation batches, native undo/redo, checkpoints, guarded publication and owner cleanup; MCP-tree termination preserves unsaved work; [contract](docs/live-sessions.md) |
 
 The desktop GUI does not need to be controlled by this server. This does **not**
 claim Windows Service/Session 0 compatibility or universal headless support for

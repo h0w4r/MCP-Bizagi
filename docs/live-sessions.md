@@ -1,12 +1,12 @@
 # Live Modeler sessions: integration boundary
 
-**Experimental stdio MCP bridge; managed launch and release-wide live acceptance remain open.** File operations and a separately loaded native
+**Experimental managed desktop sessions; broader Modeler parity is deferred.** File operations and a separately loaded native
 model are not access to the document currently open in the desktop application.
 Unsaved edits, the editor's revision, selection and undo history belong to that
 application instance. An MCP-generated replacement file must not be described
 as a synchronized live document.
 
-## Development companion
+## Dedicated managed editor
 
 The source now contains a dedicated `McpBizagi.LiveHost` process and versioned
 `LiveSessionRequest` contracts. Its native adapter hosts the installed desktop
@@ -42,8 +42,8 @@ The source now also exposes `live_read`, `live_apply`, `live_history`,
 client exercised native unsaved editing, revision rejection, undo/redo, checkpoint
 and an independent `native_inspect` worker. Disposing the first stdio client/server
 and starting a second server preserved the same unsaved native document and its
-receipt. That does **not** accredit an automated production launcher: the test
-companion was independently launched by the engineering harness.
+receipt. These earlier tests used an engineering supervisor. The production
+launcher now has a separate acceptance circuit described below.
 
 The modern client verifies session UUID, configured executable, process start time
 and the actual named-pipe server PID before sending requests. Cancellation or
@@ -52,9 +52,7 @@ a separate receipt endpoint; it never resends the original mutation. An unknown 
 unavailable receipt is not treated as proof of no side effect. See the library's
 [disconnect semantics](https://microsoft.github.io/vs-streamjsonrpc/docs/disconnecting.html).
 
-The companion is not yet a supported launch/configuration workflow. Remaining
-integration work includes independent session ownership, owner cleanup and packaged
-lifecycle acceptance. Pending-editor coverage beyond canvas labels remains explicit, not presumed. In particular,
+Pending-editor coverage beyond canvas labels remains explicit, not presumed. In particular,
 native autosave can write a document without an MCP save request: the companion
 therefore rejects an initial document outside its owner's staging directory.
 Checkpoint validates that boundary again, including reparse points, in case another
@@ -156,12 +154,13 @@ Native CPU and journal/log activity reset a configurable inactivity window. Expi
 or cancellation stops observation, **never kills the editor** and never authorizes
 another close attempt. The exit observation is independently flushed to disk;
 `live_reconcile` can read it after both editor exit and MCP restart, without a pipe.
-If that observation is absent, reconciliation returns **unknown**, not an invented
-successful close or permission to replay it.
+If that observation and sufficient independent-owner evidence are absent,
+reconciliation returns **unknown**, not an invented success or permission to replay.
 
-The current `LiveEditorExit.OwnedTreeVerified` is explicitly false: the client proves
-the editor's OS exit, not the independent owner's descendant cleanup. Production
-owner lifecycle and packaged acceptance remain separate release requirements.
+For sessions created by `live_open`, the client also pins the independent owner,
+waits for its normal exit and validates the owner's native job-empty journal and
+launch-task removal. Only then is `LiveEditorExit.OwnedTreeVerified` true. Legacy
+engineering companions without that owner retain the narrower root-exit result.
 Native closing may call its own focus-related handlers; no blanket no-foreground
 claim follows from clean file persistence or process exit.
 
@@ -170,7 +169,84 @@ rejection, normal native closing, unchanged durable file hashes, retained exit
 reconciliation after editor exit, and the same reconciliation from a fresh MCP
 process. The dedicated editor exited with code zero; its independent engineering
 supervisor also verified all 20 observed owned processes exited. That supervisor
-evidence does not turn the still-missing production owner into an implemented one.
+evidence belongs to that earlier engineering-supervisor circuit, not the production
+owner acceptance below.
+
+## Managed launch, discovery and independent lifetime
+
+`live_open(path, expectedRevision)` opens a dedicated **visible** Modeler editor
+on a staged copy of an existing native `.bpm`. It never opens the original for
+editing. Obtain its SHA-256 through your normal file/model inspection workflow.
+For BPMN input, first use the native import workflow to produce a `.bpm`.
+
+The Windows package contains `live/McpBizagi.LiveHost.exe` and
+`owner/McpBizagi.LiveOwner.exe`. The server discovers these siblings by default.
+Source development can explicitly configure `MCP_BIZAGI_LIVE_HOST` and
+`MCP_BIZAGI_LIVE_OWNER`; these are operator configuration, never tool parameters.
+`MCP_BIZAGI_LIVE_ROOT` selects the registry, defaulting to `live` under server state.
+
+Requirements are an interactive Windows account, the installed supported Modeler,
+and access to Windows Task Scheduler. The fixed current-user task has **no time
+trigger, no password, no elevation and no recurring schedule**. On-demand activation
+keeps the owner outside the stdio server's process tree. Each owner exclusively
+leases the account's managed editor slot, owns the native descendants in a Windows
+job, and removes only its exact task definition when it exits. One managed live
+editor per account is supported initially; an existing session is not stolen.
+
+Poll `operation_get` for the open result; it contains `sessionId`, original path
+and revision, working-copy path and the actual synchronized native snapshot.
+`live_sessions_list` finds retained sessions after MCP restart or cancelled opening.
+A listed running process is **not** a readiness claim: `live_read` supplies that.
+Neither discovery nor reconciliation automatically relaunches an editor.
+
+Typical sequence:
+
+1. `live_open` with the native file path and current SHA-256.
+2. `live_read` with its session UUID; retain the returned live revision.
+3. `live_apply` with that revision and explicit element Name/Documentation changes.
+4. `live_history` for native undo/redo, always using the new current revision.
+5. `live_checkpoint` with current live and working-copy disk revisions.
+6. `live_publish` for explicit guarded publication to the original or another
+   existing destination; a checkpoint alone never publishes there.
+7. `live_close` with the clean checkpoint's live/disk revisions and operation ID.
+
+Cancelling or terminating MCP leaves the dedicated editor and unsaved work alive.
+Native autosave may still persist its staged copy. Closing the whole Windows user
+session, shutting down Windows, or externally terminating the independent owner
+is not covered by this MCP-disconnection guarantee.
+
+### Startup and recovery diagnostics
+
+Requests are not admitted during native `Form.OnLoad` message pumping: the real
+form-shown event, browser initialization, document load and JavaScript context must
+all precede the synchronization barrier. This prevents reentrant calls into a
+partially constructed editor. Native Modeler's default initial page handshake is
+12 seconds; the dedicated `live/McpBizagi.LiveHost.exe.config` sets
+`TimeElapsedWaitPage` to 120000 milliseconds. Operators can configure that handshake
+in their own host deployment without changing Bizagi's installation. It is not an
+operation-duration timeout or authority to kill an active editor.
+
+Actual startup CPU/I/O advances the configurable inactivity window. A caught native
+page-load failure is retained as `native-page-load-error.txt`, not hidden as an
+endless initializing canvas. The owner tolerates transient telemetry-file sharing
+failures without ending the editor. Inspect private session journals locally;
+they can contain paths and model information and should not be posted unredacted.
+
+If MCP disappears while observing Close, `live_reconcile` can combine the native
+close admission, the independent owner's OS/job exit evidence, matching identity,
+task removal and unchanged checkpoint hashes. A missing MCP observer file no longer
+means the result must be unknown when this stronger independent evidence exists.
+Without sufficient evidence the result remains unknown or an explicit error;
+closing or writing is never replayed to infer what happened.
+
+### Source managed-lifetime acceptance
+
+The independent stdio suite uses `--managed-live` with an operator-owned acceptance
+model. It invokes the real `live_open`, applies an unsaved native edit, terminates
+the **entire MCP process tree**, and reconnects from a new MCP process to the same
+native revision. It also exercises native history, stale/dirty rejection, checkpoint,
+fresh-worker readback, whole-archive publication fidelity and native closing.
+Release-package evidence is reported separately from source execution.
 
 ## Evidence from the installed 4.3.0.008 components
 

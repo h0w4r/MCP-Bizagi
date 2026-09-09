@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><AllowUnsafeBlocks>true</AllowUnsafeBlocks><Product>McpBizagi.LiveOwner</Product></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../McpBizagi.Core/McpBizagi.Core.csproj" />
+    <!-- Share reviewed Windows activation and job ownership, not the MCP host lifetime. -->
+    <Compile Include="../McpBizagi.Server/WorkerJob.cs" Link="WorkerJob.cs" />
+    <Compile Include="../McpBizagi.Server/LiveOwnerTask.cs" Link="LiveOwnerTask.cs" />
+  </ItemGroup>
+</Project>
