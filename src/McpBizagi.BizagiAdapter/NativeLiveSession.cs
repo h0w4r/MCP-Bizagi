@@ -75,6 +75,7 @@ public sealed partial class NativeEngine
                 if (request.Action != "read" && (uncertain || before.Revision != request.ExpectedRevision))
                     throw new InvalidOperationException(uncertain ? "A previous native operation has an uncertain result; editing is locked for investigation." : "Live revision conflict.");
                 if (request.Action == "read") return Retain(request, fingerprint, before, "completed", "live_read_completed");
+                if (request.Action == "close") return await CloseAsync(request, fingerprint, before, () => dispatched = true, cancellation).ConfigureAwait(false);
                 cancellation.ThrowIfCancellationRequested();
                 // Record intent before dispatch. A disconnected client can query the same operation ID.
                 File.WriteAllText(Path.Combine(engine.workRoot, request.OperationId + ".intent.json"), payload);

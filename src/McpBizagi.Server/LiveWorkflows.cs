@@ -7,10 +7,10 @@ namespace McpBizagi.Server;
 /// <summary>Durable MCP-to-native requests. Connection failure is not permission to repeat a mutation.</summary>
 public sealed partial class LiveWorkflows(LiveSessionClient client, ServerOptions options, Operations operations, NativeWorkflows native, LiveSessionOptions liveOptions)
 {
-    public OperationView Execute(string sessionId, string action, string revision = "", string diskRevision = "", LiveElementPatch[]? changes = null)
+    public OperationView Execute(string sessionId, string action, string revision = "", string diskRevision = "", LiveElementPatch[]? changes = null, string checkpointOperationId = "")
     {
         var request = new LiveSessionRequest { SessionId = sessionId, OperationId = Guid.NewGuid().ToString("D"), Action = action,
-            ExpectedRevision = revision, ExpectedDiskRevision = diskRevision, Changes = changes ?? [] };
+            ExpectedRevision = revision, ExpectedDiskRevision = diskRevision, Changes = changes ?? [], CheckpointOperationId = checkpointOperationId };
         LiveSessionProtocol.Validate(request);
         // Freeze a direct .NET caller's mutable array just as the native endpoint does.
         request = JsonSerializer.Deserialize<LiveSessionRequest>(JsonSerializer.Serialize(request))!;
@@ -29,7 +29,7 @@ public sealed partial class LiveWorkflows(LiveSessionClient client, ServerOption
     public OperationView Reconcile(string operationId)
     {
         var original = operations.Get(operationId);
-        if (original.Kind is not ("live_read" or "live_update" or "live_undo" or "live_redo" or "live_checkpoint") || original.State is "running" or "cancelling")
+        if (original.Kind is not ("live_read" or "live_update" or "live_undo" or "live_redo" or "live_checkpoint" or "live_close") || original.State is "running" or "cancelling")
             throw new InvalidOperationException("Reconciliation requires a terminal original live operation.");
         var request = JsonSerializer.Deserialize<LiveSessionRequest>(new WorkspaceFiles(DirectoryFor(operationId)).Read("request.json"))
             ?? throw new InvalidDataException("The original durable live request is unavailable.");
@@ -37,7 +37,8 @@ public sealed partial class LiveWorkflows(LiveSessionClient client, ServerOption
         if (request.OperationId != Guid.ParseExact(operationId, "N").ToString("D")) throw new InvalidDataException("Live journal identity mismatch.");
         return operations.Start("live_reconcile", async (id, progress, token) =>
         {
-            var receipt = await client.Receipt(request.SessionId, request.OperationId, progress, token);
+            var receipt = request.Action == "close" ? client.RetainedCloseObservation(request)
+                : await client.Receipt(request.SessionId, request.OperationId, progress, token);
             WriteEvidence(DirectoryFor(id), "reconciliation.json", new { operationId, receipt, writeReplayed = false });
             return new { originalOperationId = operationId, receipt, writeReplayed = false };
         });

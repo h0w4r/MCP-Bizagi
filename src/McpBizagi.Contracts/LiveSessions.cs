@@ -9,6 +9,7 @@ public sealed class LiveSessionRequest
     public string Action { get; set; } = "read";
     public string ExpectedRevision { get; set; } = "";
     public string ExpectedDiskRevision { get; set; } = "";
+    public string CheckpointOperationId { get; set; } = "";
     public LiveElementPatch[] Changes { get; set; } = System.Array.Empty<LiveElementPatch>();
 }
 
@@ -61,7 +62,18 @@ public sealed class LiveSessionReply
     public string Message { get; set; } = "";
     public LiveSessionSnapshot? Snapshot { get; set; }
     public LiveCheckpoint? Checkpoint { get; set; }
+    public LiveEditorExit? EditorExit { get; set; }
     public string[] Warnings { get; set; } = System.Array.Empty<string>();
+}
+
+/// <summary>Observed OS exit of the pinned editor, not a claim that a close request alone succeeded.</summary>
+public sealed class LiveEditorExit
+{
+    public int ProcessId { get; set; }
+    public System.DateTimeOffset StartedAt { get; set; }
+    public System.DateTimeOffset ObservedAt { get; set; }
+    public int ExitCode { get; set; }
+    public bool OwnedTreeVerified { get; set; }
 }
 
 /// <summary>A durable working-copy checkpoint, never an implicit replacement of the operator's original.</summary>
@@ -84,16 +96,18 @@ public static class LiveSessionProtocol
         if (request == null) throw new System.ArgumentNullException(nameof(request));
         if (request.ProtocolVersion != 1) throw new System.NotSupportedException("Unsupported live-session protocol version.");
         RequireId(request.SessionId, "SessionId"); RequireId(request.OperationId, "OperationId");
-        if (request.Action != "read" && request.Action != "update" && request.Action != "undo" && request.Action != "redo" && request.Action != "checkpoint")
+        if (request.Action != "read" && request.Action != "update" && request.Action != "undo" && request.Action != "redo" && request.Action != "checkpoint" && request.Action != "close")
             throw new System.NotSupportedException("Unsupported live-session action.");
         if (request.Action != "read" && string.IsNullOrWhiteSpace(request.ExpectedRevision))
             throw new System.ArgumentException("A live document revision is required before changing the editor.");
         if (request.ExpectedRevision == null || request.ExpectedRevision.Length > 256)
             throw new System.ArgumentException("Invalid live revision.");
-        if (request.ExpectedDiskRevision == null || (request.Action == "checkpoint"
+        if (request.ExpectedDiskRevision == null || (request.Action == "checkpoint" || request.Action == "close"
             ? request.ExpectedDiskRevision.Length != 64 || !System.Linq.Enumerable.All(request.ExpectedDiskRevision, c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))
             : request.ExpectedDiskRevision.Length != 0))
-            throw new System.ArgumentException("Only checkpoint requires an observed lowercase SHA-256 disk revision.");
+            throw new System.ArgumentException("Checkpoint and close require an observed lowercase SHA-256 disk revision.");
+        if (request.Action == "close") RequireId(request.CheckpointOperationId, "CheckpointOperationId");
+        else if (request.CheckpointOperationId != "") throw new System.ArgumentException("Only close accepts a retained checkpoint operation identity.");
         if (request.Changes == null) throw new System.ArgumentException("Changes cannot be null.");
         if (request.Action != "update" && request.Changes.Length != 0)
             throw new System.ArgumentException("Only update accepts element changes.");

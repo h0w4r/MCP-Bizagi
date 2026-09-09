@@ -70,6 +70,8 @@ public sealed partial class LiveSessionClient(LiveSessionOptions live, ServerOpt
         using var rpc = new JsonRpc(pipe, pipe); rpc.StartListening();
         progress("live_connected_identity_verified");
         var invocation = rpc.InvokeWithCancellationAsync<LiveSessionReply>(method, [parameter], token);
+        if (parameter is LiveSessionRequest { Action: "close" } close)
+            return await ObserveClose(close, descriptor, process, invocation, progress, token);
         // Evidence files track actual native phases/callbacks, not an invented percentage.
         // Inactivity only disconnects our request; it never terminates the live editor.
         string previous = ""; var inactivity = Stopwatch.StartNew();
@@ -91,10 +93,15 @@ public sealed partial class LiveSessionClient(LiveSessionOptions live, ServerOpt
                 throw new TimeoutException("No operation evidence advanced within the live inactivity window. The editor remains open; query the receipt instead of replaying the request.");
         }
         var reply = await invocation;
-        if (reply.OperationId != operationId || (reply.Snapshot != null && !sessionId.Equals(reply.Snapshot.SessionId, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidDataException("Native reply identity does not match the requested operation/session.");
+        ValidateReplyIdentity(reply, sessionId, operationId);
         progress("live_reply_received");
         return reply;
+    }
+
+    private static void ValidateReplyIdentity(LiveSessionReply reply, string sessionId, string operationId)
+    {
+        if (reply.OperationId != operationId || (reply.Snapshot != null && !sessionId.Equals(reply.Snapshot.SessionId, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidDataException("Native reply identity does not match the requested operation/session.");
     }
 
     [LibraryImport("kernel32.dll", SetLastError = true)]

@@ -47,6 +47,8 @@ internal static class LiveSessionAcceptance
         static string Name(JsonElement snapshot, string id) => snapshot.GetProperty("Elements").EnumerateArray()
             .Single(e => e.GetProperty("Id").GetString() == id).GetProperty("Name").GetString()!;
         string editedRevision, elementId, diskRevision, updateId, publicationId = "", checkpointId = "", checkpointHash = "";
+        string closeRevision = "", closeDiskRevision = "", closeCheckpointId = "";
+        string closedOperationId = "";
         string destination = Path.Combine(run, "Original model Ω.bpm");
         string name = "MCP live unsaved Ω " + Guid.NewGuid().ToString("N")[..8];
         string documentation = "Retained live documentation Ω " + Guid.NewGuid().ToString("N")[..8];
@@ -97,6 +99,9 @@ internal static class LiveSessionAcceptance
             checkpointHash = checkpoint.GetProperty("Revision").GetString()!;
             var laterUnsaved = Snapshot(await Execute(client, "live_apply", new() { ["sessionId"] = sessionId,
                 ["expectedRevision"] = Revision(Snapshot(saved)), ["changes"] = new[] { new { ElementId = elementId, Name = name + " later unsaved" } } }));
+            // A valid saved checkpoint is not permission to discard a newer dirty document.
+            await Execute(client, "live_close", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(laterUnsaved),
+                ["expectedDiskRevision"] = checkpointHash, ["checkpointOperationId"] = saved.GetProperty("OperationId").GetString() }, "failed");
             string artifact = checkpoint.GetProperty("ArtifactPath").GetString()!;
             // Workspace adoption is not publication: a private byte copy allows a
             // second real MCP tool to invoke its independent installed-engine worker.
@@ -133,7 +138,9 @@ internal static class LiveSessionAcceptance
                 throw new InvalidOperationException("Checkpoint publication altered later unsaved editor state.");
             // Undo only the acceptance edit after proving publication did not consume it, then retain a clean disposable working copy.
             var restored = Snapshot(await Execute(client, "live_history", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(stillUnsaved), ["action"] = "undo" }));
-            await Execute(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(restored), ["expectedDiskRevision"] = checkpointHash });
+            var finalCheckpoint = await Execute(client, "live_checkpoint", new() { ["sessionId"] = sessionId, ["expectedRevision"] = Revision(restored), ["expectedDiskRevision"] = checkpointHash });
+            closeRevision = Revision(Snapshot(finalCheckpoint)); closeDiskRevision = Snapshot(finalCheckpoint).GetProperty("DiskRevision").GetString()!;
+            closeCheckpointId = finalCheckpoint.GetProperty("OperationId").GetString()!;
             File.WriteAllText(Path.Combine(run, "live-mcp-result.json"), JsonSerializer.Serialize(new { sessionId, elementId, name,
                 documentation, saved, readback, fidelity, publication, laterUnsavedPreserved = true, stdioRestartPreservedUnsaved = true, originalDestinationPublished = true, managedLaunchAccredited = false }));
             Console.WriteLine("LIVE_STDIO_MCP_EDIT_HISTORY_RESTART_RECEIPT_CHECKPOINT_PUBLICATION_PASS");
@@ -154,6 +161,27 @@ internal static class LiveSessionAcceptance
             if (!recovered.GetProperty("Result").GetProperty("destinationPublished").GetBoolean()) throw new InvalidOperationException("Native receipt fallback did not publish the retained checkpoint.");
             File.WriteAllText(Path.Combine(run, "live-publication-native-receipt.json"), recovered.GetRawText());
             Console.WriteLine("LIVE_PUBLICATION_NATIVE_RECEIPT_FALLBACK_PASS");
+            await Execute(client, "live_close", new() { ["sessionId"] = sessionId, ["expectedRevision"] = closeRevision,
+                ["expectedDiskRevision"] = closeDiskRevision, ["checkpointOperationId"] = updateId }, "failed");
+            var closed = await Execute(client, "live_close", new() { ["sessionId"] = sessionId, ["expectedRevision"] = closeRevision,
+                ["expectedDiskRevision"] = closeDiskRevision, ["checkpointOperationId"] = closeCheckpointId });
+            closedOperationId = closed.GetProperty("OperationId").GetString()!;
+            var exit = closed.GetProperty("Result").GetProperty("EditorExit");
+            if (exit.GetProperty("ExitCode").GetInt32() != 0) throw new InvalidOperationException("Managed native close did not verify a normal editor exit.");
+            var closeReceipt = await Execute(client, "live_reconcile", new() { ["operationId"] = closed.GetProperty("OperationId").GetString() });
+            if (closeReceipt.GetProperty("Result").GetProperty("receipt").GetProperty("Code").GetString() != "live_editor_exit_verified")
+                throw new InvalidOperationException("Retained close reconciliation did not work after editor exit.");
+            File.WriteAllText(Path.Combine(run, "live-close-result.json"), JsonSerializer.Serialize(new { closed, closeReceipt }));
+            Console.WriteLine("LIVE_CLOSE_DIRTY_AND_UNRETAINED_REJECTED_NATIVE_EXIT_RECONCILIATION_PASS");
+        }
+        // Neither the old MCP host nor the native process is alive: recovery must use durable exit observation only.
+        await using (var client = await McpClient.CreateAsync(Transport()))
+        {
+            var recovered = await Execute(client, "live_reconcile", new() { ["operationId"] = closedOperationId });
+            if (recovered.GetProperty("Result").GetProperty("receipt").GetProperty("EditorExit").GetProperty("ExitCode").GetInt32() != 0)
+                throw new InvalidOperationException("Restarted MCP host lost retained native exit evidence.");
+            File.WriteAllText(Path.Combine(run, "live-close-restart.json"), recovered.GetRawText());
+            Console.WriteLine("LIVE_CLOSE_MCP_RESTART_RECONCILIATION_PASS");
         }
     }
 }

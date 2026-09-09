@@ -18,7 +18,7 @@ public sealed class LiveSessionProtocolTests
     public void UnimplementedOrArbitraryCommandsAreRejected(string action) => Assert.Throws<NotSupportedException>(() => LiveSessionProtocol.Validate(Request(action)));
 
     [Theory]
-    [InlineData("update")][InlineData("undo")][InlineData("redo")][InlineData("checkpoint")]
+    [InlineData("update")][InlineData("undo")][InlineData("redo")][InlineData("checkpoint")][InlineData("close")]
     public void ChangesRequireAnObservedRevision(string action)
     {
         var request = Request(action); request.ExpectedRevision = "";
@@ -94,6 +94,22 @@ public sealed class LiveSessionProtocolTests
         request.ExpectedDiskRevision = new string('a', 64);
         LiveSessionProtocol.Validate(request);
         request.ExpectedRevision = "";
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+    }
+
+    [Fact]
+    public void CloseRequiresRetainedCheckpointIdentityAndBothRevisions()
+    {
+        var request = Request("close"); request.ExpectedDiskRevision = new string('a', 64);
+        Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+        request.CheckpointOperationId = Guid.NewGuid().ToString("D"); LiveSessionProtocol.Validate(request);
+        request.ExpectedDiskRevision = ""; Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
+    }
+
+    [Fact]
+    public void OtherActionsCannotSmuggleClosePreconditions()
+    {
+        var request = Request(); request.CheckpointOperationId = Guid.NewGuid().ToString("D");
         Assert.Throws<ArgumentException>(() => LiveSessionProtocol.Validate(request));
     }
 

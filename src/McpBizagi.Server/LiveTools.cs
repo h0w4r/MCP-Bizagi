@@ -37,10 +37,17 @@ public sealed class LiveTools(LiveWorkflows live)
     public CallToolResult Checkpoint(string sessionId, string expectedRevision, string expectedDiskRevision)
         => Guard(() => live.Execute(sessionId, "checkpoint", expectedRevision, expectedDiskRevision));
 
-    [McpServerTool(Name = "live_reconcile", Destructive = false, OpenWorld = false), Description("Query the native retained receipt of a terminal live operation after cancellation, disconnect or MCP restart. Never dispatches the original request again. An unknown receipt is not proof that a write did not happen. The same native session must still be running. Poll operation_get.")]
+    [McpServerTool(Name = "live_reconcile", Destructive = false, OpenWorld = false), Description("Query the retained receipt of a terminal live operation after cancellation, disconnect or MCP restart. Never dispatches the original request again. An unknown receipt is not proof that an action did not happen. Editor operations require the same running session; close uses the durable OS exit observation without a live pipe. Poll operation_get.")]
     public CallToolResult Reconcile(string operationId) => Guard(() => live.Reconcile(operationId));
 
     [McpServerTool(Name = "live_publish", Destructive = true, OpenWorld = false), Description("Publish an exact retained native checkpoint to an existing workspace .bpm using its expected destination SHA-256. Supply the complete expected Name/Documentation differences from that destination; empty changes requires semantic equivalence. Rejects unexplained whole-archive differences, preserves a backup, and verifies through fresh native readers. Never changes the live editor or publishes later unsaved edits. Poll operation_get; after interruption use native_commit_reconcile, not another write.")]
     public CallToolResult Publish(string checkpointOperationId, string destinationPath, string expectedDestinationRevision, LiveElementPatch[] expectedChanges)
         => Guard(() => live.Publish(checkpointOperationId, destinationPath, expectedDestinationRevision, expectedChanges));
+
+    [McpServerTool(Name = "live_close", Destructive = true, OpenWorld = false), Description("Close only the managed native editor after validating a current clean checkpoint, live revision and disk SHA-256. Requires the checkpoint MCP operation ID. Refuses dirty/stale/unretained state, uses native closing and verifies actual editor process exit plus retained file hashes. Does not publish to the original, force-kill or certify owner child cleanup. Poll operation_get; reconcile interruptions instead of replaying close.")]
+    public CallToolResult Close(string sessionId, string expectedRevision, string expectedDiskRevision, string checkpointOperationId) => Guard(() =>
+    {
+        if (!Guid.TryParseExact(checkpointOperationId, "N", out var id) || id == Guid.Empty) throw new ArgumentException("A checkpoint MCP operation ID is required.");
+        return live.Execute(sessionId, "close", expectedRevision, expectedDiskRevision, checkpointOperationId: id.ToString("D"));
+    });
 }

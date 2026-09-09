@@ -38,7 +38,7 @@ container passed whole-archive fidelity comparison. The saved dedicated editor a
 closed normally. Checkpoint alone never publishes to an operator's original file.
 
 The source now also exposes `live_read`, `live_apply`, `live_history`,
-`live_checkpoint`, `live_publish` and `live_reconcile` through the official MCP SDK. A real stdio
+`live_checkpoint`, `live_publish`, `live_close` and `live_reconcile` through the official MCP SDK. A real stdio
 client exercised native unsaved editing, revision rejection, undo/redo, checkpoint
 and an independent `native_inspect` worker. Disposing the first stdio client/server
 and starting a second server preserved the same unsaved native document and its
@@ -53,7 +53,7 @@ unavailable receipt is not treated as proof of no side effect. See the library's
 [disconnect semantics](https://microsoft.github.io/vs-streamjsonrpc/docs/disconnecting.html).
 
 The companion is not yet a supported launch/configuration workflow. Remaining
-integration work includes independent session ownership, managed close and packaged
+integration work includes independent session ownership, owner cleanup and packaged
 lifecycle acceptance. Pending-editor coverage beyond canvas labels remains explicit, not presumed. In particular,
 native autosave can write a document without an MCP save request: the companion
 therefore rejects an initial document outside its owner's staging directory.
@@ -135,7 +135,42 @@ The independent stdio acceptance client exercised installed Modeler **4.3.0.008*
 
 These are source integration results, not packaged lifecycle or universal GUI
 compatibility claims. The dedicated test editor closed normally afterward; automatic
-production ownership and managed-close tools still require their own acceptance.
+production ownership and packaged lifecycle still require their own acceptance.
+
+## Close only a durably retained clean editor
+
+`live_close` requires the session UUID, current live revision, current working-copy
+SHA-256 and the MCP operation ID of its matching native checkpoint. The native
+adapter synchronizes pending canvas labels, rechecks the document on its UI thread,
+and rejects dirty state, stale revisions, absent checkpoints or changed artifacts.
+It does not silently save, discard unsaved work or publish to the original.
+
+The bridge uses the installed application's normal `Form.Close` lifecycle, not
+clicks, synthetic input, forced process termination or direct form disposal. Native
+closing can cancel; see [the Windows Forms contract](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.form.close).
+A flushed **closing** receipt means admission only. The MCP client pins the actual
+editor process and reports completion only after observing exit code zero and
+rechecking working-copy/checkpoint hashes. A broken RPC pipe alone is not success.
+
+Native CPU and journal/log activity reset a configurable inactivity window. Expiry
+or cancellation stops observation, **never kills the editor** and never authorizes
+another close attempt. The exit observation is independently flushed to disk;
+`live_reconcile` can read it after both editor exit and MCP restart, without a pipe.
+If that observation is absent, reconciliation returns **unknown**, not an invented
+successful close or permission to replay it.
+
+The current `LiveEditorExit.OwnedTreeVerified` is explicitly false: the client proves
+the editor's OS exit, not the independent owner's descendant cleanup. Production
+owner lifecycle and packaged acceptance remain separate release requirements.
+Native closing may call its own focus-related handlers; no blanket no-foreground
+claim follows from clean file persistence or process exit.
+
+The source stdio acceptance suite exercised dirty-document and wrong-checkpoint
+rejection, normal native closing, unchanged durable file hashes, retained exit
+reconciliation after editor exit, and the same reconciliation from a fresh MCP
+process. The dedicated editor exited with code zero; its independent engineering
+supervisor also verified all 20 observed owned processes exited. That supervisor
+evidence does not turn the still-missing production owner into an implemented one.
 
 ## Evidence from the installed 4.3.0.008 components
 
