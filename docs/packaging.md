@@ -9,6 +9,12 @@ has a [twenty-circuit extracted-package verification record](validation-package-
 Its ZIP and checksum are immutable; building a newer checkout creates a different
 candidate that requires its own evidence.
 
+The consolidated [0.7.0-alpha.1 package](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.7.0-alpha.1)
+includes the independent live owner and companion. Its
+[six-circuit verification record](validation-package-0.7.md) covers the extracted
+artifact, unsaved recovery after whole MCP-tree termination, saved modeling and
+startup failure/recovery. All 541 manifest entries remained unchanged.
+
 ## Build and inspect
 
 Run `scripts/package.ps1` from a reviewed checkout. The script uses locked restore,
