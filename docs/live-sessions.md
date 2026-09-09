@@ -193,6 +193,12 @@ leases the account's managed editor slot, owns the native descendants in a Windo
 job, and removes only its exact task definition when it exits. One managed live
 editor per account is supported initially; an existing session is not stolen.
 
+Activation explicitly uses **normal interactive scheduling priority**, not the
+scheduler's default background priority. This is not privilege elevation or a
+high/realtime priority request. Startup read-only probe connection failures can be
+retried while actual native activity advances; mutations and launches are never
+replayed by that readiness loop.
+
 Poll `operation_get` for the open result; it contains `sessionId`, original path
 and revision, working-copy path and the actual synchronized native snapshot.
 `live_sessions_list` finds retained sessions after MCP restart or cancelled opening.

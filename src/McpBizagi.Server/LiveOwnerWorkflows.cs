@@ -60,22 +60,36 @@ public sealed partial class LiveWorkflows
                 throw new IOException("Native page-load handshake failed; the dedicated editor may show an error dialog. Inspect native-page-load-error.txt; no live mutation was dispatched.");
             if (File.Exists(files.Resolve("owner-error.json"))) throw new IOException("Live owner failed: " + System.Text.Encoding.UTF8.GetString(files.Read("owner-error.json")));
             if (File.Exists(files.Resolve("owner-exit.json"))) throw new IOException("Native editor exited before readiness; inspect retained owner evidence.");
-            string activity = "";
+            string activity = lastActivity;
             if (File.Exists(files.Resolve("owner-activity.json")))
             {
                 // Atomic telemetry replacement is allowed while this read holds an old complete file handle.
-                using var stream = new FileStream(files.Resolve("owner-activity.json"), FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
-                using var json = JsonDocument.Parse(stream);
-                activity = json.RootElement.GetProperty("cpu") + ":" + json.RootElement.GetProperty("io");
+                try
+                {
+                    using var stream = new FileStream(files.Resolve("owner-activity.json"), FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+                    using var json = JsonDocument.Parse(stream);
+                    activity = json.RootElement.GetProperty("cpu") + ":" + json.RootElement.GetProperty("io");
+                }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                { progress("live_startup_telemetry_temporarily_unavailable"); } // Failure does not count as activity.
             }
             if (activity != lastActivity) { lastActivity = activity; inactivity.Restart(); progress("live_native_startup_activity"); }
             if (File.Exists(files.Resolve("connection.json")))
             {
                 var probe = new LiveSessionRequest { SessionId = request.SessionId, OperationId = Guid.NewGuid().ToString("D"), Action = "read" };
-                var reply = await client.Execute(probe, progress, token);
-                if (reply.State == "completed" && reply.Snapshot != null) return reply.Snapshot;
-                if (reply.Code != "live_editor_not_ready") throw new InvalidOperationException(reply.Code + ": " + reply.Message);
-                progress("live_native_editor_initializing");
+                try
+                {
+                    var reply = await client.Execute(probe, progress, token);
+                    if (reply.State == "completed" && reply.Snapshot != null) return reply.Snapshot;
+                    if (reply.Code != "live_editor_not_ready") throw new InvalidOperationException(reply.Code + ": " + reply.Message);
+                    progress("live_native_editor_initializing");
+                }
+                catch (TimeoutException) when (!token.IsCancellationRequested)
+                {
+                    // Only this startup read probe is retried, never a mutation or
+                    // a launch. Actual owner CPU/I/O still governs the inactivity window.
+                    progress("live_startup_read_probe_waiting");
+                }
             }
             if (inactivity.Elapsed.TotalSeconds > options.InactivitySeconds)
                 throw new TimeoutException("Native startup made no observable progress. The independent owner was not stopped; inspect live_sessions_list before any new launch.");

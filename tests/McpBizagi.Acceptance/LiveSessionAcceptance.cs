@@ -71,6 +71,16 @@ internal static class LiveSessionAcceptance
                 var opened = await Execute(client, "live_open", new() { ["path"] = input, ["expectedRevision"] = hash });
                 sessionId = opened.GetProperty("Result").GetProperty("sessionId").GetString()!;
                 File.WriteAllText(Path.Combine(run, "managed-open.json"), opened.GetRawText());
+                var identities = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(Path.Combine(liveRoot, sessionId, "owner-started.json")));
+                foreach (string role in new[] { "Owner", "Editor" })
+                {
+                    var identity = identities.GetProperty(role);
+                    using var process = Process.GetProcessById(identity.GetProperty("ProcessId").GetInt32()); _ = process.SafeHandle;
+                    if (process.StartTime.ToUniversalTime() != identity.GetProperty("StartedAt").GetDateTimeOffset().UtcDateTime ||
+                        process.PriorityClass != ProcessPriorityClass.Normal)
+                        throw new InvalidOperationException("Managed interactive process identity or normal scheduling priority mismatch: " + role);
+                }
+                File.WriteAllText(Path.Combine(run, "managed-scheduling.json"), JsonSerializer.Serialize(new { normalPriorityVerified = true, identities }));
                 var listed = await Call(client, "live_sessions_list", new());
                 if (!listed.GetProperty("sessions").EnumerateArray().Any(s => s.GetProperty("SessionId").GetString() == sessionId))
                     throw new InvalidOperationException("The managed native launch was not recoverable from the registry.");

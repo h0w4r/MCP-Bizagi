@@ -65,7 +65,12 @@ public sealed partial class LiveSessionClient(LiveSessionOptions live, ServerOpt
         progress("live_connecting");
         using var pipe = new NamedPipeClientStream(".", descriptor.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
         using (var connection = CancellationTokenSource.CreateLinkedTokenSource(token))
-        { connection.CancelAfter(TimeSpan.FromSeconds(options.ConnectionSeconds)); await pipe.ConnectAsync(connection.Token); }
+        {
+            connection.CancelAfter(TimeSpan.FromSeconds(options.ConnectionSeconds));
+            try { await pipe.ConnectAsync(connection.Token); }
+            catch (OperationCanceledException error) when (!token.IsCancellationRequested)
+            { throw new TimeoutException("Initial live pipe handshake expired before request dispatch; the independent editor was not stopped.", error); }
+        }
         if (GetNamedPipeServerProcessId(pipe.SafePipeHandle, out uint actual) == 0) throw new Win32Exception(Marshal.GetLastPInvokeError());
         if (actual != descriptor.ProcessId || process.HasExited) throw new InvalidOperationException("Live pipe server process does not match the pinned native editor.");
         using var rpc = new JsonRpc(pipe, pipe); rpc.StartListening();

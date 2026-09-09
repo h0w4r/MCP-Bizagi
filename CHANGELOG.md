@@ -12,6 +12,10 @@
   journals without replay. Include the live companion and owner in Windows
   packaging and exercise packaged sibling discovery through the actual MCP client.
   See [source live acceptance](docs/validation-live-owner.md).
+- Set normal interactive scheduling priority for the live owner rather than
+  Task Scheduler's default background priority. Classify initial live-pipe
+  deadlines explicitly and retry only startup read probes while real native
+  activity continues. Preserve failed-candidate diagnostics and unchanged models.
 
 - Extend complete diagram layout with observed offset geometry verified by the
   installed native layouter before persistence. Query original and proposed

@@ -21,6 +21,9 @@ internal static class LiveOwnerTask
         principal.UserId = request.UserSid; principal.LogonType = 3; principal.RunLevel = 0;
         dynamic settings = objects.Keep(definition.Settings);
         settings.Enabled = true; settings.AllowDemandStart = true;
+        // Scheduler defaults to background priority 7. A real interactive editor
+        // and Chromium need ordinary priority, not starvation under desktop load.
+        settings.Priority = 4; // NORMAL_PRIORITY_CLASS; never elevated/high priority.
         settings.ExecutionTimeLimit = "PT0S"; // Override the scheduler's default 72-hour termination.
         settings.DisallowStartIfOnBatteries = false; settings.StopIfGoingOnBatteries = false;
         settings.RunOnlyIfIdle = false; settings.RunOnlyIfNetworkAvailable = false;

@@ -5,6 +5,9 @@
 | `MCP_BIZAGI_ROOT` | Allowed model workspace | LocalAppData/MCP-Bizagi/workspace |
 | `MCP_BIZAGI_STATE` | Private journals and native artifacts | LocalAppData/MCP-Bizagi/state |
 | `MCP_BIZAGI_WORKER` | Absolute worker executable path | worker/McpBizagi.Worker.exe beside server |
+| `MCP_BIZAGI_LIVE_HOST` | Dedicated native editor executable | live/McpBizagi.LiveHost.exe beside server |
+| `MCP_BIZAGI_LIVE_OWNER` | Independent Windows owner executable | owner/McpBizagi.LiveOwner.exe beside server |
+| `MCP_BIZAGI_LIVE_ROOT` | Managed session registry and staged models | live beneath MCP_BIZAGI_STATE |
 | `BIZAGI_MODELER_PATH` | Modeler installation directory | Windows installed-app registry discovery |
 | `MCP_BIZAGI_EXPERIMENTAL_NATIVE` | `1` explicitly enables native diagnostics | Disabled |
 | `MCP_BIZAGI_INACTIVITY_SECONDS` | No-activity window, minimum 10 seconds | 120 |
@@ -16,10 +19,19 @@ Relative model paths are resolved within `MCP_BIZAGI_ROOT`. Traversal, alternate
 data streams, and existing reparse points are rejected. Configuration is read
 when the server starts; tools cannot change it.
 
-Only one live host may own a state directory. A second host is rejected before
+Only one MCP server may own a state directory. A second server is rejected before
 it can rewrite active operation journals. Separate clients can use distinct
 state directories. Completed native artifact references can cross from private
 state into later native operations without widening ordinary workspace access.
+
+Managed live editors are independent of MCP server connections. One managed
+editor per Windows account is supported initially, even across different registry
+roots. `live_open` needs an interactive session and access to on-demand Task
+Scheduler activation; it never requests a password or elevation. Its original
+model is copied before opening. See [live sessions](live-sessions.md) for lifecycle,
+startup-handshake configuration and no-replay recovery. Native closing allows
+at least 15 seconds for descendant cleanup when necessary, after the editor root
+has ended; this is not a lifetime limit or permission to discard unsaved work.
 
 The installed settings provider derives its application namespace from the
 worker executable metadata. Actual paths are checked before service resolution:

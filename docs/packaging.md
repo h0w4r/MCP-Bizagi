@@ -24,6 +24,8 @@ The package contains:
 
 - `McpBizagi.Server.dll`, its dependency manifest, and host dependencies.
 - `worker/McpBizagi.Worker.exe`, its own configuration, adapter, and dependencies.
+- `live/McpBizagi.LiveHost.exe`, dedicated native-editor configuration and dependencies.
+- `owner/McpBizagi.LiveOwner.exe`, the independent on-demand Windows owner and dependencies.
 - Project documentation, example BPMN, project license, attribution, and notices.
 - `licenses/` with actual third-party texts and NuGet metadata.
 - `dependencies.json` with package identities, hashes, and license sources.

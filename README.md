@@ -125,7 +125,7 @@ integration evidence before native writes are enabled. Bizagi is not bundled.
 ## Quick start
 
 **Use a package:** download the ZIP and checksum from the
-[experimental release](https://github.com/h0w4r/MCP-Bizagi/releases/tag/v0.6.0-alpha.1),
+[experimental releases](https://github.com/h0w4r/MCP-Bizagi/releases),
 verify SHA-256, then follow [packaged configuration](docs/packaging.md#verify-the-packaged-server).
 The package requires the .NET 10 runtime but not the SDK.
 
@@ -149,7 +149,9 @@ Configure your MCP client's stdio server entry using absolute paths:
       "args": ["C:/Projects/MCP-Bizagi/src/McpBizagi.Server/bin/Release/net10.0-windows/McpBizagi.Server.dll"],
       "env": {
         "MCP_BIZAGI_ROOT": "C:/Processes",
-        "MCP_BIZAGI_WORKER": "C:/Projects/MCP-Bizagi/src/McpBizagi.Worker/bin/Release/net48/McpBizagi.Worker.exe"
+        "MCP_BIZAGI_WORKER": "C:/Projects/MCP-Bizagi/src/McpBizagi.Worker/bin/Release/net48/McpBizagi.Worker.exe",
+        "MCP_BIZAGI_LIVE_HOST": "C:/Projects/MCP-Bizagi/src/McpBizagi.LiveHost/bin/Release/net48/McpBizagi.LiveHost.exe",
+        "MCP_BIZAGI_LIVE_OWNER": "C:/Projects/MCP-Bizagi/src/McpBizagi.LiveOwner/bin/Release/net10.0-windows/McpBizagi.LiveOwner.exe"
       }
     }
   }
@@ -181,6 +183,13 @@ For an existing `.bpm`, call `native_inspect`, retain its `sourceRevision` and
 native element IDs, then pass a name-change batch to `native_apply_changes`.
 The result is a **new artifact**, not an overwrite of the input. BPMN IDs and
 native IDs are not interchangeable. See the [tool reference](docs/tools.md).
+
+For the dedicated live editor, call `live_open` with the native model's path and
+current SHA-256. Then use its session UUID for `live_read`, revision-guarded
+`live_apply`, native history, checkpoint and explicit publication/close. The
+packaged server discovers its live companion and independent owner automatically;
+the executable overrides above are for source builds. See the
+[live-session workflow and limits](docs/live-sessions.md).
 
 Use `nativeArtifact` / `outputArtifact` references to feed generated models into
 the next native tool, even when private state is outside the model workspace.
