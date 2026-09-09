@@ -96,7 +96,11 @@ public sealed partial class NativeEngine
             "Bizagi.ProcessModeler.Persistence.Preferences.Providers.UserSettingsProvider");
         localSettings = (string)application.GetProperty("LocalSettingsPath")!.GetValue(null)!;
         string roaming = (string)application.GetProperty("RoamingSettingsPath")!.GetValue(null)!;
-        string Expected(Environment.SpecialFolder folder) => Path.Combine(Environment.GetFolderPath(folder), "h0w4r", "McpBizagi.Worker");
+        var entry = System.Reflection.Assembly.GetEntryAssembly();
+        string product = NativeSettingsIdentity.RequireProduct(entry?.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company,
+            entry?.GetCustomAttribute<AssemblyProductAttribute>()?.Product);
+        // A long-lived desktop session must not hold the disposable worker's preference lease.
+        string Expected(Environment.SpecialFolder folder) => Path.Combine(Environment.GetFolderPath(folder), "h0w4r", product);
         if (!string.Equals(localSettings, Expected(Environment.SpecialFolder.LocalApplicationData), StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(roaming, Expected(Environment.SpecialFolder.ApplicationData), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Native settings escaped the dedicated MCP worker application namespace.");

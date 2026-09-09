@@ -1,10 +1,32 @@
 # Live Modeler sessions: integration boundary
 
-**Not implemented or accredited.** File operations and a separately loaded native
+**Not exposed or accredited as a public MCP capability.** File operations and a separately loaded native
 model are not access to the document currently open in the desktop application.
 Unsaved edits, the editor's revision, selection and undo history belong to that
 application instance. An MCP-generated replacement file must not be described
 as a synchronized live document.
+
+## Development companion
+
+The source now contains a dedicated `McpBizagi.LiveHost` process and versioned
+`LiveSessionRequest` contracts. Its native adapter hosts the installed desktop
+editor, dispatches explicit property batches through the native command manager,
+and retains operation receipts across pipe reconnects. Its preferences are separate
+from both the operator's Modeler preferences and disposable native workers.
+
+Engineering tests have exercised actual in-memory editing, stale-revision rejection,
+native undo/redo callbacks and receipt replay over the companion's named pipe.
+These are **native-bridge tests, not the public MCP acceptance gate**. The earlier
+prototype also exercised native saving and fresh-process readback; its direct save
+path is deliberately not exposed in the source companion.
+
+The companion is not yet a supported launch/configuration workflow. Remaining
+integration work includes independent session ownership, complete pending-editor
+synchronization, transactional saving and the real stdio MCP circuit. In particular,
+native autosave can write a document without an MCP save request: the companion
+therefore rejects an initial document outside its owner's staging directory.
+Opening an arbitrary existing `BizagiModeler.exe` process is not implemented by
+this managed-companion route. Do not infer that ability from process discovery.
 
 ## Evidence from the installed 4.3.0.008 components
 

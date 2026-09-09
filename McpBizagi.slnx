@@ -3,6 +3,7 @@
     <Project Path="src/McpBizagi.BizagiAdapter/McpBizagi.BizagiAdapter.csproj" />
     <Project Path="src/McpBizagi.Contracts/McpBizagi.Contracts.csproj" />
     <Project Path="src/McpBizagi.Core/McpBizagi.Core.csproj" />
+    <Project Path="src/McpBizagi.LiveHost/McpBizagi.LiveHost.csproj" />
     <Project Path="src/McpBizagi.Server/McpBizagi.Server.csproj" />
     <Project Path="src/McpBizagi.Worker/McpBizagi.Worker.csproj" />
   </Folder>

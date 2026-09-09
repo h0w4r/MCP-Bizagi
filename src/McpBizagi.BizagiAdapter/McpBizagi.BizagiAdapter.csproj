@@ -4,6 +4,7 @@
     <EmbeddedResource Include="NativeAlignmentBridge.js" />
     <EmbeddedResource Include="NativePortQuery.js" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <ProjectReference Include="../McpBizagi.Contracts/McpBizagi.Contracts.csproj" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
