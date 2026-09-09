@@ -31,9 +31,17 @@ The package contains:
 - `manifest.sha256.json` with hashes of the packaged files (excluding itself).
 - `scripts/verify-package.ps1`, the read-only manifest/provenance verifier.
 
-Dependency licenses absent from NuGet are fetched from pinned upstream commits.
-Network access is required for this step. Missing licenses stop packaging; do not
-remove this check to produce a distributable ZIP.
+Dependency licenses absent from NuGet first use the content-bound reviewed
+texts in `licenses/reviewed-sources.json`: exact package/version, NuGet SHA-512,
+declared license, immutable source URL and text SHA-256 must match. The current
+runtime closure's missing texts are checked in, so assembling their licenses
+does not require repeated GitHub downloads. Identical text is deduplicated, but
+package-specific identities remain separate. Locked restore may still require
+network access when NuGet packages are not cached.
+
+A new dependency without a reviewed text falls back to its package-declared
+pinned upstream commit. Missing licenses or hash mismatches stop packaging;
+rate limits are not a reason to omit a license or use a mutable branch.
 
 ## Verify extracted bytes and provenance
 

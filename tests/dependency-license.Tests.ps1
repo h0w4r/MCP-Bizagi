@@ -29,4 +29,11 @@ foreach ($case in 'valid', 'hash', 'license', 'text', 'escape', 'mutable-source'
     } elseif (-not $failed) { throw "Unsafe license policy result: $case" }
     $count++
 }
-Write-Output "DEPENDENCY_LICENSE_POLICY_PASS cases=$count"
+# Validate every checked-in text, including entries that share identical
+# upstream license bytes. Package-specific hashes must remain independent.
+$reviewed=@(Get-Content (Join-Path $repo 'licenses/reviewed-sources.json') -Raw|ConvertFrom-Json)
+foreach($entry in $reviewed){
+    $actual=Get-ReviewedDependencyLicense -LicenseRoot (Join-Path $repo 'licenses') -Package $entry.package -NugetSha512 $entry.nugetSha512 -DeclaredLicense $entry.license
+    if(-not $actual -or [string]::IsNullOrWhiteSpace($actual.text) -or $actual.source -cne $entry.source){throw 'Reviewed cache entry did not resolve exactly.'}
+}
+Write-Output "DEPENDENCY_LICENSE_POLICY_PASS cases=$count reviewedEntries=$($reviewed.Count)"

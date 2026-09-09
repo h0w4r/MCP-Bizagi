@@ -21,12 +21,14 @@ components, not only this summary.
 
 `scripts/package.ps1` includes the runtime dependency closure's NuGet metadata,
 embedded license/notice files, and a dependency inventory. When a package omits
-its license text, the script fetches it from the exact upstream repository commit
-recorded in that package's metadata. An unresolved license stops packaging.
-If the package also omits repository provenance, an explicitly reviewed source in
-`licenses/reviewed-sources.json` must match the exact NuGet content hash, declared
-license and checked-in license text hash. This pins the license, not an inferred
-binary build commit. MSAGL 1.2.1 uses this reviewed-source path.
+its license text, the script first uses an explicitly reviewed source in
+`licenses/reviewed-sources.json`. It must match the exact NuGet content hash, declared
+license and checked-in license text hash. These texts retain their immutable
+upstream URLs and copyrights. When no reviewed entry exists, the script fetches
+the exact repository commit recorded in the package metadata; an unresolved
+license stops packaging. Reviewed license provenance is not an inferred binary
+build commit. MSAGL 1.2.1, which omits its repository commit, has its separately
+documented reviewed source rather than a fabricated package build provenance.
 
 Bizagi Modeler and its bundled third-party components remain separately licensed.
 They are loaded from the operator's installation and must not be added to this

@@ -9,3 +9,4 @@
 *.slnx text eol=lf
 # Reviewed upstream license hashes include original line endings and whitespace.
 licenses/**/LICENSE.txt -text -whitespace
+licenses/upstream/*.txt -text -whitespace

@@ -7,5 +7,437 @@
     "sha256": "789bf207455e832e8cc853262ad5aa05b31837dfc43670f3e1b0407046a1e2cc",
     "source": "https://raw.githubusercontent.com/microsoft/automatic-graph-layout/0a902c5b112d5bfcdf9f20108c900224030948c1/LICENSE",
     "reason": "The NuGet package declares MIT but omits its license text and repository commit. This separately reviewed license source is not an assertion of the binary's build commit."
+  },
+  {
+    "package": "MessagePack.Annotations/2.5.302",
+    "nugetSha512": "PTHQHbMJzx1VtUUCpnvPavD7o5X9s2dAJ4uQHAP2kBCwJKICpPTZq0qxzbB4/6iJJiIxem8zlxyfldGAx1SjSQ==",
+    "license": "MIT",
+    "file": "upstream/3c267c978e61b4abdf822dcdb7b70a0d34404f602a56d7cfc619acbb72da1dbc.txt",
+    "sha256": "3c267c978e61b4abdf822dcdb7b70a0d34404f602a56d7cfc619acbb72da1dbc",
+    "source": "https://raw.githubusercontent.com/MessagePack-CSharp/MessagePack-CSharp/b611da84ea0dc80dc516ac443bd540cd7f1f9d83/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "MessagePack/2.5.302",
+    "nugetSha512": "5DZsKli4dMEpm/glcMAheuO8/IesfaTskbfsuvgnQwWFKS5FN7Z6yNx+5F+UW94E+9N2qt8Zs63/XVzpLsElgA==",
+    "license": "MIT",
+    "file": "upstream/3c267c978e61b4abdf822dcdb7b70a0d34404f602a56d7cfc619acbb72da1dbc.txt",
+    "sha256": "3c267c978e61b4abdf822dcdb7b70a0d34404f602a56d7cfc619acbb72da1dbc",
+    "source": "https://raw.githubusercontent.com/MessagePack-CSharp/MessagePack-CSharp/b611da84ea0dc80dc516ac443bd540cd7f1f9d83/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Bcl.AsyncInterfaces/10.0.1",
+    "nugetSha512": "E1HSLkPHXEO30JEij2pWbOuzz1Z5ND4a5l7IP1T2RgQuE0a0NzEIvtO64RNy3Otn6PFezbT80cfm3M/Cgt70PA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/fad253f51b461736dfd3cd9c15977bb7493becef/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Bcl.HashCode/6.0.0",
+    "nugetSha512": "GI4jcoi6eC9ZhNOQylIBaWOQjyGaR8T6N3tC1u8p3EXfndLCVNNWa+Zp+ocjvvS3kNBN09Zma2HXL0ezO0dRfw==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/d0c2a5a83211e271826172a6b0510c25a52dbd53/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.AI.Abstractions/10.8.3",
+    "nugetSha512": "K0B05oApxmviWalNHPMBBcRC7erKiDATz3ENNR/jqTR9JwIwLRefgDhj2jCRwL1aca99pXUe0qyQC73/xIuZig==",
+    "license": "MIT",
+    "file": "upstream/47f0ad8ba753eae5de6178291cd8f38bbb42d2368b177f8e11714ad17c701275.txt",
+    "sha256": "47f0ad8ba753eae5de6178291cd8f38bbb42d2368b177f8e11714ad17c701275",
+    "source": "https://raw.githubusercontent.com/dotnet/extensions/ccb356f31db9d894807c4fd0c97c2f41553d1524/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Caching.Abstractions/10.0.10",
+    "nugetSha512": "4ZFBNE+jzR+CrWWlhOesnmywCW7pYKT0dxyAQRdL11yJwxe4jvcAu31eorFtEkoFeCDcUTeNssgPv2yaRRptaQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/f7d90799ce4ef09a0bb257852a57248d2a8fb8dd/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.Abstractions/10.0.11",
+    "nugetSha512": "fVi053xdpda9Em7vSkmgVxO/PtgC2m78ekReKWsgcyskqY0U82Bz/MONwxpGzI0hElYKJfw+fupqMVeKW3fSaA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.Binder/10.0.11",
+    "nugetSha512": "rFn8RuszZn3qquPVkDytMUlPc2+rXl9MCoygwc1XmAgC5vg5/oXJ8hkOosOrLoBLsqdTy4lFwP6iQdPS9uSYOA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.CommandLine/10.0.11",
+    "nugetSha512": "1KHr/1L56llwQ/yI0tAisEA31UpPsn8aasjASIwELOaN4JIUcbjuQBMdFOIzfNBBeULoUa0XfBe5QDtRRUY+fg==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.11",
+    "nugetSha512": "KICyU3eVi5jvloKm01EXV69L97H/zkhISVtV98cIuzuFOxNx3xTUVcXqvWTz3aq7OvUuDB/MFlPFjmxRaKF7/A==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.FileExtensions/10.0.11",
+    "nugetSha512": "mDW7KVFB05M6jiRUyaZiOMWhS31n5HlSZwoYctHAZAucD4sMDJ70IxOmkGDt6RpstchD+keWBjhdzcMpSkWvWQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.Json/10.0.11",
+    "nugetSha512": "nSPrT8U/cNoB4coqkmnanAMK9PsL7lsjG+LLUKEwHRFwS6E78b8S1wdv/y88EOxBhasWov1rLd7RTHmmsYPOLg==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration.UserSecrets/10.0.11",
+    "nugetSha512": "BRliLdUowglV8GS+J1G/QsSofCJYYFg3U8QZx0ACRn+a91az/Qnpy+h6PyHS94WgV2TSazX5D/cuuk6wnCJatw==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Configuration/10.0.11",
+    "nugetSha512": "wlhRqZW8LcJPa+vk2oLAc/REXDItHtkFQdf/QcXYGZbZOO13izcsKY1pCvuFQYwUiZD+hwSZwsKASjqT+BNaVg==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.11",
+    "nugetSha512": "/a1aJz4m7ylhEDf25ugQChLQoN5XwoGjWw/BoR/ZWWKsO1v4DdJElS1uyngahz4B/eOzjFk1KNTkarRLE5wsIg==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.DependencyInjection/10.0.11",
+    "nugetSha512": "PSmotV19c7E3lKed++uYo1kSiXFI+uTl37CBSrhq+CfLC3FCHjG7R91+xPnNehQfHS1b0Tzo/CCLPWH3qaEheg==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Diagnostics.Abstractions/10.0.11",
+    "nugetSha512": "se7Kx8QpJEt+nf26L4qIVAofGTDr1wbexxsh/Fm3Xc04xUkqUXK06KUS7FLwSQYSjqb7q9n+T7MEcXYBhI1Y5g==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Diagnostics/10.0.11",
+    "nugetSha512": "HT70uGPxMLqqnOzKMcnQtDmeV4r0KHr4qVCLhP7SXil9jMEm8sQXwcybxVVFGXZJ1V44xV0mLqQ54aZbcR2OiQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.FileProviders.Abstractions/10.0.11",
+    "nugetSha512": "JOjac6SQQgZmdmB8WGEw61/7siqMZoWJMkmq2p1goJGxqI59lO6oB4bOl0jNsbaPBdYy5Mlkb+6U7T4+CjnD8Q==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.FileProviders.Physical/10.0.11",
+    "nugetSha512": "Tq/UqMaczePv9yWwSsJZRgKtgA46djVR5xHj/lZBCueQ3ag8f9v5mu0EdhrNx7tXxNk+Y9OurG2oKuSKINjr0A==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.FileSystemGlobbing/10.0.11",
+    "nugetSha512": "2i6rtW/B5rCnWCnhdmWWEmaM9O0HD0zsPY9eRqa++y4tclI3Uw8zvGbBvhY/LjAdtf8gUHhUPcAWj3DRlWMXmQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Hosting.Abstractions/10.0.11",
+    "nugetSha512": "pwtpF7iF/NNaOBcX+pvMZ7y2+JAVbH5KkNrH9uMZtuVxVJsFTDiWiCR7Tk3HVptsAijaetipUZVRVK2LLq+nvA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Hosting/10.0.11",
+    "nugetSha512": "eIDa/Rl+93aj17gMlFsJJx+LhBvb3CP0Mu1PeVYkDp2Y3S4Jock8UynfGQEcx7lrlq+gKW+ECQJHbro/LTPDEQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.Abstractions/10.0.11",
+    "nugetSha512": "Ljd0Uxoq5XpScD2Bg0nM/r3mwx7Ao5Uq24eo2ARxbGvqJ7Zht6rt2cJtwVRH4Cv+1ZVMdXz6TB43KbpmsxRrvQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.Configuration/10.0.11",
+    "nugetSha512": "S7LvLeVHKNPaY2NMyxW7c2TBGsLgxoSUBCV5Ev5iN8kgC7EPR2UB7eW7vHsElGMcIUDwRmoxLfvGDynCn3q6EA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.Console/10.0.11",
+    "nugetSha512": "dFc0yDudyD1iIg6z9XT7ofsT3hVO7Y4ylrxGHIVRR0GaZ4CUk4ujOrMoy7wWEdNHZhvJooySg6hZpOxyS8zEVA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.Debug/10.0.11",
+    "nugetSha512": "wr+j1bjdFXhc8lKTLoq+RbwFM8M+orcMS9xrcqLmDGOxJcXpKizEeE5h6v/GKwCZV02FmhaA7OlNjoq072jZpQ==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.EventLog/10.0.11",
+    "nugetSha512": "Eck9GpCCpvZ3f6L7IUlN+mPtRVefnf7PsiIG5vi61QawPtLNCEAv2TPD/M3SojcU0PFaef+BxiVGPOShFHtDog==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging.EventSource/10.0.11",
+    "nugetSha512": "hs6QWECLLohi2VKqUvSGRUvrg7eXR1DqKL95Jrtz3cdD2g2nBA+yJPdRQLZ7SLmnTZWycxfMDK2s0ho+rfst5w==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Logging/10.0.11",
+    "nugetSha512": "nUOJwgFkSiLHiVGFpU22pIJtuWYewuSYQ3JVuP/gdK8ASMT807Px+TYQiRWs6uSsOmoyFTaVCwKXTasczV6BpA==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.11",
+    "nugetSha512": "syEhXQ/sEaSBFaqzlp9gDGHX/nk6gkQkh1sIUpBO1mlBj3Phu1rmb4ML1uCiyPW9N6Kxfxv3y5FGObC+bV01Qw==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Options/10.0.11",
+    "nugetSha512": "eY1GAKcTfD2maP27J84X9IovT3yjHJ2dVDzPmDg6/XqYvt3jMzJhtfQCLjG9pVsZGAd+8DQ2QrjaDcs2+VQLGw==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.Extensions.Primitives/10.0.11",
+    "nugetSha512": "SXcz+kF+4Oo9b1+55zntpJFYfwb1jw66ioxptyNOOTDc8g2FHnBFWjZpsWfCvZIhzr0x+4e2trVTs4OKwQfBtw==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.NET.StringTools/18.4.0",
+    "nugetSha512": "iQWOKi3L5QStmWqDjDubcr1KlTDy88qBTe88I0etlUUo1l0zSNebGJXl1Xetyl+ACA+ujP3YUtxo3Nz54JPriw==",
+    "license": "MIT",
+    "file": "upstream/9aebac42398b50e652a84a7b92d70e85cd1a9c8746558a743dc6cec11b8d7d3e.txt",
+    "sha256": "9aebac42398b50e652a84a7b92d70e85cd1a9c8746558a743dc6cec11b8d7d3e",
+    "source": "https://raw.githubusercontent.com/dotnet/msbuild/6e61e96acff3f3bd97740401540053cc2d49b189/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.VisualStudio.Threading.Only/17.14.15",
+    "nugetSha512": "NqONyw1RXyj9P3k5e1uU2k9kc1ptwuU5NJQzG+MPq7vQVHUzBY8HLuJf/N2Rw5H/myD96CVxziDxmjawPuzntw==",
+    "license": "MIT",
+    "file": "upstream/492ad816c18066132e6153dbecb698d97ee54f916b24908f3346b6118bd8c4eb.txt",
+    "sha256": "492ad816c18066132e6153dbecb698d97ee54f916b24908f3346b6118bd8c4eb",
+    "source": "https://raw.githubusercontent.com/microsoft/vs-threading/a6094b6fea9846b21867b5c18f1c2c798caa0e24/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Microsoft.VisualStudio.Validation/17.13.22",
+    "nugetSha512": "fC20ITOxlUpGQ0ltAxITQbeFxwuB6OjLT3lByC4+/Gm46o/Mwv9hlIVrBhiUhnqdQzUUvr4EHkdiYe7WOSMLmw==",
+    "license": "MIT",
+    "file": "upstream/141df76637e66c7778cbeba736fa0d05baba044431e26bc46764ff2e5caea193.txt",
+    "sha256": "141df76637e66c7778cbeba736fa0d05baba044431e26bc46764ff2e5caea193",
+    "source": "https://raw.githubusercontent.com/microsoft/vs-validation/fd7027e236db97b472614237b1453022e24ef146/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "ModelContextProtocol.Core/2.2.0",
+    "nugetSha512": "FeBfXU6T8k+jw4afg4sfxdEX2rL/e5oKOk9ROOGztu9k47+7Bz08sdaToYt2XvMY1opNbwxYQOFMj6wH9TInhA==",
+    "license": "Apache-2.0",
+    "file": "upstream/7c6a686d2b34b86ad8c726e0ac4d76903b525f251d73e617f8db3879fa8f11fc.txt",
+    "sha256": "7c6a686d2b34b86ad8c726e0ac4d76903b525f251d73e617f8db3879fa8f11fc",
+    "source": "https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/6fa3825973949a9c4f0cd8af344e15a8db09dc35/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "ModelContextProtocol/2.2.0",
+    "nugetSha512": "4Pb9u02Nwsp0poueDsqNdyGRojFxOYpljB7zDBsq+aHL+Afou3OgxlBc3GWFVnsRMRJrUtWqDh3s6k2JgPzmrQ==",
+    "license": "Apache-2.0",
+    "file": "upstream/7c6a686d2b34b86ad8c726e0ac4d76903b525f251d73e617f8db3879fa8f11fc.txt",
+    "sha256": "7c6a686d2b34b86ad8c726e0ac4d76903b525f251d73e617f8db3879fa8f11fc",
+    "source": "https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/6fa3825973949a9c4f0cd8af344e15a8db09dc35/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Nerdbank.MessagePack/1.2.4",
+    "nugetSha512": "9NKlDsKkOV5zQFkZZnQmssdV6npFNs0Of1Nz5mvAJA4uANxCge2TfXQ9nCYUet58bEWQ00a/aNHdjmcXEI7iuQ==",
+    "license": "MIT",
+    "file": "upstream/54262c4217c49229662acb1d1b33839739a3c7a845ff7a2a2b2d7501e4eac1eb.txt",
+    "sha256": "54262c4217c49229662acb1d1b33839739a3c7a845ff7a2a2b2d7501e4eac1eb",
+    "source": "https://raw.githubusercontent.com/AArnott/Nerdbank.MessagePack/5a6876da3e77b84a15e3a46d632abdce3c2b0529/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "Nerdbank.Streams/2.13.16",
+    "nugetSha512": "GjifQ5M4IpQWjGNNbIrsj8M/M7ESb2328OeoGeqxk5rOJiuaAJ5zFc6CyqB+5UWKr1KEGK23hKoxA+z1gooAKA==",
+    "license": "MIT",
+    "file": "upstream/99f8056e31a2b2f39706be53611bd486b9de3f962c8f73847482a72887403cdd.txt",
+    "sha256": "99f8056e31a2b2f39706be53611bd486b9de3f962c8f73847482a72887403cdd",
+    "source": "https://raw.githubusercontent.com/AArnott/Nerdbank.Streams/c51a94a1ef129c965728b76be202edafe3f3893f/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "PolyType/1.3.1",
+    "nugetSha512": "GFdJvsN/VczpP0GfdPIi0jDudGH2Emk3rcIJHdqwU2SL2zQm1xSl6OTYvQSUxvzHu3ClWo096ICdWXVkpifQUA==",
+    "license": "MIT",
+    "file": "upstream/98f5182f6132dad17842ffc04991d43255af4befa1eb0aea291518cab36c0e70.txt",
+    "sha256": "98f5182f6132dad17842ffc04991d43255af4befa1eb0aea291518cab36c0e70",
+    "source": "https://raw.githubusercontent.com/eiriktsarpalis/PolyType/a887f0b4e39438bbde1713ca18acb11d81b03512/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "StreamJsonRpc/2.25.29",
+    "nugetSha512": "ebP0ScWRtbd1EWayLRJ6bjM7aPwYZoJIIU1DApmn/cYl2dydR9f4p6Mj3eY77qzAywy6IbZWB9sJPSWeO5hmrg==",
+    "license": "MIT",
+    "file": "upstream/119c6789d801c4745fa85fa3ffcc1028574bc49a73d5ca04e2be4da21805977d.txt",
+    "sha256": "119c6789d801c4745fa85fa3ffcc1028574bc49a73d5ca04e2be4da21805977d",
+    "source": "https://raw.githubusercontent.com/microsoft/vs-streamjsonrpc/332cc170a82fa424e0b4f902ab9f9a876e827f38/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Buffers/4.6.1",
+    "nugetSha512": "N8GXpmiLMtljq7gwvyS+1QvKT/W2J8sNAvx+HVg4NGmsG/H+2k/y9QI23auLJRterrzCiDH+IWAw4V/GPwsMlw==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/6b84308c9ad012f53240d72c1d716d7e42546483/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Diagnostics.EventLog/10.0.11",
+    "nugetSha512": "QTXEoQBzz00SFWbo7nAg1Ogd4f99lwqcO9uAJ7MYSLEUR28f6As32QktrqG2Fr9cfAfd1GjLyGYspE7Ipj7P6w==",
+    "license": "MIT",
+    "file": "upstream/ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b.txt",
+    "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "source": "https://raw.githubusercontent.com/dotnet/dotnet/e2f47b0110ed922f21a1522da67279133ce28f32/LICENSE.TXT",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Memory/4.6.3",
+    "nugetSha512": "qdcDOgnFZY40+Q9876JUHnlHu7bosOHX8XISRoH94fwk6hgaeQGSgfZd8srWRZNt5bV9ZW2TljcegDNxsf+96A==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/f62ca0009b038cab4725a720f386623a969d73ad/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Numerics.Vectors/4.6.1",
+    "nugetSha512": "sQxefTnhagrhoq2ReR0D/6K0zJcr9Hrd6kikeXsA1I8kOCboTavcUC4r7TSfpKFeE163uMuxZcyfO1mGO3EN8Q==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/6b84308c9ad012f53240d72c1d716d7e42546483/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Runtime.CompilerServices.Unsafe/6.1.2",
+    "nugetSha512": "2hBr6zdbIBTDE3EhK7NSVNdX58uTK6iHW/P/Axmm9sl1xoGSLqDvMtpecn226TNwHByFokYwJmt/aQQNlO5CRw==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/f62ca0009b038cab4725a720f386623a969d73ad/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
+  },
+  {
+    "package": "System.Threading.Tasks.Extensions/4.6.3",
+    "nugetSha512": "7sCiwilJLYbTZELaKnc7RecBBXWXA+xMLQWZKWawBxYjp6DBlSE3v9/UcvKBvr1vv2tTOhipiogM8rRmxlhrVA==",
+    "license": "MIT",
+    "file": "upstream/cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310.txt",
+    "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "source": "https://raw.githubusercontent.com/dotnet/maintenance-packages/f62ca0009b038cab4725a720f386623a969d73ad/LICENSE",
+    "reason": "Previously captured from the package-declared repository commit. Exact package and license-text hashes permit offline packaging without changing the reviewed upstream source."
   }
 ]
