@@ -10,6 +10,15 @@ int packageArgument = Array.IndexOf(args, "--package");
 string? package = packageArgument >= 0 ? Path.GetFullPath(args[packageArgument + 1]) : null;
 string run = Path.Combine(repo, ".local", "acceptance", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..6]);
 Directory.CreateDirectory(run);
+int liveArgument = Array.IndexOf(args, "--live-session");
+if (liveArgument >= 0)
+{
+    int rootArgument = Array.IndexOf(args, "--live-root");
+    if (rootArgument < 0 || liveArgument + 1 >= args.Length || rootArgument + 1 >= args.Length)
+        throw new ArgumentException("Live acceptance requires --live-session UUID --live-root DIRECTORY and an independently running native companion.");
+    await LiveSessionAcceptance.Run(repo, args[liveArgument + 1], Path.GetFullPath(args[rootArgument + 1]), run);
+    return 0;
+}
 string stateRoot = args.Contains("--external-state") ? Path.Combine(repo, ".local", "acceptance-state", Path.GetFileName(run)) : Path.Combine(run, "state");
 var env = new Dictionary<string, string?>
 {

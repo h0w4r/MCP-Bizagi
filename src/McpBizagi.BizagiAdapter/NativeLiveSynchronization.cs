@@ -9,8 +9,14 @@ public sealed partial class NativeEngine
 {
     public sealed partial class LiveSession
     {
+        private sealed class LiveEditorNotReadyException : InvalidOperationException
+        {
+            public LiveEditorNotReadyException(string phase = "browser") : base("The native editor is not ready at phase " + phase + "; no live operation was dispatched.") { }
+        }
         private sealed class BrowserSynchronization
         {
+            public bool Ready { get; set; } = true;
+            public string ReadinessPhase { get; set; } = "";
             public int Version { get; set; }
             public int Pending { get; set; }
             public long Started { get; set; }
@@ -77,13 +83,19 @@ public sealed partial class NativeEngine
             {
                 // These version-pinned fields identify the actual editor browser, not
                 // a second renderer, another tab or an arbitrary client-selected object.
-                object editor = Optional(form, "ActiveDiagramEditor") ?? throw new InvalidOperationException("Native editor is not ready.");
+                object editor = Optional(form, "ActiveDiagramEditor") ?? throw new LiveEditorNotReadyException();
                 object view = editor.GetType().GetField("wbDiagramEditor", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(editor)!;
+                object? browser = view.GetType().GetField("_webView", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(view);
+                if (browser == null || !(bool)Get(browser, "IsBrowserInitialized") || (bool)Get(browser, "IsDisposed") || (bool)Get(browser, "Disposing"))
+                    throw new LiveEditorNotReadyException();
                 return (Task<string>)Call(view, "EvaluateScript", script)!;
             }, cancellation).ConfigureAwait(false);
             string result = await evaluation.ConfigureAwait(false);
+            if (!result.TrimStart().StartsWith("{", StringComparison.Ordinal))
+                throw new InvalidOperationException("Native editor synchronization did not return structured evidence: " + result.Substring(0, Math.Min(result.Length, 2048)));
             var state = JsonConvert.DeserializeObject<BrowserSynchronization>(result)
                 ?? throw new InvalidOperationException("Native synchronization returned no structured evidence.");
+            if (state.Version == 1 && !state.Ready) throw new LiveEditorNotReadyException(state.ReadinessPhase);
             if (state.Version != 1 || state.Started < 0 || state.Completed < 0 || state.Failed < 0 || state.Pending < 0 || state.Epoch < 0 ||
                 state.Completed > state.Started || state.Failed > state.Started - state.Completed ||
                 state.Started - state.Completed - state.Failed != state.Pending || state.Expected == null ||

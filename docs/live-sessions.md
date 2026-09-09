@@ -1,6 +1,6 @@
 # Live Modeler sessions: integration boundary
 
-**Not exposed or accredited as a public MCP capability.** File operations and a separately loaded native
+**Experimental stdio MCP bridge; managed launch and release-wide live acceptance remain open.** File operations and a separately loaded native
 model are not access to the document currently open in the desktop application.
 Unsaved edits, the editor's revision, selection and undo history belong to that
 application instance. An MCP-generated replacement file must not be described
@@ -16,7 +16,7 @@ from both the operator's Modeler preferences and disposable native workers.
 
 Engineering tests have exercised actual in-memory editing, stale-revision rejection,
 native undo/redo callbacks and receipt replay over the companion's named pipe.
-These are **native-bridge tests, not the public MCP acceptance gate**. The earlier
+The initial tests were **native-bridge tests, not public MCP acceptance**. The earlier
 prototype also exercised native saving and fresh-process readback.
 
 The source companion now synchronizes pending **canvas label text** through the
@@ -36,6 +36,21 @@ files and receipt replay were exercised against the real companion. A separate
 installed-engine worker reopened the saved artifact; the tested multi-diagram
 container passed whole-archive fidelity comparison. The saved dedicated editor also
 closed normally. None of these tests publishes to an operator's original file.
+
+The source now also exposes `live_read`, `live_apply`, `live_history`,
+`live_checkpoint` and `live_reconcile` through the official MCP SDK. A real stdio
+client exercised native unsaved editing, revision rejection, undo/redo, checkpoint
+and an independent `native_inspect` worker. Disposing the first stdio client/server
+and starting a second server preserved the same unsaved native document and its
+receipt. That does **not** accredit an automated production launcher: the test
+companion was independently launched by the engineering harness.
+
+The modern client verifies session UUID, configured executable, process start time
+and the actual named-pipe server PID before sending requests. Cancellation or
+inactivity disconnects the client but never kills the editor. Reconciliation calls
+a separate receipt endpoint; it never resends the original mutation. An unknown or
+unavailable receipt is not treated as proof of no side effect. See the library's
+[disconnect semantics](https://microsoft.github.io/vs-streamjsonrpc/docs/disconnecting.html).
 
 The companion is not yet a supported launch/configuration workflow. Remaining
 integration work includes independent session ownership, the remaining pending-editor
@@ -77,8 +92,8 @@ disconnecting the MCP or restarting its host must not lose the operator's work.
 The integration must respect native thread affinity, command notifications,
 undo/redo and document lifetime. Reading a saved copy, examining an autosave file,
 or creating a second model in the worker does not satisfy these requirements.
-Neither window clicks nor foreground activation are substitutes. No established
-live route is currently exposed as an MCP tool.
+Neither window clicks nor foreground activation are substitutes. The experimental
+tools do not attach to arbitrary operator-owned Modeler processes.
 
 Independent verification **inside Modeler** is another open gate. The installed
 offscreen renderer and a fresh persistence worker establish different facts and

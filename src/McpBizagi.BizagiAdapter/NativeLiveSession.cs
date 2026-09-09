@@ -142,7 +142,7 @@ public sealed partial class NativeEngine
             {
                 if (dispatched) uncertain = true;
                 var reply = new LiveSessionReply { OperationId = request.OperationId, State = dispatched ? "uncertain" : "rejected",
-                    Code = dispatched ? "native_result_requires_review" : "live_request_rejected", Message = error.Message };
+                    Code = dispatched ? "native_result_requires_review" : error is LiveEditorNotReadyException ? "live_editor_not_ready" : "live_request_rejected", Message = error.Message };
                 // Diagnostics cannot cause a second dispatch or clear native unsaved state.
                 receipts[request.OperationId] = fingerprint;
                 File.WriteAllText(Path.Combine(engine.workRoot, request.OperationId + ".error.txt"), error.ToString());
@@ -164,6 +164,21 @@ public sealed partial class NativeEngine
         }
 
         private string ReceiptPath(string id) => Path.Combine(engine.workRoot, id.ToLowerInvariant() + ".receipt.json");
+        public async Task<LiveSessionReply> ReceiptAsync(string operationId, CancellationToken cancellation)
+        {
+            if (!Guid.TryParseExact(operationId, "D", out var id) || id == Guid.Empty) throw new ArgumentException("Invalid live operation identity.");
+            await serial.WaitAsync(cancellation).ConfigureAwait(false);
+            try
+            {
+                if (disposed) throw new ObjectDisposedException(nameof(LiveSession));
+                if (!receipts.ContainsKey(operationId)) return new LiveSessionReply { OperationId = operationId, State = "unknown",
+                    Code = "operation_not_recorded", Message = "No retained receipt exists for this operation in this native session. No request was dispatched by this query." };
+                var reply = JsonConvert.DeserializeObject<LiveSessionReply>(File.ReadAllText(ReceiptPath(operationId)));
+                if (reply == null || !reply.OperationId.Equals(operationId, StringComparison.OrdinalIgnoreCase)) throw new JsonException("Native receipt identity mismatch.");
+                return reply;
+            }
+            finally { serial.Release(); }
+        }
         private void WriteReceipt(string id, LiveSessionReply reply)
         {
             string path = ReceiptPath(id), stage = path + ".tmp";

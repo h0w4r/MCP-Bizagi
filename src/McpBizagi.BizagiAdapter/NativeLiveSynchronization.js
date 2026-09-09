@@ -2,16 +2,20 @@
 // native editing, simulates input, or exposes a caller-supplied JavaScript endpoint.
 (() => {
     if (window.__mcpLiveSynchronizationV1) return window.__mcpLiveSynchronizationV1.begin();
+    // Chromium initialization can finish before Angular and the native bindings.
+    // Report that distinct readiness state instead of returning a JavaScript error.
+    const notReady = phase => JSON.stringify({ version: 1, ready: false, readinessPhase: phase });
     const host = document.querySelector('mod-bpmn-canvas');
     const context = host && host.__ngContext__;
     const views = Array.isArray(context) ? [context, ...context.filter(Array.isArray)] : [];
     const diagrams = [...new Set(views.flat().filter(v => v && v.processDiagram).map(v => v.processDiagram))];
-    if (diagrams.length !== 1 || !diagrams[0].diagram) throw new Error('No unique native live diagram.');
+    if (diagrams.length === 0 || (diagrams.length === 1 && !diagrams[0].diagram)) return notReady('canvas_component');
+    if (diagrams.length !== 1) throw new Error('No unique native live diagram.');
     const diagram = diagrams[0].diagram;
     const direct = diagram.get('directEditing');
     const provider = diagram.get('desktopData')._cefsharpProvider;
     if (!provider || !direct || typeof window.syncPendingChanges !== 'function')
-        throw new Error('Native live synchronization contract is unavailable.');
+        return notReady('native_diagram_services');
     const state = { version: 1, pending: 0, started: 0, completed: 0, failed: 0, epoch: 0, expected: [] };
     const wrappers = [];
     for (const [group, methods] of [
@@ -19,10 +23,10 @@
         ['diagramEditorKeyboardCommandHandler', ['undoChange', 'redoChange']]
     ]) {
         const target = provider[group];
-        if (!target) throw new Error('Native Chromium binding is absent: ' + group);
+        if (!target) return notReady(group);
         for (const method of methods) {
             const original = target[method];
-            if (typeof original !== 'function') throw new Error('Native Chromium method is absent: ' + method);
+            if (typeof original !== 'function') return notReady(group + '.' + method);
             const wrapper = function (...args) {
                 state.pending++; state.started++;
                 let result;

@@ -94,6 +94,7 @@ internal static class Program
             using var handler = new HeaderDelimitedMessageHandler(pipe, pipe, formatter);
             using var rpc = new JsonRpc(handler);
             rpc.AddLocalRpcMethod("execute", new Func<LiveSessionRequest, CancellationToken, Task<LiveSessionReply>>(session.ExecuteAsync));
+            rpc.AddLocalRpcMethod("receipt", new Func<string, CancellationToken, Task<LiveSessionReply>>(session.ReceiptAsync));
             rpc.StartListening();
             using var stop = lifetime.Register(() => rpc.Dispose());
             try { await rpc.Completion.ConfigureAwait(false); }

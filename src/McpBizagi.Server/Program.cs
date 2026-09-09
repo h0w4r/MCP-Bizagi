@@ -18,8 +18,11 @@ builder.Services.AddSingleton<WorkerClient>();
 builder.Services.AddSingleton<Operations>();
 builder.Services.AddHostedService(services => services.GetRequiredService<Operations>());
 builder.Services.AddSingleton<NativeWorkflows>();
+builder.Services.AddSingleton(LiveSessionOptions.FromEnvironment(configuration));
+builder.Services.AddSingleton<LiveSessionClient>();
+builder.Services.AddSingleton<LiveWorkflows>();
 // Use the official SDK's parameter marshaller, but never silently ignore unknown
 // members of a typed request (including nested patches and mutation arrays).
 var toolJson = new JsonSerializerOptions(McpJsonUtilities.DefaultOptions) { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };
-builder.Services.AddMcpServer().WithStdioServerTransport().WithTools<ModelTools>(toolJson);
+builder.Services.AddMcpServer().WithStdioServerTransport().WithTools<ModelTools>(toolJson).WithTools<LiveTools>(toolJson);
 await builder.Build().RunAsync();

@@ -22,8 +22,8 @@ foreground-window automation, or redistributing Bizagi binaries.
 
 > **Experimental—not full Modeler automation yet.** Native operations are opt-in,
 > version-gated integrations with the installed Modeler **4.3.0.008** engine.
-> Files and isolated workers come first; live unsaved desktop sessions and
-> independent GUI compatibility remain open.
+> An experimental stdio bridge now reaches a separately running managed live editor.
+> Managed launch, guarded live publication and independent GUI compatibility remain open.
 >
 > **Real execution, explicit boundaries.** Native persistence, structural edits,
 > documentation, configured simulation, offscreen rendering and recovery have
@@ -104,7 +104,7 @@ every operation into a BPMN XML export.
 | Excel, Word and PDF publication | Opt-in native generators | Fresh-reader content/image checks; installed template; [publication boundaries](docs/native-publication.md) |
 | Native Web publication | Experimental source after 0.6 | Selected root/subprocess pages, native search, byte-verified PNGs and tested embedded file; browser quality remains partial; [contract](docs/native-web-publication.md) |
 | Extended attributes and embedded files | Experimental current source | Explicit native XML, complete element values, tables and byte transactions; [contract](docs/native-attributes.md) |
-| Live unsaved Modeler sessions | Not implemented | Files and isolated engine first |
+| Live unsaved Modeler sessions | Experimental source bridge | Managed companion read/property batches, native history, working-copy checkpoints and receipt reconciliation across MCP restart; automated launch and original-file publication remain open; [boundary](docs/live-sessions.md) |
 
 The desktop GUI does not need to be controlled by this server. This does **not**
 claim Windows Service/Session 0 compatibility or universal headless support for
