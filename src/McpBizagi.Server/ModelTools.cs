@@ -66,6 +66,8 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
                 scope = "experimental_complete_represented_diagram_pool_partition_expanded_anchor_group_native_verified_ports_and_cross_pool_planning_with_native_persistence_and_fidelity_not_universal_or_visual_accreditation" },
             nativeSelectionCopy = new { tool = "native_elements_copy", maximumSelection = 1000,
                 scope = "experimental_closed_native_selection_explicit_parent_and_position_complete_identity_payload_archive_and_restart_gates_not_OS_clipboard_or_live_unsaved_documents" },
+            nativeSubProcessInlining = new { tool = "native_subprocess_inline", preservesSharedProcess = true, replacesSourceFile = false,
+                scope = "experimental_local_call_body_copy_with_native_conversion_and_copy_archive_gates_not_recursive_expansion_or_behavioral_equivalence" },
             nativeConversions = new { tool = "native_elements_convert", taskTypes = NativeConversionPolicy.TaskTypes, gatewayTypes = NativeConversionPolicy.GatewayTypes,
                 taskToUnboundCall = new { targetType = "CallActivity", createsDiagram = false, selectsTarget = false, bindingTool = "native_mutate", bindingField = "CallTarget.ProcessId", reverseSupported = true, reverseRequiresUnbound = true, reverseInlinesProcess = false },
                 events = new { requiredField = "ExpectedEventMode", preservesRole = true, neutralDefinitionsOnly = true,
@@ -152,6 +154,10 @@ public sealed class ModelTools(WorkspaceFiles files, ServerOptions options, Nati
 
     [McpServerTool(Name = "native_elements_copy"), Description("Experimental native selection copy without OS clipboard or simulated input. Supply source diagram, target process or embedded subprocess, 1-1000 distinct native root IDs with a closed reference graph, and explicit destination position. Source revision checked and original retained. Three workers verify native persistence, fresh readback and complete archive fidelity. Unsupported or lossy selections fail; poll operation_get. Availability is not universal operational accreditation.")]
     public CallToolResult CopyNativeSelection(string path, string expectedRevision, NativeSelectionCopyRequest selection) => Guard(() => native.CopySelection(path, expectedRevision, selection));
+
+    [McpServerTool(Name = "native_subprocess_inline"), Description("Experimental conversion of one bound local CallActivity to an embedded SubProcess, copying its complete closed body with new native identities. Supply ElementId, ExpectedProcessId and explicit Position. The original shared process, other callers and source file remain intact. Five workers verify native conversion, copying, fresh reads and whole-archive fidelity. Rejects recursive expansion, unrepresented partitions, configured body simulation or presentation migration; not behavioral equivalence or live-unsaved editing. Poll operation_get; publish the final artifact separately.")]
+    public CallToolResult InlineSubProcess(string path, string expectedRevision, NativeSubProcessInlining inlining) =>
+        Guard(() => native.InlineSubProcess(path, expectedRevision, inlining));
 
     [McpServerTool(Name = "native_subprocess_extract"), Description("Experimental native embedded-to-reusable subprocess extraction on a private copy. Explicit source ID, target diagram name and revision; original retained. Fresh-reader and whole-container gates quarantine unaccredited changes. Poll operation_get; tool availability is not operational accreditation.")]
     public CallToolResult ExtractSubProcess(string path, string expectedRevision, NativeSubProcessExtraction extraction) =>

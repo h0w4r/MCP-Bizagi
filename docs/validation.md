@@ -1,5 +1,18 @@
 # Verification baselines
 
+## Local reusable-body inlining — 2026-09-09 UTC
+
+The [native inlining contract](native-inlining.md#source-mcp-acceptance--2026-09-09-utc)
+records three real stdio/native circuits: six completed inlinings, two prerequisite
+operations, three expected failures and three active-reader cancellations followed
+by successful recovery. Both conversion and copy stages passed whole-archive and
+fresh-reader verification. Shared processes and other callers were retained;
+independent ZIP-byte checks confirmed the rich corpus's copied attachment.
+All 41 workers and 51 recorded owned processes exited; 233 desktop samples found
+no owned visible window or foreground takeover. These are source circuits, not a
+packaged, behavioral-equivalence, live-session or independent GUI claim.
+The separate unit/component suite passed 1,434 tests.
+
 ## Offset ports with resized anchors — extracted candidate, 2026-09-09 UTC
 
 The actual official MCP client ran `--native --diagram-layout-ports-only

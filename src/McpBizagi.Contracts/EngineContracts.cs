@@ -14,6 +14,7 @@ public sealed class EngineRequest
     public NativeMutation[] Mutations { get; set; } = System.Array.Empty<NativeMutation>();
     public NativeTypeConversion[] Conversions { get; set; } = System.Array.Empty<NativeTypeConversion>();
     public NativeSubProcessExtraction? Extraction { get; set; }
+    public NativeSubProcessInlining? Inlining { get; set; }
     public NativeReparenting[] Reparentings { get; set; } = System.Array.Empty<NativeReparenting>();
     public NativeScenarioTransfer[] ScenarioTransfers { get; set; } = System.Array.Empty<NativeScenarioTransfer>();
     public string[] DiscardScenarioResultDiagrams { get; set; } = System.Array.Empty<string>();

@@ -286,6 +286,20 @@ try
         await NativeReparentingAcceptance.Run(repo, run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit, (name, input) => Call(name, input, true));
         Console.WriteLine("NATIVE_REPARENTING_PASS evidence=" + run); return 0;
     }
+    if (args.Contains("--inlining-only"))
+    {
+        if (!native) throw new ArgumentException("Inlining acceptance requires --native.");
+        string? Option(string name)
+        {
+            int index = Array.IndexOf(args, name);
+            if (index < 0) return null;
+            if (index + 1 >= args.Length) throw new ArgumentException(name + " requires a path.");
+            return args[index + 1];
+        }
+        await NativeInliningAcceptance.Run(run, (name, input) => Call(name, input), WaitOperation, VerifyWorkerExit,
+            (name, input) => Call(name, input, true), Option("--input"), Option("--inlining-request"));
+        Console.WriteLine("NATIVE_INLINING_PASS evidence=" + run); return 0;
+    }
     if (args.Contains("--selection-copy-only"))
     {
         if (!native) throw new ArgumentException("Selection copy acceptance requires --native.");

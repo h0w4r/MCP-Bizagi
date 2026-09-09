@@ -113,6 +113,13 @@ diagram name to perform installed-engine embedded-to-reusable refactoring.
 See its [copy-only contract](native-refactoring.md) for descendant/file fidelity,
 persisted tab remapping, explicit simulation boundaries and failure quarantine.
 
+`native_subprocess_inline` performs the inverse structural direction: supply
+`inlining.ElementId`, `inlining.ExpectedProcessId` and `inlining.Position` to
+convert one local call and copy its referenced body into an embedded subprocess.
+The shared source process and other callers remain untouched. Its
+[two-stage fidelity contract](native-inlining.md) deliberately does not claim
+behavioral equivalence or migration of process-level configuration.
+
 For selected-diagram XPDL 2.2 exchange, use `native_xpdl_export` and
 `native_xpdl_import`, not the BPMN roundtrip tool. Both require explicit format
 loss acknowledgement and source revisions. The [XPDL contract](native-xpdl.md)

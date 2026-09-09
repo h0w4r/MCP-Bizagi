@@ -154,7 +154,7 @@ public sealed partial class NativeEngine
             progress("native_installed_font_inventory"); reply.Fonts = InstalledFonts(); reply.Success = true;
             reply.Code = "installed_fonts_observed_not_glyph_rendering_accreditation"; return reply;
         }
-        if (!new[] { "create_save", "extract_save", "reparent_save", "align_save", "anchor_preview", "port_query", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "simulation_result_save", "saved_results_read", "documentation_read", "presentation_save", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
+        if (!new[] { "create_save", "inline_prepare_save", "extract_save", "reparent_save", "align_save", "anchor_preview", "port_query", "copy_save", "import_save", "xpdl_import_save", "xpdl_export", "visio_import_save", "visio_export", "exchange_read", "read_export", "edit_save", "mutate_save", "convert_save", "metadata_read", "metadata_save", "simulation_result_save", "saved_results_read", "documentation_read", "presentation_save", "documentation_save", "diagrams_read", "diagrams_save", "inspect", "validate", "simulate", "what_if", "render_svg", "publish", "image_export", "custom_save", "custom_import", "custom_export" }.Contains(request.Action))
             throw new NotSupportedException("Unknown native operation.");
         progress("native_resolve_persistence");
         object persistence = Resolve("Bizagi.ProcessModeler.BusinessEntities.Interfaces.File.IFileSystemPersistenceManager");
@@ -256,7 +256,7 @@ public sealed partial class NativeEngine
                 reply.ExchangeFiles = ExportXpdl(model, request, progress);
                 reply.Artifacts = reply.ExchangeFiles.Select(e => e.Path).ToArray();
             }
-            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save" or "metadata_save" or "simulation_result_save" or "documentation_save" or "presentation_save" or "diagrams_save" or "custom_save" or "custom_import")
+            if (request.Action is "edit_save" or "mutate_save" or "convert_save" or "inline_prepare_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save" or "metadata_save" or "simulation_result_save" or "documentation_save" or "presentation_save" or "diagrams_save" or "custom_save" or "custom_import")
             {
                 if (request.Action == "align_save") reply.Alignment = Align(model, persistence, request, progress);
                 if (request.Action == "copy_save") reply.SelectionCopy = CopySelection(model, persistence, request, progress);
@@ -266,6 +266,7 @@ public sealed partial class NativeEngine
                     MigratePresentation(model, request.PresentationTransfers, progress);
                     MigrateScenarioParameters(model, request.ScenarioTransfers, request.DiscardScenarioResultDiagrams, progress);
                 }
+                if (request.Action == "inline_prepare_save") PrepareInlineSubProcess(model, persistence, request.Inlining ?? throw new InvalidDataException("Missing inlining request."), progress);
                 if (request.Action == "extract_save") reply.Extraction = ExtractSubProcess(model, persistence, request.Extraction ?? throw new InvalidDataException("Missing extraction request."), progress);
                 if (request.Action == "convert_save") ConvertElements(model, persistence, request.Conversions, progress);
                 if (request.Action == "custom_save") EditCustomArtifacts(model, request.CustomArtifactPatch ?? throw new InvalidDataException("Missing custom artifact patch."), progress);
@@ -319,9 +320,9 @@ public sealed partial class NativeEngine
         reply.SavedSimulationResults = SavedSimulationResults(model);
         // Reparenting can migrate current-user subprocess tabs across diagrams;
         // preserve the editor's actual write scope for independent restart checks.
-        if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "extract_save" or "reparent_save" or "exchange_read") reply.DiagramState = DiagramState(model);
-        if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);
-        if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Documentation = Documentation(model);
+        if (request.Action is "diagrams_read" or "diagrams_save" or "create_save" or "inline_prepare_save" or "extract_save" or "reparent_save" or "exchange_read") reply.DiagramState = DiagramState(model);
+        if (request.Action is "metadata_read" or "metadata_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "inline_prepare_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Metadata = Metadata(model);
+        if (request.Action is "documentation_read" or "documentation_save" or "xpdl_import_save" or "xpdl_export" or "visio_import_save" or "visio_export" or "exchange_read" or "inline_prepare_save" or "extract_save" or "reparent_save" or "align_save" or "copy_save") reply.Documentation = Documentation(model);
         if (request.Action is "presentation_save" or "exchange_read" or "reparent_save") reply.Presentation = Presentation(model);
         if (request.Action == "documentation_read" && request.Attachment != null)
         {

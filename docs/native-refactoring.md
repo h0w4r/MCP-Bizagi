@@ -104,8 +104,8 @@ The current request rejects rather than silently interpreting:
 - Unrepresented activity-set semantics, shared Enterprise models, a stale
   revision, an absent/wrong element kind, or a colliding diagram name.
 
-Arbitrary selection extraction, scenario/action migration and reverse inlining
-remain separate work. Task/call conversion and explicit
+Arbitrary selection extraction and scenario/action migration remain separate work.
+[Local reusable-body inlining](native-inlining.md), task/call conversion and explicit
 [native reparenting](native-reparenting.md) have their own tools and contracts;
 the latter adds guarded cross-diagram content migration in source after the
 immutable 0.6.0-alpha.1 package. They are not implemented by this extraction tool. This
