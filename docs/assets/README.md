@@ -32,4 +32,3 @@ Refine this README brand banner into clean flat vector-style artwork. Preserve t
 `native-request.png` is the historical native-render example described in [validation](../validation.md).
 
 The newer [HackerOne report lifecycle](../../examples/hackerone-report-lifecycle/README.md) lives beside its BPMN source and verification receipt. Its SVG and transparent PNG are byte-exact installed-engine output, not generated brand artwork.
-

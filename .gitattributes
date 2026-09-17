@@ -10,3 +10,6 @@
 # Reviewed upstream license hashes include original line endings and whitespace.
 licenses/**/LICENSE.txt -text -whitespace
 licenses/upstream/*.txt -text -whitespace
+# Published example receipts cover the original engine/input bytes, including line endings.
+examples/hackerone-report-lifecycle/source.bpmn -text -whitespace
+examples/hackerone-report-lifecycle/diagram.svg -text -whitespace
