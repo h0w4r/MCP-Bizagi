@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_HackerOne" targetNamespace="https://github.com/h0w4r/MCP-Bizagi/examples/hackerone" exporter="MCP-Bizagi operator demo" exporterVersion="0.7.0-alpha.1">
+  <process id="Process_HackerOne" name="Gestión coordinada de un reporte en HackerOne" isExecutable="false">
+    <documentation>Vista de negocio simplificada: el triaje puede hacerlo el programa o el servicio de HackerOne. La recompensa no es obligatoria ni depende necesariamente del cierre. No se representan plazos universales. Fuentes oficiales consultadas el 17/09/2026: https://docs.hackerone.com/en/articles/8475030-report-states ; https://docs.hackerone.com/en/articles/8473994-submitting-reports ; https://docs.hackerone.com/en/articles/15518592-post-submission-guide</documentation>
+    <laneSet id="LaneSet_HackerOne">
+      <lane id="Lane_Researcher" name="Investigador">
+        <flowNodeRef>Start</flowNodeRef>
+        <flowNodeRef>Scope</flowNodeRef>
+        <flowNodeRef>Research</flowNodeRef>
+        <flowNodeRef>Submit</flowNodeRef>
+        <flowNodeRef>MoreEvidence</flowNodeRef>
+      </lane>
+      <lane id="Lane_Program" name="Equipo del programa / triaje">
+        <flowNodeRef>Triage</flowNodeRef>
+        <flowNodeRef>NeedInfo</flowNodeRef>
+        <flowNodeRef>Actionable</flowNodeRef>
+        <flowNodeRef>CloseOther</flowNodeRef>
+        <flowNodeRef>EndOther</flowNodeRef>
+        <flowNodeRef>Accept</flowNodeRef>
+        <flowNodeRef>Fix</flowNodeRef>
+        <flowNodeRef>Verify</flowNodeRef>
+        <flowNodeRef>Fixed</flowNodeRef>
+        <flowNodeRef>Resolve</flowNodeRef>
+        <flowNodeRef>Disclose</flowNodeRef>
+        <flowNodeRef>Publish</flowNodeRef>
+        <flowNodeRef>End</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="Start" name="Inicio">
+      <outgoing>F01</outgoing>
+    </startEvent>
+    <task id="Scope" name="Elegir programa y revisar reglas y alcance">
+      <incoming>F01</incoming>
+      <outgoing>F02</outgoing>
+    </task>
+    <task id="Research" name="Investigar y documentar el hallazgo">
+      <documentation>Investigación dentro de las reglas y del alcance autorizado del programa. Registrar un hallazgo reproducible sin incluir aquí técnicas de explotación.</documentation>
+      <incoming>F02</incoming>
+      <outgoing>F03</outgoing>
+    </task>
+    <task id="Submit" name="Enviar reporte en HackerOne">
+      <documentation>Preparar título, activo, tipo de problema, evidencia e impacto. Al enviarse, el reporte queda pendiente de validación (New).</documentation>
+      <incoming>F03</incoming>
+      <outgoing>F04</outgoing>
+    </task>
+    <task id="MoreEvidence" name="Aportar información adicional">
+      <documentation>Responder en el reporte a la solicitud Needs More Info. Este esquema muestra el retorno normal y omite vencimientos y mediaciones.</documentation>
+      <incoming>F06</incoming>
+      <outgoing>F07</outgoing>
+    </task>
+    <task id="Triage" name="Revisar alcance, evidencia e impacto">
+      <documentation>Lo realiza el equipo del programa o el servicio de triaje contratado de HackerOne. Pending Program Review solo aplica al servicio de triaje gestionado; la decisión final corresponde al programa.</documentation>
+      <incoming>F04</incoming>
+      <incoming>F07</incoming>
+      <outgoing>F05</outgoing>
+    </task>
+    <exclusiveGateway id="NeedInfo" name="¿Falta información?" gatewayDirection="Diverging">
+      <incoming>F05</incoming>
+      <outgoing>F06</outgoing>
+      <outgoing>F08</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="Actionable" name="¿Requiere acción?" gatewayDirection="Diverging">
+      <documentation>Determinar si el reporte validado debe avanzar a remediación. La clasificación de cierres depende del contenido y de la política, no solo de una decisión binaria de validez.</documentation>
+      <incoming>F08</incoming>
+      <outgoing>F09</outgoing>
+      <outgoing>F11</outgoing>
+    </exclusiveGateway>
+    <task id="CloseOther" name="Cerrar con motivo: Duplicate / Informative / Not Applicable">
+      <incoming>F09</incoming>
+      <outgoing>F10</outgoing>
+    </task>
+    <endEvent id="EndOther" name="Cierre alternativo">
+      <incoming>F10</incoming>
+    </endEvent>
+    <task id="Accept" name="Validar y priorizar: Triaged">
+      <incoming>F11</incoming>
+      <outgoing>F12</outgoing>
+    </task>
+    <task id="Fix" name="Corregir la vulnerabilidad">
+      <incoming>F12</incoming>
+      <incoming>F15</incoming>
+      <outgoing>F13</outgoing>
+    </task>
+    <task id="Verify" name="Verificar la corrección">
+      <documentation>El equipo verifica la solución. Si solicita una nueva prueba al investigador, puede usar Retesting. Si falla la verificación, vuelve a remediación.</documentation>
+      <incoming>F13</incoming>
+      <outgoing>F14</outgoing>
+    </task>
+    <exclusiveGateway id="Fixed" name="¿Corregida?" gatewayDirection="Diverging">
+      <incoming>F14</incoming>
+      <outgoing>F15</outgoing>
+      <outgoing>F16</outgoing>
+    </exclusiveGateway>
+    <task id="Resolve" name="Cerrar como resuelto: Resolved">
+      <incoming>F16</incoming>
+      <outgoing>F17</outgoing>
+    </task>
+    <exclusiveGateway id="Disclose" name="¿Divulgación acordada?" gatewayDirection="Diverging">
+      <documentation>Paso opcional posterior al cierre, sujeto a la configuración de divulgación, la coordinación y las autorizaciones del programa. No se publica automáticamente todo reporte.</documentation>
+      <incoming>F17</incoming>
+      <outgoing>F18</outgoing>
+      <outgoing>F20</outgoing>
+    </exclusiveGateway>
+    <task id="Publish" name="Publicar según la política acordada">
+      <incoming>F18</incoming>
+      <outgoing>F19</outgoing>
+    </task>
+    <endEvent id="End" name="Gestión finalizada">
+      <incoming>F19</incoming>
+      <incoming>F20</incoming>
+    </endEvent>
+    <sequenceFlow id="F01" sourceRef="Start" targetRef="Scope" />
+    <sequenceFlow id="F02" sourceRef="Scope" targetRef="Research" />
+    <sequenceFlow id="F03" sourceRef="Research" targetRef="Submit" />
+    <sequenceFlow id="F04" sourceRef="Submit" targetRef="Triage" name="New" />
+    <sequenceFlow id="F05" sourceRef="Triage" targetRef="NeedInfo" />
+    <sequenceFlow id="F06" sourceRef="NeedInfo" targetRef="MoreEvidence" name="Sí · Needs More Info" />
+    <sequenceFlow id="F07" sourceRef="MoreEvidence" targetRef="Triage" name="Ampliación" />
+    <sequenceFlow id="F08" sourceRef="NeedInfo" targetRef="Actionable" name="No" />
+    <sequenceFlow id="F09" sourceRef="Actionable" targetRef="CloseOther" name="No" />
+    <sequenceFlow id="F10" sourceRef="CloseOther" targetRef="EndOther" />
+    <sequenceFlow id="F11" sourceRef="Actionable" targetRef="Accept" name="Sí" />
+    <sequenceFlow id="F12" sourceRef="Accept" targetRef="Fix" />
+    <sequenceFlow id="F13" sourceRef="Fix" targetRef="Verify" />
+    <sequenceFlow id="F14" sourceRef="Verify" targetRef="Fixed" />
+    <sequenceFlow id="F15" sourceRef="Fixed" targetRef="Fix" name="No · volver a corregir" />
+    <sequenceFlow id="F16" sourceRef="Fixed" targetRef="Resolve" name="Sí" />
+    <sequenceFlow id="F17" sourceRef="Resolve" targetRef="Disclose" />
+    <sequenceFlow id="F18" sourceRef="Disclose" targetRef="Publish" name="Sí" />
+    <sequenceFlow id="F19" sourceRef="Publish" targetRef="End" />
+    <sequenceFlow id="F20" sourceRef="Disclose" targetRef="End" name="No · mantener privado" />
+    <textAnnotation id="Note_Triage">
+      <text>El triaje puede hacerlo el programa o HackerOne, si se contrató ese servicio.</text>
+    </textAnnotation>
+    <association id="Assoc_Note_Triage" sourceRef="Triage" targetRef="Note_Triage" associationDirection="None" />
+    <textAnnotation id="Note_Bounty">
+      <text>Recompensa opcional: según elegibilidad y política. Puede gestionarse antes o después de la resolución.</text>
+    </textAnnotation>
+    <association id="Assoc_Note_Bounty" sourceRef="Accept" targetRef="Note_Bounty" associationDirection="None" />
+    <textAnnotation id="Note_Retest">
+      <text>Retesting: nueva verificación por el investigador, cuando el programa la solicita.</text>
+    </textAnnotation>
+    <association id="Assoc_Note_Retest" sourceRef="Verify" targetRef="Note_Retest" associationDirection="None" />
+    <textAnnotation id="Note_Disclosure">
+      <text>La divulgación no es obligatoria. Depende de la política y la coordinación con el programa.</text>
+    </textAnnotation>
+    <association id="Assoc_Note_Disclosure" sourceRef="Disclose" targetRef="Note_Disclosure" associationDirection="None" />
+  </process>
+  <collaboration id="Collaboration_HackerOne" name="HackerOne — ciclo de un reporte">
+    <participant id="Pool_HackerOne" name="HackerOne — ciclo de un reporte de vulnerabilidad" processRef="Process_HackerOne" />
+  </collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_HackerOne" name="HackerOne — ciclo de un reporte">
+    <bpmndi:BPMNPlane id="Plane_HackerOne" bpmnElement="Collaboration_HackerOne">
+      <bpmndi:BPMNShape id="Shape_Pool_HackerOne" bpmnElement="Pool_HackerOne" isHorizontal="true">
+        <dc:Bounds x="20" y="20" width="2920" height="990" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Researcher" bpmnElement="Lane_Researcher" isHorizontal="true">
+        <dc:Bounds x="50" y="20" width="2890" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Program" bpmnElement="Lane_Program" isHorizontal="true">
+        <dc:Bounds x="50" y="300" width="2890" height="710" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="Start">
+        <dc:Bounds x="130" y="120" width="30" height="30" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="85" y="160" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Scope" bpmnElement="Scope">
+        <dc:Bounds x="220" y="95" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Research" bpmnElement="Research">
+        <dc:Bounds x="450" y="95" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Submit" bpmnElement="Submit">
+        <dc:Bounds x="680" y="95" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_MoreEvidence" bpmnElement="MoreEvidence">
+        <dc:Bounds x="1010" y="170" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Triage" bpmnElement="Triage">
+        <dc:Bounds x="680" y="430" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_NeedInfo" bpmnElement="NeedInfo">
+        <dc:Bounds x="930" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="880" y="390" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Actionable" bpmnElement="Actionable">
+        <dc:Bounds x="1160" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1110" y="390" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CloseOther" bpmnElement="CloseOther">
+        <dc:Bounds x="1110" y="660" width="185" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndOther" bpmnElement="EndOther">
+        <dc:Bounds x="1370" y="695" width="30" height="30" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1325" y="735" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Accept" bpmnElement="Accept">
+        <dc:Bounds x="1340" y="430" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Fix" bpmnElement="Fix">
+        <dc:Bounds x="1570" y="430" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Verify" bpmnElement="Verify">
+        <dc:Bounds x="1800" y="430" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Fixed" bpmnElement="Fixed">
+        <dc:Bounds x="2030" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1980" y="390" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Resolve" bpmnElement="Resolve">
+        <dc:Bounds x="2170" y="430" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Disclose" bpmnElement="Disclose">
+        <dc:Bounds x="2410" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2360" y="390" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Publish" bpmnElement="Publish">
+        <dc:Bounds x="2580" y="430" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End" bpmnElement="End">
+        <dc:Bounds x="2840" y="455" width="30" height="30" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2795" y="495" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Note_Triage" bpmnElement="Note_Triage">
+        <dc:Bounds x="650" y="820" width="335" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Note_Bounty" bpmnElement="Note_Bounty">
+        <dc:Bounds x="1330" y="820" width="330" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Note_Retest" bpmnElement="Note_Retest">
+        <dc:Bounds x="1810" y="820" width="305" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Note_Disclosure" bpmnElement="Note_Disclosure">
+        <dc:Bounds x="2410" y="820" width="345" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_F01" bpmnElement="F01">
+        <di:waypoint x="160" y="135" />
+        <di:waypoint x="220" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F02" bpmnElement="F02">
+        <di:waypoint x="380" y="135" />
+        <di:waypoint x="450" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F03" bpmnElement="F03">
+        <di:waypoint x="610" y="135" />
+        <di:waypoint x="680" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F04" bpmnElement="F04">
+        <di:waypoint x="760" y="175" />
+        <di:waypoint x="760" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="780" y="305" width="70" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F05" bpmnElement="F05">
+        <di:waypoint x="840" y="470" />
+        <di:waypoint x="930" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F06" bpmnElement="F06">
+        <di:waypoint x="955" y="445" />
+        <di:waypoint x="955" y="210" />
+        <di:waypoint x="1010" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="820" y="310" width="125" height="38" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F07" bpmnElement="F07">
+        <di:waypoint x="1090" y="170" />
+        <di:waypoint x="1090" y="70" />
+        <di:waypoint x="875" y="70" />
+        <di:waypoint x="875" y="365" />
+        <di:waypoint x="720" y="365" />
+        <di:waypoint x="720" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="790" y="342" width="85" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F08" bpmnElement="F08">
+        <di:waypoint x="980" y="470" />
+        <di:waypoint x="1160" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1050" y="440" width="35" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F09" bpmnElement="F09">
+        <di:waypoint x="1185" y="495" />
+        <di:waypoint x="1185" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1200" y="585" width="35" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F10" bpmnElement="F10">
+        <di:waypoint x="1295" y="710" />
+        <di:waypoint x="1370" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F11" bpmnElement="F11">
+        <di:waypoint x="1210" y="470" />
+        <di:waypoint x="1340" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1260" y="440" width="35" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F12" bpmnElement="F12">
+        <di:waypoint x="1500" y="470" />
+        <di:waypoint x="1570" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F13" bpmnElement="F13">
+        <di:waypoint x="1730" y="470" />
+        <di:waypoint x="1800" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F14" bpmnElement="F14">
+        <di:waypoint x="1960" y="470" />
+        <di:waypoint x="2030" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F15" bpmnElement="F15">
+        <di:waypoint x="2055" y="495" />
+        <di:waypoint x="2055" y="640" />
+        <di:waypoint x="1650" y="640" />
+        <di:waypoint x="1650" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1780" y="650" width="155" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F16" bpmnElement="F16">
+        <di:waypoint x="2080" y="470" />
+        <di:waypoint x="2170" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2110" y="440" width="35" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F17" bpmnElement="F17">
+        <di:waypoint x="2330" y="470" />
+        <di:waypoint x="2410" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F18" bpmnElement="F18">
+        <di:waypoint x="2460" y="470" />
+        <di:waypoint x="2580" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2510" y="440" width="35" height="22" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F19" bpmnElement="F19">
+        <di:waypoint x="2750" y="470" />
+        <di:waypoint x="2840" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F20" bpmnElement="F20">
+        <di:waypoint x="2435" y="495" />
+        <di:waypoint x="2435" y="640" />
+        <di:waypoint x="2855" y="640" />
+        <di:waypoint x="2855" y="485" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2570" y="650" width="160" height="30" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Note_Triage" bpmnElement="Assoc_Note_Triage">
+        <di:waypoint x="760" y="510" />
+        <di:waypoint x="760" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Note_Bounty" bpmnElement="Assoc_Note_Bounty">
+        <di:waypoint x="1420" y="510" />
+        <di:waypoint x="1420" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Note_Retest" bpmnElement="Assoc_Note_Retest">
+        <di:waypoint x="1880" y="510" />
+        <di:waypoint x="1880" y="565" />
+        <di:waypoint x="2130" y="565" />
+        <di:waypoint x="2130" y="775" />
+        <di:waypoint x="1960" y="775" />
+        <di:waypoint x="1960" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Note_Disclosure" bpmnElement="Assoc_Note_Disclosure">
+        <di:waypoint x="2460" y="470" />
+        <di:waypoint x="2500" y="470" />
+        <di:waypoint x="2500" y="775" />
+        <di:waypoint x="2580" y="775" />
+        <di:waypoint x="2580" y="820" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

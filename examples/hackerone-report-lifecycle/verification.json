@@ -1,0 +1,54 @@
+{
+  "example": "HackerOne report lifecycle",
+  "verifiedAt": "2026-09-17",
+  "serverVersion": "0.7.0-alpha.1",
+  "engineVersion": "4.3.0.008",
+  "transport": "Official C# MCP client over stdio to packaged host and isolated native workers",
+  "observed": {
+    "activities": 11,
+    "exclusiveGateways": 4,
+    "lanes": 2,
+    "sequenceFlows": 20,
+    "startEvents": 1,
+    "endEvents": 2,
+    "annotations": 4,
+    "sourceConnectionsMatched": 20,
+    "nativeValidationFindings": 0,
+    "publishedNativeReadbackVerified": true,
+    "nativePublicationByteIdentityPreserved": true,
+    "transparentPng": true,
+    "pngDimensions": [
+      2952,
+      1022
+    ],
+    "desktopObservationsWithoutVisibleWindowOrForegroundTakeover": 21,
+    "ownedWorkerExitRecords": 21
+  },
+  "operationIds": {
+    "nativeCommit": "246cf6d1f2b94356b5bf0af08c4ceff4",
+    "nativeRender": "75844f04667d454c91a4c9485362b489",
+    "nativeValidation": "e7e113338bdf4e1a960088f11eb246e7"
+  },
+  "artifacts": [
+    {
+      "file": "source.bpmn",
+      "sha256": "6a65882c4eb9c955a98eb8e0ce26f6f9d16f3604c138f74b885ccd64096ba897",
+      "bytes": 20409
+    },
+    {
+      "file": "diagram.svg",
+      "sha256": "a7012fad63518e1e5cfc7db78dd184879bdd934c1c2e50a0556c879be97cfd7d",
+      "bytes": 48016
+    },
+    {
+      "file": "diagram.png",
+      "sha256": "379c48f8e6f1a1afe3a6f6c654847406717f367879c688dbf0b8138c2afff2b2",
+      "bytes": 90087
+    }
+  ],
+  "limitations": [
+    "The source BPMN predates native typography and label refinements.",
+    "Desktop GUI compatibility was not independently verified in this run.",
+    "The native BPM file and raw transcripts are not distributed because their metadata may identify the local operator."
+  ]
+}
