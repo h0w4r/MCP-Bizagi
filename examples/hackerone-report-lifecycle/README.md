@@ -1,5 +1,7 @@
 # Example: HackerOne report lifecycle
 
+[English diagram edition](en/README.md) · Original Spanish diagram below.
+
 A real modeling example created through **MCP-Bizagi 0.7.0-alpha.1** and the
 installed **Bizagi Modeler 4.3.0.008** engine on September 17, 2026.
 

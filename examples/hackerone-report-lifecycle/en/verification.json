@@ -1,0 +1,74 @@
+{
+  "example": "HackerOne report lifecycle — English edition",
+  "verifiedAt": "2026-10-03",
+  "verificationCompletedAtUtc": "2026-10-04T03:24:27.853244+00:00",
+  "serverVersion": "0.7.0-alpha.1",
+  "engineVersion": "4.3.0.008",
+  "transport": "Official C# MCP client over stdio to packaged host and isolated native workers",
+  "derivedFrom": "../verification.json",
+  "language": "en",
+  "observed": {
+    "activities": 11,
+    "exclusiveGateways": 4,
+    "lanes": 2,
+    "sequenceFlows": 20,
+    "startEvents": 1,
+    "endEvents": 2,
+    "annotations": 4,
+    "sourceConnectionsMatched": 20,
+    "nativeIdentitiesPreserved": true,
+    "nativeGeometryAndRoutesPreserved": true,
+    "nativeValidationFindings": 0,
+    "translatedNativeNames": 29,
+    "translatedNativeDocumentation": 7,
+    "translatedNativeAnnotations": 4,
+    "publishedNativeReadbackVerified": true,
+    "nativePublicationByteIdentityPreserved": true,
+    "spanishOriginalUnchanged": true,
+    "transparentPng": true,
+    "pngDimensions": [
+      2952,
+      1022
+    ],
+    "desktopObservationsWithoutVisibleWindowOrForegroundTakeover": 12,
+    "ownedWorkerExitRecords": 12
+  },
+  "operationIds": {
+    "nativeTranslation": "4ffa6d8fc6fd489d8bd965577d380a26",
+    "nativeDiagramRename": "b88ac4be1f6c4d6bb7b2c5691d2cbea0",
+    "nativeCommit": "b04102275e4a495fbe9895008cb73cca",
+    "nativeRender": "278133b9e73c4d1b9ccec0bb9b9ea89b",
+    "nativeValidation": "659a7acdb51c464f8f9389883a8dfb9a",
+    "rejectedHiddenProcessRename": "df0db7dc11604d17b3db9e348eafd174",
+    "nativeValidationAfterRejection": "5d28b26f6c594b788e6e84de689258c8"
+  },
+  "recovery": {
+    "rejectedWritePhase": "native_fidelity_verification",
+    "publishedModelUnchanged": true,
+    "freshNativeValidationSucceededAfterRejection": true
+  },
+  "artifacts": [
+    {
+      "file": "source.bpmn",
+      "sha256": "b986fac70624a1c6e4f0fa624c16168250484b828bdf3ff377667f5ae152c6a9",
+      "bytes": 20233
+    },
+    {
+      "file": "diagram.svg",
+      "sha256": "9f0aaa6b272b418b9db33db8c9c3f1cd67d886b8fb1b7f8d259e421cb802ac2f",
+      "bytes": 47863
+    },
+    {
+      "file": "diagram.png",
+      "sha256": "c892d5afce9f9fdc11b22a6c9973791375fa569c9e7060cc0f443ee9bc14901b",
+      "bytes": 89879
+    }
+  ],
+  "limitations": [
+    "One external label rectangle was widened for English text; node geometry and connector routes were preserved.",
+    "Hidden workflow-process displayName metadata retains the Spanish source name. An attempted rename was rejected by the fidelity gate without modifying the published model; visible pool/diagram labels and the English BPMN are translated.",
+    "The English BPMN translates the original input, before native typography and label refinements.",
+    "Desktop GUI compatibility was not independently verified in this run.",
+    "The native BPM file and raw transcripts remain local because their metadata may identify the operator."
+  ]
+}

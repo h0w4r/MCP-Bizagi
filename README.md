@@ -80,6 +80,8 @@ mock renderer or an AI-generated picture of a diagram.
 The run saved a native `.bpm`, reopened the published file in a separate worker,
 verified all 20 connections against the source and returned no native validation
 findings. Labels are in Spanish, as requested in the original example.
+An [English edition](examples/hackerone-report-lifecycle/en/README.md) preserves
+the same process and includes its own native-rendered image and verification receipt.
 
 [Open the full-size SVG](examples/hackerone-report-lifecycle/diagram.svg) ·
 [BPMN source](examples/hackerone-report-lifecycle/source.bpmn) ·

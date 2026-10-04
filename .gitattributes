@@ -13,3 +13,5 @@ licenses/upstream/*.txt -text -whitespace
 # Published example receipts cover the original engine/input bytes, including line endings.
 examples/hackerone-report-lifecycle/source.bpmn -text -whitespace
 examples/hackerone-report-lifecycle/diagram.svg -text -whitespace
+examples/hackerone-report-lifecycle/en/source.bpmn -text -whitespace
+examples/hackerone-report-lifecycle/en/diagram.svg -text -whitespace
